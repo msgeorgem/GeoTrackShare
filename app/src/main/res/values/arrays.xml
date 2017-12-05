@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string-array name="run_settings_order_by_labels">
+
+        <item>@string/run_settings_order_by_maxspeed_label</item>
+        <item>@string/run_settings_order_by_avrgspeed_label</item>
+        <item>@string/run_settings_order_by_recent_label</item>
+
+    </string-array>
+
+    <string-array name="run_settings_order_by_values">
+
+        <item>@string/run_settings_order_by_maxspeed_value</item>
+        <item>@string/run_settings_order_by_avrgspeed_value</item>
+        <item>@string/run_settings_order_by_recent_value</item>
+
+    </string-array>
+
+</resources>

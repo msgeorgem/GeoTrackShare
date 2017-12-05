@@ -24,7 +24,7 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/AppTheme">
+        android:theme="@style/AppThemeNoBar">
 
         <!--
              The API key for Google Maps-based APIs is defined as a string resource.
@@ -54,6 +54,33 @@
             </intent-filter>
 
         </activity>
+        <!--The manifest entry for our DetailActivity. Each Activity requires a manifest entry-->
+
+        <activity
+            android:name=".DetailActivity"
+            android:label="@string/title_activity_detail"
+            android:parentActivityName=".MainActivity"
+            android:theme="@style/AppThemeNoBar">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".MainActivity" />
+        </activity>
+
+        <activity
+            android:name="com.example.android.geotrackshare.SettingsActivity"
+            android:label="@string/title_activity_settings"
+            android:theme="@style/AppThemeNoBar">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.example.android.geotrackshare.MainActivity" />
+        </activity>
+
+        <provider
+            android:name="com.example.android.geotrackshare.Data.TrackProvider"
+            android:authorities="com.example.android.geotrackshare"
+            android:exported="false" />
+
+
     </application>
 
 </manifest>

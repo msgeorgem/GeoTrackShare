@@ -31,4 +31,38 @@
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
 
+    <string name="action_share">Share</string>
+    <string name="action_settings">Settings</string>
+    <string name="real_time">Real Time</string>
+    <string name="run_list">Run List</string>
+
+    <string name="run_settings_order_by_maxspeed_label">max_speed</string>
+    <string name="run_settings_order_by_avrgspeed_label">average_speed</string>
+    <string name="run_settings_order_by_recent_label">_id</string>
+
+    <string name="run_settings_order_by_maxspeed_value">max_speed</string>
+    <string name="run_settings_order_by_avrgspeed_value">average_speed</string>
+    <string name="run_settings_order_by_recent_value">_id</string>
+
+    <!-- Default order for order preference -->
+    <string name="run_settings_order_by_default" translatable="false">_id</string>
+    <string name="run_settings_order_by_key">_id</string>
+    <string name="run_settings_order_by_label">run</string>
+
+    <string name="title_activity_settings">Settings</string>
+    <string name="title_activity_detail">Details</string>
+
+
+    <string name="delete">Delete</string>
+    <string name="cancel">Cancel</string>
+    <string name="delete_oneitem_dialog_msg">Are you sure to remove this run from favourites?</string>
+    <string name="delete_one_item">Run removed from favourites</string>
+
+    <string name="editor_insert_item_failed">Error with saving run</string>
+    <string name="editor_update_item_failed">You already favor this movie</string>
+    <string name="editor_insert_item_success">Run added to favourites</string>
+
+    <string name="no_runs">Run list is empty. You can add run by
+        turning tracking button. Just click it! </string>
+
 </resources>
