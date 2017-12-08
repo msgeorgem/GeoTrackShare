@@ -50,13 +50,30 @@ public class TracksCursorAdapter extends CursorRecyclerAdapter<TracksCursorAdapt
         id = cursor.getLong(cursor.getColumnIndex(TrackContract.TrackingEntry._ID));
         int runColumnIndex = cursor.getColumnIndex(TrackContract.TrackingEntry.COLUMN_RUN_ID);
         int timeColumnIndex = cursor.getColumnIndex(TrackContract.TrackingEntry.COLUMN_TIME);
+        int speedColumnIndex = cursor.getColumnIndex(TrackContract.TrackingEntry.COLUMN_SPEED);
+        int altColumnIndex = cursor.getColumnIndex(TrackContract.TrackingEntry.COLUMN_ALTITUDE);
+        int maxAltColumnIndex = cursor.getColumnIndex(TrackContract.TrackingEntry.COLUMN_MAX_ALT);
+        int minAltColumnIndex = cursor.getColumnIndex(TrackContract.TrackingEntry.COLUMN_MIN_ALT);
+        int maxSpeedColumnIndex = cursor.getColumnIndex(TrackContract.TrackingEntry.COLUMN_MAX_SPEED);
 
         // Read the item attributes from the Cursor for the current item
         final String itemTitle = cursor.getString(runColumnIndex);
-        String itemOverview = cursor.getString(timeColumnIndex);
+        String itemTime = cursor.getString(timeColumnIndex);
+        String itemSpeed = cursor.getString(speedColumnIndex);
+        String itemAltitude = cursor.getString(altColumnIndex);
+        String itemMaxAlt = cursor.getString(maxAltColumnIndex);
+        String itemMinAlt = cursor.getString(minAltColumnIndex);
+        String itemMaxSpeed = cursor.getString(maxSpeedColumnIndex);
 
         viewHolder.runIdTextView.setText(itemTitle);
-        viewHolder.timeStartTextView.setText(itemOverview);
+        viewHolder.timeStartTextView.setText(itemTime);
+        viewHolder.speedTextView.setText(itemSpeed);
+        viewHolder.altitude.setText(itemAltitude);
+        viewHolder.maxAltitude.setText(itemMaxAlt);
+        viewHolder.minAltitude.setText(itemMinAlt);
+        viewHolder.maxSpeedTextView.setText(itemMaxSpeed);
+
+
         viewHolder.itemView.setTag(id);
 
         viewHolder.itemView.setOnClickListener(new View.OnClickListener() {
@@ -103,12 +120,24 @@ public class TracksCursorAdapter extends CursorRecyclerAdapter<TracksCursorAdapt
 
         public TextView runIdTextView;
         public TextView timeStartTextView;
+        public TextView speedTextView;
+        public TextView maxSpeedTextView;
+        public TextView altitude;
+        public TextView minAltitude;
+        public TextView maxAltitude;
+
+
         public ToggleButton favToggle;
 
         public ViewHolder(View view) {
             super(view);
             runIdTextView = view.findViewById(R.id.run_id);
             timeStartTextView = view.findViewById(R.id.start_time);
+            speedTextView = view.findViewById(R.id.speed);
+            maxSpeedTextView = view.findViewById(R.id.max_speed);
+            altitude = view.findViewById(R.id.altitude);
+            minAltitude = view.findViewById(R.id.min_alt);
+            maxAltitude = view.findViewById(R.id.max_alt);
             favToggle = view.findViewById(R.id.favListToggleButton);
         }
     }

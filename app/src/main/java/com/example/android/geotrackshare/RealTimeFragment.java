@@ -3,9 +3,11 @@ package com.example.android.geotrackshare;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.content.ContentValues;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
 import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
@@ -23,6 +25,7 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.android.geotrackshare.Data.TrackContract;
 import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.common.api.ResolvableApiException;
 import com.google.android.gms.location.FusedLocationProviderClient;
@@ -39,9 +42,21 @@ import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 
+import java.io.IOException;
 import java.text.DateFormat;
 import java.util.Date;
 import java.util.Locale;
+
+import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_ALTITUDE;
+import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_LATITUDE;
+import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_LONGITUDE;
+import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_MAX_ALT;
+import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_MAX_SPEED;
+import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_MIN_ALT;
+import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_RUN_ID;
+import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_SPEED;
+import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_TIME;
+import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.CONTENT_URI;
 
 
 /**
@@ -121,6 +136,14 @@ public class RealTimeFragment extends Fragment {
     private TextView mLongitudeTextView;
     private TextView mAltitudeTextView;
     private TextView mSpeedTextView;
+    private TextView mMaxSpeedTextView;
+    private TextView mAvgSpeedTextView;
+    private TextView mMinAltitudeTextView;
+    private TextView mMaxAltitudeTextView;
+    private TextView mTotalTimeTextView;
+    private TextView mTotalDistanceTextView;
+
+
     private View mLocation;
 
     // Labels.
@@ -129,6 +152,20 @@ public class RealTimeFragment extends Fragment {
     private String mLastUpdateTimeLabel;
     private String mAltitudeLabel;
     private String mSpeedLabel;
+    private String mMaxSpeedLabel;
+    private String mAvgSpeedLabel;
+    private String mMinAltitudeLabel;
+    private String mMaxAltitudeLabel;
+    private String mTotalTimeLabel;
+    private String mTotalDistanceLabel;
+
+    private int mMaxId, mCurrentId;
+
+    private double mCurrentLatitude, mCurrentLongitude, mCurrentAltitude, mCurrentSpeed, mMaxSpeed,
+            mAverageSpeed, mMaxAltitude, mMinAltitude, mTotalTime, mTotalDistance;
+
+    private Cursor cur;
+
 
     /**
      * Tracks the status of the location updates request. Value changes when the user presses the
@@ -139,7 +176,9 @@ public class RealTimeFragment extends Fragment {
     /**
      * Time when the location was updated represented as a String.
      */
-    private String mLastUpdateTime;
+    private String mLastUpdateTime, mNewTime;
+
+
 
 
     public RealTimeFragment() {
@@ -162,6 +201,14 @@ public class RealTimeFragment extends Fragment {
         mAltitudeTextView = v.findViewById(R.id.altitude_text);
         mSpeedTextView = v.findViewById(R.id.speed_text);
         mLastUpdateTimeTextView = v.findViewById(R.id.last_update_time_text);
+        mMaxSpeedTextView = v.findViewById(R.id.max_speed);
+        mAvgSpeedTextView = v.findViewById(R.id.avg_speed);
+        mMinAltitudeTextView = v.findViewById(R.id.min_alt);
+        mMaxAltitudeTextView = v.findViewById(R.id.max_alt);
+        mTotalTimeTextView = v.findViewById(R.id.total_time);
+        mTotalDistanceTextView = v.findViewById(R.id.total_distance);
+
+
 
         // Set labels.
         mLatitudeLabel = getResources().getString(R.string.latitude_label);
@@ -169,9 +216,16 @@ public class RealTimeFragment extends Fragment {
         mAltitudeLabel = getResources().getString(R.string.altitude_label);
         mSpeedLabel = getResources().getString(R.string.speed_label);
         mLastUpdateTimeLabel = getResources().getString(R.string.last_update_time_label);
+        mMaxSpeedLabel = "Max Speed";
+        mAvgSpeedLabel = "Average Speed";
+        mMinAltitudeLabel = "Minimum Altitude";
+        mMaxAltitudeLabel = "Maximum Altitude";
+        mTotalTimeLabel = "Total time";
+        mTotalDistanceLabel = "Total distance";
 
         mRequestingLocationUpdates = false;
         mLastUpdateTime = "";
+
 
         // Update values using data stored in the Bundle.
         updateValuesFromBundle(savedInstanceState);
@@ -193,7 +247,6 @@ public class RealTimeFragment extends Fragment {
                 String uri = String.format(Locale.ENGLISH, "geo:%f,%f", mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude());
                 Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(uri));
                 startActivity(intent);
-
             }
         });
 
@@ -201,6 +254,7 @@ public class RealTimeFragment extends Fragment {
             @Override
             public void onClick(View view) {
                 startUpdatesButtonHandler();
+                mCurrentId = queryMaxId() + 1;
             }
         });
 
@@ -446,9 +500,191 @@ public class RealTimeFragment extends Fragment {
                     mCurrentLocation.getSpeed()));
             mLastUpdateTimeTextView.setText(String.format(Locale.ENGLISH, "%s: %s",
                     mLastUpdateTimeLabel, mLastUpdateTime));
+
+//            mAvgSpeedTextView.setText(String.format(Locale.ENGLISH, "%s: %f",
+//                    mAvgSpeedLabel, queryAverageSpeed(mCurrentId)));
+            mMaxSpeedTextView.setText(String.format(Locale.ENGLISH, "%s: %f",
+                    mMaxSpeedLabel, queryMaxSpeed(mCurrentId)));
+            mMaxAltitudeTextView.setText(String.format(Locale.ENGLISH, "%s: %f",
+                    mMaxAltitudeLabel, queryMaxAlt(mCurrentId)));
+            mMinAltitudeTextView.setText(String.format(Locale.ENGLISH, "%s: %f",
+                    mMinAltitudeLabel, queryMinAlt(mCurrentId)));
+//            mTotalTimeTextView.setText(String.format(Locale.ENGLISH, "%s: %f",
+//                    mTotalTimeLabel, queryTotalTime(mCurrentId)));
+//            mTotalDistanceTextView.setText(String.format(Locale.ENGLISH, "%s: %f",
+//                    mTotalDistanceLabel, queryTotalDistance(mCurrentId)));
+
+
+            mCurrentLatitude = mCurrentLocation.getLatitude();
+            mCurrentLongitude = mCurrentLocation.getLongitude();
+            mCurrentAltitude = mCurrentLocation.getAltitude();
+            mCurrentSpeed = mCurrentLocation.getSpeed();
+            mMaxSpeed = queryMaxSpeed(mCurrentId);
+            mMaxAltitude = queryMaxAlt(mCurrentId);
+            mMinAltitude = queryMinAlt(mCurrentId);
+
+            mLastUpdateTime = DateFormat.getTimeInstance().format(new Date());
+
+            try {
+                saveItem(mCurrentId, mLastUpdateTime, mCurrentLatitude, mCurrentLongitude,
+                        mCurrentAltitude, mCurrentSpeed, mMaxSpeed, mMaxAltitude, mMinAltitude);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 
+    private int queryMaxId() {
+
+        String ORDER = " " + COLUMN_RUN_ID + " DESC LIMIT 1";
+        try {
+            cur = getActivity().getContentResolver()
+                    .query(TrackContract.TrackingEntry.CONTENT_URI, null, null, null, ORDER);
+
+            if (cur != null && cur.moveToFirst()) {
+                do {
+                    int idColumnIndex = cur.getColumnIndex(COLUMN_RUN_ID);
+                    mMaxId = cur.getInt(idColumnIndex);
+
+                } while (cur.moveToNext());
+            }
+            if (cur != null) {
+                cur.close();
+            }
+
+        } catch (Exception e) {
+            Log.e("Path Error", e.toString());
+        }
+
+        return mMaxId;
+    }
+
+    public double queryMaxSpeed(int id) {
+        String specificID = String.valueOf(id);
+        String mSelectionClause = TrackContract.TrackingEntry.COLUMN_RUN_ID;
+        String SELECTION = mSelectionClause + " = '" + specificID + "'";
+        String ORDER = " " + COLUMN_SPEED + " DESC LIMIT 1";
+        try {
+            cur = getActivity().getContentResolver()
+                    .query(TrackContract.TrackingEntry.CONTENT_URI, null, SELECTION, null, ORDER);
+
+            if (cur != null && cur.moveToFirst()) {
+                do {
+                    int idColumnIndex = cur.getColumnIndex(COLUMN_SPEED);
+                    mMaxSpeed = cur.getInt(idColumnIndex);
+
+                } while (cur.moveToNext());
+            }
+            if (cur != null) {
+                cur.close();
+            }
+
+        } catch (Exception e) {
+            Log.e("Path Error", e.toString());
+        }
+
+        return mMaxSpeed;
+    }
+
+    private double queryMaxAlt(int id) {
+        String specificID = String.valueOf(id);
+        String mSelectionClause = TrackContract.TrackingEntry.COLUMN_RUN_ID;
+        String SELECTION = mSelectionClause + " = '" + specificID + "'";
+        String ORDER = " " + COLUMN_ALTITUDE + " DESC LIMIT 1";
+        try {
+            cur = getActivity().getContentResolver()
+                    .query(TrackContract.TrackingEntry.CONTENT_URI, null, SELECTION, null, ORDER);
+
+            if (cur != null && cur.moveToFirst()) {
+                do {
+                    int idColumnIndex = cur.getColumnIndex(COLUMN_ALTITUDE);
+                    mMaxAltitude = cur.getInt(idColumnIndex);
+
+                } while (cur.moveToNext());
+            }
+            if (cur != null) {
+                cur.close();
+            }
+
+        } catch (Exception e) {
+            Log.e("Path Error", e.toString());
+        }
+        return mMaxAltitude;
+    }
+
+    private double queryMinAlt(int id) {
+        String specificID = String.valueOf(id);
+        String mSelectionClause = TrackContract.TrackingEntry.COLUMN_RUN_ID;
+        String SELECTION = mSelectionClause + " = '" + specificID + "'";
+        String ORDER = " " + COLUMN_ALTITUDE + " ASC LIMIT 1";
+        try {
+            cur = getActivity().getContentResolver()
+                    .query(TrackContract.TrackingEntry.CONTENT_URI, null, SELECTION, null, ORDER);
+
+            if (cur != null && cur.moveToFirst()) {
+                do {
+                    int idColumnIndex = cur.getColumnIndex(COLUMN_ALTITUDE);
+                    mMinAltitude = cur.getInt(idColumnIndex);
+
+                } while (cur.moveToNext());
+            }
+            if (cur != null) {
+                cur.close();
+            }
+
+        } catch (Exception e) {
+            Log.e("Path Error", e.toString());
+        }
+        return mMinAltitude;
+    }
+
+    private double queryAverageSpeed(int id) {
+        String specificID = String.valueOf(id);
+        String mSelectionClause = TrackContract.TrackingEntry.COLUMN_RUN_ID;
+        String SELECTION = mSelectionClause + " = '" + specificID + "'";
+        try {
+            cur = getActivity().getContentResolver()
+                    .query(TrackContract.TrackingEntry.CONTENT_URI, null, SELECTION, null, null);
+
+            if (cur != null && cur.moveToFirst()) {
+                do {
+                    int idColumnIndex = cur.getColumnIndex(COLUMN_SPEED);
+                    mAverageSpeed = cur.getInt(idColumnIndex);
+
+                } while (cur.moveToNext());
+            }
+            if (cur != null) {
+                cur.close();
+            }
+
+        } catch (Exception e) {
+            Log.e("Path Error", e.toString());
+        }
+        return mAverageSpeed;
+    }
+
+
+    private void saveItem(int runId, String currentTime, double currentLatitude, double currentLongitude,
+                          double currentAltitude, double currentSpeed, double currentMaxSpeed,
+                          double currentMaxAlt, double currentMinAlt) throws IOException {
+
+        ContentValues values = new ContentValues();
+        values.put(COLUMN_RUN_ID, runId);
+        values.put(COLUMN_TIME, currentTime);
+        values.put(COLUMN_LATITUDE, currentLatitude);
+        values.put(COLUMN_LONGITUDE, currentLongitude);
+        values.put(COLUMN_ALTITUDE, currentAltitude);
+        values.put(COLUMN_SPEED, currentSpeed);
+        values.put(COLUMN_MAX_SPEED, currentMaxSpeed);
+        values.put(COLUMN_MAX_ALT, currentMaxAlt);
+        values.put(COLUMN_MIN_ALT, currentMinAlt);
+
+
+        // This is a NEW item, so insert a new item into the provider,
+        // returning the content URI for the item item.
+        getActivity().getContentResolver().insert(CONTENT_URI, values);
+
+    }
     /**
      * Removes location updates from the FusedLocationApi.
      */

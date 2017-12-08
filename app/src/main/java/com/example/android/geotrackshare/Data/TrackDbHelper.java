@@ -13,7 +13,7 @@ public class TrackDbHelper extends SQLiteOpenHelper {
 
     public static final String DATABASE_NAME = "geotrackshare.db";
 
-    private static final int DATABASE_VERSION = 1;
+    private static final int DATABASE_VERSION = 5;
 
     public TrackDbHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
@@ -31,7 +31,10 @@ public class TrackDbHelper extends SQLiteOpenHelper {
                         TrackContract.TrackingEntry.COLUMN_LATITUDE + " REAL NOT NULL, " +
                         TrackContract.TrackingEntry.COLUMN_LONGITUDE + " REAL NOT NULL, " +
                         TrackContract.TrackingEntry.COLUMN_ALTITUDE + " REAL NOT NULL, " +
-                        TrackContract.TrackingEntry.COLUMN_SPEED + " REAL NOT NULL);";
+                        TrackContract.TrackingEntry.COLUMN_SPEED + " REAL NOT NULL, " +
+                        TrackContract.TrackingEntry.COLUMN_MAX_SPEED + " REAL NOT NULL, " +
+                        TrackContract.TrackingEntry.COLUMN_MAX_ALT + " REAL NOT NULL, " +
+                        TrackContract.TrackingEntry.COLUMN_MIN_ALT + " REAL NOT NULL);";
 
         db.execSQL(SQL_CREATE_TRACKING_TABLE);
     }

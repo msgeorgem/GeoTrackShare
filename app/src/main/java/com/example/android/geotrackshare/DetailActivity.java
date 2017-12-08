@@ -58,6 +58,7 @@ public class DetailActivity extends AppCompatActivity {
     private String runId;
     private Uri mCurrentItemUri;
     private ActivityDetailBinding mDetailBinding;
+    private Cursor cur;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -128,7 +129,7 @@ public class DetailActivity extends AppCompatActivity {
     }
 
     private boolean checkIfInFavorites() {
-        Cursor cur = getContentResolver().query(CONTENT_URI, PROJECTION, null, null, null);
+        cur = getContentResolver().query(CONTENT_URI, null, null, null, null);
 
         ArrayList<String> favsTempList = new ArrayList<>();
         boolean favourite;
