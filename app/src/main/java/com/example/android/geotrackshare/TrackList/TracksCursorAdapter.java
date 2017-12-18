@@ -55,23 +55,23 @@ public class TracksCursorAdapter extends CursorRecyclerAdapter<TracksCursorAdapt
         int maxAltColumnIndex = cursor.getColumnIndex(TrackContract.TrackingEntry.COLUMN_MAX_ALT);
         int minAltColumnIndex = cursor.getColumnIndex(TrackContract.TrackingEntry.COLUMN_MIN_ALT);
         int maxSpeedColumnIndex = cursor.getColumnIndex(TrackContract.TrackingEntry.COLUMN_MAX_SPEED);
-
+//        TODO (2) fix presenting issue
         // Read the item attributes from the Cursor for the current item
         final String itemTitle = cursor.getString(runColumnIndex);
         String itemTime = cursor.getString(timeColumnIndex);
         String itemSpeed = cursor.getString(speedColumnIndex);
         String itemAltitude = cursor.getString(altColumnIndex);
-        String itemMaxAlt = cursor.getString(maxAltColumnIndex);
-        String itemMinAlt = cursor.getString(minAltColumnIndex);
-        String itemMaxSpeed = cursor.getString(maxSpeedColumnIndex);
+//        String itemMaxAlt = cursor.getString(maxAltColumnIndex);
+//        String itemMinAlt = cursor.getString(minAltColumnIndex);
+//        String itemMaxSpeed = cursor.getString(maxSpeedColumnIndex);
 
         viewHolder.runIdTextView.setText(itemTitle);
         viewHolder.timeStartTextView.setText(itemTime);
         viewHolder.speedTextView.setText(itemSpeed);
         viewHolder.altitude.setText(itemAltitude);
-        viewHolder.maxAltitude.setText(itemMaxAlt);
-        viewHolder.minAltitude.setText(itemMinAlt);
-        viewHolder.maxSpeedTextView.setText(itemMaxSpeed);
+//        viewHolder.maxAltitude.setText(itemMaxAlt);
+//        viewHolder.minAltitude.setText(itemMinAlt);
+//        viewHolder.maxSpeedTextView.setText(itemMaxSpeed);
 
 
         viewHolder.itemView.setTag(id);

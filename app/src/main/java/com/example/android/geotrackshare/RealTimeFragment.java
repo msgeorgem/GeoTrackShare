@@ -44,10 +44,13 @@ import com.google.android.gms.tasks.Task;
 
 import java.io.IOException;
 import java.text.DateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.Locale;
+import java.util.concurrent.TimeUnit;
 
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_ALTITUDE;
+import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_AVR_SPEED;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_LATITUDE;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_LONGITUDE;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_MAX_ALT;
@@ -56,6 +59,7 @@ import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_RUN_ID;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_SPEED;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_TIME;
+import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_TIME_COUNTER;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.CONTENT_URI;
 
 
@@ -97,37 +101,32 @@ public class RealTimeFragment extends Fragment {
     private final static String KEY_SPEED = "speed";
     private final static String KEY_LAST_UPDATED_TIME_STRING = "last-updated-time-string";
     private static int DISPLACEMENT = 10; // 10 meters
+    long startTime;
     /**
      * Provides access to the Fused Location Provider API.
      */
     private FusedLocationProviderClient mFusedLocationClient;
-
     /**
      * Provides access to the Location Settings API.
      */
     private SettingsClient mSettingsClient;
-
     /**
      * Stores parameters for requests to the FusedLocationProviderApi.
      */
     private LocationRequest mLocationRequest;
-
     /**
      * Stores the types of location services the client is interested in using. Used for checking
      * settings to determine if the device has optimal location settings.
      */
     private LocationSettingsRequest mLocationSettingsRequest;
-
     /**
      * Callback for Location events.
      */
     private LocationCallback mLocationCallback;
-
     /**
      * Represents a geographical location.
      */
     private Location mCurrentLocation;
-
     // UI Widgets.
     private Button mStartUpdatesButton;
     private Button mStopUpdatesButton;
@@ -140,12 +139,9 @@ public class RealTimeFragment extends Fragment {
     private TextView mAvgSpeedTextView;
     private TextView mMinAltitudeTextView;
     private TextView mMaxAltitudeTextView;
-    private TextView mTotalTimeTextView;
+    private TextView mElapsedTimeTextView;
     private TextView mTotalDistanceTextView;
-
-
     private View mLocation;
-
     // Labels.
     private String mLatitudeLabel;
     private String mLongitudeLabel;
@@ -156,17 +152,12 @@ public class RealTimeFragment extends Fragment {
     private String mAvgSpeedLabel;
     private String mMinAltitudeLabel;
     private String mMaxAltitudeLabel;
-    private String mTotalTimeLabel;
+    private String mElapsedTimeLabel;
     private String mTotalDistanceLabel;
-
     private int mMaxId, mCurrentId;
-
     private double mCurrentLatitude, mCurrentLongitude, mCurrentAltitude, mCurrentSpeed, mMaxSpeed,
             mAverageSpeed, mMaxAltitude, mMinAltitude, mTotalTime, mTotalDistance;
-
     private Cursor cur;
-
-
     /**
      * Tracks the status of the location updates request. Value changes when the user presses the
      * Start Updates and Stop Updates buttons.
@@ -176,7 +167,7 @@ public class RealTimeFragment extends Fragment {
     /**
      * Time when the location was updated represented as a String.
      */
-    private String mLastUpdateTime, mNewTime;
+    private String mLastUpdateTime, mElapsedTime;
 
 
 
@@ -205,7 +196,7 @@ public class RealTimeFragment extends Fragment {
         mAvgSpeedTextView = v.findViewById(R.id.avg_speed);
         mMinAltitudeTextView = v.findViewById(R.id.min_alt);
         mMaxAltitudeTextView = v.findViewById(R.id.max_alt);
-        mTotalTimeTextView = v.findViewById(R.id.total_time);
+        mElapsedTimeTextView = v.findViewById(R.id.total_time);
         mTotalDistanceTextView = v.findViewById(R.id.total_distance);
 
 
@@ -220,11 +211,12 @@ public class RealTimeFragment extends Fragment {
         mAvgSpeedLabel = "Average Speed";
         mMinAltitudeLabel = "Minimum Altitude";
         mMaxAltitudeLabel = "Maximum Altitude";
-        mTotalTimeLabel = "Total time";
+        mElapsedTimeLabel = "Elapsed Time";
         mTotalDistanceLabel = "Total distance";
 
         mRequestingLocationUpdates = false;
         mLastUpdateTime = "";
+        mElapsedTime = "";
 
 
         // Update values using data stored in the Bundle.
@@ -255,6 +247,7 @@ public class RealTimeFragment extends Fragment {
             public void onClick(View view) {
                 startUpdatesButtonHandler();
                 mCurrentId = queryMaxId() + 1;
+                startTime = System.currentTimeMillis();
             }
         });
 
@@ -264,7 +257,6 @@ public class RealTimeFragment extends Fragment {
                 stopUpdatesButtonHandler();
             }
         });
-
 
         return v;
     }
@@ -357,6 +349,23 @@ public class RealTimeFragment extends Fragment {
             }
         };
     }
+
+    @SuppressLint("DefaultLocale")
+    private void getElapsedTime() {
+
+        // Get elapsed time in milliseconds
+        long elapsedTimeMillis = System.currentTimeMillis() - startTime;
+
+        mElapsedTime = String.format("%02d:%02d:%02d", TimeUnit.MILLISECONDS.toHours(elapsedTimeMillis),
+                TimeUnit.MILLISECONDS.toMinutes(elapsedTimeMillis) % TimeUnit.HOURS.toMinutes(1),
+                TimeUnit.MILLISECONDS.toSeconds(elapsedTimeMillis) % TimeUnit.MINUTES.toSeconds(1));
+
+        mElapsedTimeTextView.setText(String.format(Locale.ENGLISH, "%s: %s",
+                mElapsedTimeLabel, mElapsedTime));
+    }
+
+
+
 
     /**
      * Uses a {@link com.google.android.gms.location.LocationSettingsRequest.Builder} to build
@@ -501,8 +510,8 @@ public class RealTimeFragment extends Fragment {
             mLastUpdateTimeTextView.setText(String.format(Locale.ENGLISH, "%s: %s",
                     mLastUpdateTimeLabel, mLastUpdateTime));
 
-//            mAvgSpeedTextView.setText(String.format(Locale.ENGLISH, "%s: %f",
-//                    mAvgSpeedLabel, queryAverageSpeed(mCurrentId)));
+            mAvgSpeedTextView.setText(String.format(Locale.ENGLISH, "%s: %f",
+                    mAvgSpeedLabel, calculateAverageSpeed(mCurrentId)));
             mMaxSpeedTextView.setText(String.format(Locale.ENGLISH, "%s: %f",
                     mMaxSpeedLabel, queryMaxSpeed(mCurrentId)));
             mMaxAltitudeTextView.setText(String.format(Locale.ENGLISH, "%s: %f",
@@ -522,12 +531,18 @@ public class RealTimeFragment extends Fragment {
             mMaxSpeed = queryMaxSpeed(mCurrentId);
             mMaxAltitude = queryMaxAlt(mCurrentId);
             mMinAltitude = queryMinAlt(mCurrentId);
+            mAverageSpeed = calculateAverageSpeed(mCurrentId);
 
             mLastUpdateTime = DateFormat.getTimeInstance().format(new Date());
+            getElapsedTime();
+
+//            TODO (1) add elapsed time to database
+//            mElapsedTime = getElapsedTime();
 
             try {
                 saveItem(mCurrentId, mLastUpdateTime, mCurrentLatitude, mCurrentLongitude,
-                        mCurrentAltitude, mCurrentSpeed, mMaxSpeed, mMaxAltitude, mMinAltitude);
+                        mCurrentAltitude, mMaxAltitude, mMinAltitude, mCurrentSpeed, mMaxSpeed,
+                        mAverageSpeed, mElapsedTime);
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -564,6 +579,8 @@ public class RealTimeFragment extends Fragment {
         String mSelectionClause = TrackContract.TrackingEntry.COLUMN_RUN_ID;
         String SELECTION = mSelectionClause + " = '" + specificID + "'";
         String ORDER = " " + COLUMN_SPEED + " DESC LIMIT 1";
+//        String[] PROJECTION = {TrackContract.TrackingEntry.COLUMN_SPEED};
+
         try {
             cur = getActivity().getContentResolver()
                     .query(TrackContract.TrackingEntry.CONTENT_URI, null, SELECTION, null, ORDER);
@@ -591,6 +608,8 @@ public class RealTimeFragment extends Fragment {
         String mSelectionClause = TrackContract.TrackingEntry.COLUMN_RUN_ID;
         String SELECTION = mSelectionClause + " = '" + specificID + "'";
         String ORDER = " " + COLUMN_ALTITUDE + " DESC LIMIT 1";
+//        String[] PROJECTION = {TrackContract.TrackingEntry.COLUMN_ALTITUDE};
+
         try {
             cur = getActivity().getContentResolver()
                     .query(TrackContract.TrackingEntry.CONTENT_URI, null, SELECTION, null, ORDER);
@@ -617,6 +636,8 @@ public class RealTimeFragment extends Fragment {
         String mSelectionClause = TrackContract.TrackingEntry.COLUMN_RUN_ID;
         String SELECTION = mSelectionClause + " = '" + specificID + "'";
         String ORDER = " " + COLUMN_ALTITUDE + " ASC LIMIT 1";
+//        String[] PROJECTION = {TrackContract.TrackingEntry.COLUMN_ALTITUDE};
+
         try {
             cur = getActivity().getContentResolver()
                     .query(TrackContract.TrackingEntry.CONTENT_URI, null, SELECTION, null, ORDER);
@@ -638,21 +659,30 @@ public class RealTimeFragment extends Fragment {
         return mMinAltitude;
     }
 
-    private double queryAverageSpeed(int id) {
+    private double calculateAverageSpeed(int id) {
+        int sum = 0;
+        int averageSpeed = 0;
         String specificID = String.valueOf(id);
         String mSelectionClause = TrackContract.TrackingEntry.COLUMN_RUN_ID;
         String SELECTION = mSelectionClause + " = '" + specificID + "'";
+        String[] PROJECTION = {TrackContract.TrackingEntry.COLUMN_SPEED};
         try {
             cur = getActivity().getContentResolver()
-                    .query(TrackContract.TrackingEntry.CONTENT_URI, null, SELECTION, null, null);
+                    .query(TrackContract.TrackingEntry.CONTENT_URI, PROJECTION, SELECTION, null, null);
 
+            ArrayList<Double> speedTempList = new ArrayList<>();
             if (cur != null && cur.moveToFirst()) {
-                do {
-                    int idColumnIndex = cur.getColumnIndex(COLUMN_SPEED);
-                    mAverageSpeed = cur.getInt(idColumnIndex);
-
-                } while (cur.moveToNext());
+                while (cur.moveToNext()) {
+                    Double i = cur.getDouble(cur.getColumnIndex(COLUMN_SPEED));
+                    speedTempList.add(i);
+                }
             }
+
+            for (int i = 0; i < speedTempList.size(); i++) {
+                sum += i;
+                averageSpeed = sum / speedTempList.size();
+            }
+
             if (cur != null) {
                 cur.close();
             }
@@ -660,13 +690,14 @@ public class RealTimeFragment extends Fragment {
         } catch (Exception e) {
             Log.e("Path Error", e.toString());
         }
-        return mAverageSpeed;
+        return averageSpeed;
     }
 
 
     private void saveItem(int runId, String currentTime, double currentLatitude, double currentLongitude,
-                          double currentAltitude, double currentSpeed, double currentMaxSpeed,
-                          double currentMaxAlt, double currentMinAlt) throws IOException {
+                          double currentAltitude, double currentMaxAlt, double currentMinAlt,
+                          double currentSpeed, double currentMaxSpeed, double currentAvrSpeed,
+                          String currentElapsedTime) throws IOException {
 
         ContentValues values = new ContentValues();
         values.put(COLUMN_RUN_ID, runId);
@@ -674,11 +705,12 @@ public class RealTimeFragment extends Fragment {
         values.put(COLUMN_LATITUDE, currentLatitude);
         values.put(COLUMN_LONGITUDE, currentLongitude);
         values.put(COLUMN_ALTITUDE, currentAltitude);
-        values.put(COLUMN_SPEED, currentSpeed);
-        values.put(COLUMN_MAX_SPEED, currentMaxSpeed);
         values.put(COLUMN_MAX_ALT, currentMaxAlt);
         values.put(COLUMN_MIN_ALT, currentMinAlt);
-
+        values.put(COLUMN_SPEED, currentSpeed);
+        values.put(COLUMN_MAX_SPEED, currentMaxSpeed);
+        values.put(COLUMN_AVR_SPEED, currentAvrSpeed);
+        values.put(COLUMN_TIME_COUNTER, currentElapsedTime);
 
         // This is a NEW item, so insert a new item into the provider,
         // returning the content URI for the item item.

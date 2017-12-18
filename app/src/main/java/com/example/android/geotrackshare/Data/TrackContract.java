@@ -27,11 +27,15 @@ public class TrackContract {
         public static final String COLUMN_TIME = "time";
         public static final String COLUMN_LATITUDE = "latitude";
         public static final String COLUMN_LONGITUDE = "longitude";
-        public static final String COLUMN_SPEED = "speed";
         public static final String COLUMN_ALTITUDE = "altitude";
         public static final String COLUMN_MAX_ALT = "max_alt";
         public static final String COLUMN_MIN_ALT = "min_alt";
+        public static final String COLUMN_SPEED = "speed";
         public static final String COLUMN_MAX_SPEED = "max_speed";
+        public static final String COLUMN_AVR_SPEED = "avr_speed";
+        public static final String COLUMN_TIME_COUNTER = "count_timer";
+
+
         /**
          * The MIME type of the {@link #CONTENT_URI} for a list of items.
          */
