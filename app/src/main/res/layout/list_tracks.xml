@@ -55,6 +55,22 @@
             android:text="type"
             android:textSize="16sp" />
 
+        <TextView
+            android:id="@+id/current_total_time"
+            android:layout_width="match_parent"
+            android:layout_height="20dp"
+            android:layout_weight="0.5"
+            android:text="type"
+            android:textSize="16sp" />
+
+        <TextView
+            android:id="@+id/current_total_distance"
+            android:layout_width="match_parent"
+            android:layout_height="20dp"
+            android:layout_weight="0.5"
+            android:text="type"
+            android:textSize="16sp" />
+
     </LinearLayout>
 
     <ToggleButton

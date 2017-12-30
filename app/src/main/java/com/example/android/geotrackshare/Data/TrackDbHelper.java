@@ -13,7 +13,7 @@ public class TrackDbHelper extends SQLiteOpenHelper {
 
     public static final String DATABASE_NAME = "geotrackshare.db";
 
-    private static final int DATABASE_VERSION = 3;
+    private static final int DATABASE_VERSION = 4;
 
     public TrackDbHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);

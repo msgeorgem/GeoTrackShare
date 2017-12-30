@@ -51,15 +51,21 @@ public class TracksCursorAdapter extends CursorRecyclerAdapter<TracksCursorAdapt
         int timeColumnIndex = cursor.getColumnIndex(TrackContract.TrackingEntry.COLUMN_TIME);
         int speedColumnIndex = cursor.getColumnIndex(TrackContract.TrackingEntry.COLUMN_SPEED);
         int altColumnIndex = cursor.getColumnIndex(TrackContract.TrackingEntry.COLUMN_ALTITUDE);
+        int timeCountColumnIndex = cursor.getColumnIndex(TrackContract.TrackingEntry.COLUMN_TIME_COUNTER);
+        int distColumnIndex = cursor.getColumnIndex(TrackContract.TrackingEntry.COLUMN_TOTAL_DISTANCE);
+
         int maxAltColumnIndex = cursor.getColumnIndex(TrackContract.TrackingEntry.COLUMN_MAX_ALT);
         int minAltColumnIndex = cursor.getColumnIndex(TrackContract.TrackingEntry.COLUMN_MIN_ALT);
         int maxSpeedColumnIndex = cursor.getColumnIndex(TrackContract.TrackingEntry.COLUMN_MAX_SPEED);
-//        TODO (2) fix presenting issue
+
         // Read the item attributes from the Cursor for the current item
         final String itemTitle = cursor.getString(runColumnIndex);
         String itemTime = cursor.getString(timeColumnIndex);
         String itemSpeed = cursor.getString(speedColumnIndex);
         String itemAltitude = cursor.getString(altColumnIndex);
+        String itemTimeCount = cursor.getString(timeCountColumnIndex);
+        String itemDistance = String.valueOf(cursor.getDouble(distColumnIndex));
+
 //        String itemMaxAlt = cursor.getString(maxAltColumnIndex);
 //        String itemMinAlt = cursor.getString(minAltColumnIndex);
 //        String itemMaxSpeed = cursor.getString(maxSpeedColumnIndex);
@@ -68,6 +74,9 @@ public class TracksCursorAdapter extends CursorRecyclerAdapter<TracksCursorAdapt
         viewHolder.timeTextView.setText(itemTime);
         viewHolder.speedTextView.setText(itemSpeed);
         viewHolder.altitude.setText(itemAltitude);
+        viewHolder.timeCounter.setText(itemTimeCount);
+        viewHolder.totalDistance.setText(itemDistance);
+
 //        viewHolder.maxAltitude.setText(itemMaxAlt);
 //        viewHolder.minAltitude.setText(itemMinAlt);
 //        viewHolder.maxSpeedTextView.setText(itemMaxSpeed);
@@ -124,6 +133,9 @@ public class TracksCursorAdapter extends CursorRecyclerAdapter<TracksCursorAdapt
         public TextView altitude;
         public TextView minAltitude;
         public TextView maxAltitude;
+        public TextView timeCounter;
+        public TextView totalDistance;
+
 
 
         public ToggleButton favToggle;
@@ -137,6 +149,8 @@ public class TracksCursorAdapter extends CursorRecyclerAdapter<TracksCursorAdapt
             altitude = view.findViewById(R.id.altitude);
             minAltitude = view.findViewById(R.id.min_alt);
             maxAltitude = view.findViewById(R.id.max_alt);
+            timeCounter = view.findViewById(R.id.current_total_time);
+            totalDistance = view.findViewById(R.id.current_total_distance);
             favToggle = view.findViewById(R.id.favListToggleButton);
         }
     }

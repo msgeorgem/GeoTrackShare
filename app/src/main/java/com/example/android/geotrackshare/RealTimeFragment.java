@@ -91,20 +91,20 @@ public class RealTimeFragment extends Fragment {
     /**
      * The desired interval for location updates. Inexact. Updates may be more or less frequent.
      */
-    private static final long UPDATE_INTERVAL_IN_MILLISECONDS = 10000; // 10 sec
+    private static final long UPDATE_INTERVAL_IN_MILLISECONDS = 5000; // 10 sec
     /**
      * The fastest rate for active location updates. Exact. Updates will never be more frequent
      * than this value.
      */
     private static final long FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS =
-            UPDATE_INTERVAL_IN_MILLISECONDS / 2;
+            UPDATE_INTERVAL_IN_MILLISECONDS / 5;
     // Keys for storing activity state in the Bundle.
     private final static String KEY_REQUESTING_LOCATION_UPDATES = "requesting-location-updates";
     private final static String KEY_LOCATION = "location";
     private final static String KEY_ALTITUDE = "altitude";
     private final static String KEY_SPEED = "speed";
     private final static String KEY_LAST_UPDATED_TIME_STRING = "last-updated-time-string";
-    private static int DISPLACEMENT = 10; // 10 meters
+    private static int DISPLACEMENT = 5; // 10 meters
     long startTime;
     /**
      * Provides access to the Fused Location Provider API.
@@ -216,7 +216,7 @@ public class RealTimeFragment extends Fragment {
         mSpeedLabel = getResources().getString(R.string.speed_label);
         mLastUpdateTimeLabel = getResources().getString(R.string.last_update_time_label);
         mMaxSpeedLabel = "Max Speed";
-        mAvgSpeedLabel = "Average Speed";
+        mAvgSpeedLabel = "Avg Speed";
         mMinAltitudeLabel = "Minimum Altitude";
         mMaxAltitudeLabel = "Maximum Altitude";
         mElapsedTimeLabel = "Elapsed Time";
@@ -346,7 +346,7 @@ public class RealTimeFragment extends Fragment {
         mLocationRequest.setFastestInterval(FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS);
 
         mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-        //mLocationRequest.setSmallestDisplacement(DISPLACEMENT);
+//        mLocationRequest.setSmallestDisplacement(DISPLACEMENT);
     }
 
     /**
@@ -431,7 +431,7 @@ public class RealTimeFragment extends Fragment {
         // It is a good practice to remove location requests when the activity is in a paused or
         // stopped state. Doing so helps battery performance and is especially
         // recommended in applications that request frequent location updates.
-        stopLocationUpdates();
+//        stopLocationUpdates();
     }
 
     /**
@@ -595,19 +595,23 @@ public class RealTimeFragment extends Fragment {
 
     private double calculateDistance(int id) {
 
+
         mPreviousLatitude = queryPreviousLocation(id)[0];
         mPreviousLongitude = queryPreviousLocation(id)[1];
         mCurrentLatitude = mCurrentLocation.getLatitude();
         mCurrentLongitude = mCurrentLocation.getLongitude();
 
-        mDistance = DistanceCalculator.greatCircleInKilometers(mPreviousLatitude,
-                mPreviousLongitude, mCurrentLatitude, mCurrentLongitude);
-        Log.i("Print PreviousLatitude", String.valueOf(mPreviousLatitude));
-        Log.i("Print PreviousLongitude", String.valueOf(mPreviousLongitude));
-        Log.i("Print CurrentLatitude", String.valueOf(mCurrentLatitude));
-        Log.i("Print CurrentLongitude", String.valueOf(mCurrentLongitude));
-        Log.i("Print Distance", String.valueOf(mDistance));
-
+        if (mPreviousLatitude != 0.0 && mPreviousLongitude != 0.0) {
+            mDistance = DistanceCalculator.greatCircleInKilometers(mPreviousLatitude,
+                    mPreviousLongitude, mCurrentLatitude, mCurrentLongitude);
+            Log.i("Print PreviousLatitude", String.valueOf(mPreviousLatitude));
+            Log.i("Print PreviousLongitude", String.valueOf(mPreviousLongitude));
+            Log.i("Print CurrentLatitude", String.valueOf(mCurrentLatitude));
+            Log.i("Print CurrentLongitude", String.valueOf(mCurrentLongitude));
+            Log.i("Print Distance", String.valueOf(mDistance));
+        } else {
+            mDistance = 0.0;
+        }
         return mDistance;
     }
 

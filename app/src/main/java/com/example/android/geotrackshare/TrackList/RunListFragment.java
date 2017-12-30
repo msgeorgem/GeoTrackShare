@@ -35,6 +35,8 @@ import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_RUN_ID;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_SPEED;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_TIME;
+import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_TIME_COUNTER;
+import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_TOTAL_DISTANCE;
 
 
 /**
@@ -59,7 +61,9 @@ public class RunListFragment extends Fragment implements LoaderManager.LoaderCal
             COLUMN_LATITUDE,
             COLUMN_LONGITUDE,
             COLUMN_ALTITUDE,
-            COLUMN_SPEED
+            COLUMN_SPEED,
+            COLUMN_TIME_COUNTER,
+            COLUMN_TOTAL_DISTANCE
     };
     private static final String[] PROJECTION = {
             TrackContract.TrackingEntry._ID,
