@@ -18,13 +18,6 @@
         android:baselineAligned="false"
         android:orientation="horizontal">
 
-        <ImageView
-            android:id="@+id/locate_on_map"
-            android:layout_width="60dp"
-            android:layout_height="60dp"
-            android:layout_marginTop="60dp"
-            android:src="@drawable/location_mark02" />
-
         <Button
             android:id="@+id/start_updates_button"
             android:layout_width="0dp"
@@ -45,6 +38,47 @@
             android:enabled="false"
             android:gravity="center"
             android:text="@string/stop_updates" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:baselineAligned="false"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/run_number"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginLeft="@dimen/small_margin"
+            android:layout_marginStart="@dimen/small_margin"
+            android:textSize="@dimen/default_text_size" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:baselineAligned="false"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:layout_marginLeft="@dimen/small_margin"
+            android:layout_marginStart="@dimen/small_margin"
+            android:text="@string/find_me_on_map"
+            android:textSize="@dimen/default_text_size" />
+
+        <ImageView
+            android:id="@+id/locate_on_map"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:src="@drawable/location_mark02" />
+
     </LinearLayout>
 
     <TextView
@@ -80,14 +114,6 @@
         android:textSize="@dimen/default_text_size" />
 
     <TextView
-        android:id="@+id/last_update_time_text"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginLeft="@dimen/small_margin"
-        android:layout_marginStart="@dimen/small_margin"
-        android:textSize="@dimen/default_text_size" />
-
-    <TextView
         android:id="@+id/max_speed"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -113,6 +139,22 @@
 
     <TextView
         android:id="@+id/max_alt"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="@dimen/small_margin"
+        android:layout_marginStart="@dimen/small_margin"
+        android:textSize="@dimen/default_text_size" />
+
+    <TextView
+        android:id="@+id/distance"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="@dimen/small_margin"
+        android:layout_marginStart="@dimen/small_margin"
+        android:textSize="@dimen/default_text_size" />
+
+    <TextView
+        android:id="@+id/last_update_time_text"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginLeft="@dimen/small_margin"

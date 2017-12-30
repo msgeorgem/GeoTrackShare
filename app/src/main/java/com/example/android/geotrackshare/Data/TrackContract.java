@@ -34,6 +34,8 @@ public class TrackContract {
         public static final String COLUMN_MAX_SPEED = "max_speed";
         public static final String COLUMN_AVR_SPEED = "avr_speed";
         public static final String COLUMN_TIME_COUNTER = "count_timer";
+        public static final String COLUMN_DISTANCE = "distance";
+        public static final String COLUMN_TOTAL_DISTANCE = "total_distance";
 
 
         /**

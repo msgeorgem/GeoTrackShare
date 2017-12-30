@@ -8,7 +8,7 @@
     <string name="btn_stop_location_updates">STOP LOCATION UPDATES</string>
     <string name="location_permissions_granted_message">Location Permissions Granted</string>
     <string name="need_location_permission_message">You need to enable location permissions first</string>
-
+    <string name="find_me_on_map">Find me on Google Maps</string>
 
     <string name="latitude_label">Latitude</string>
     <string name="longitude_label">Longitude</string>

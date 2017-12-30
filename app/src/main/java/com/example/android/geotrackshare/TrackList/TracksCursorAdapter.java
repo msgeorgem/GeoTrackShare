@@ -37,7 +37,6 @@ public class TracksCursorAdapter extends CursorRecyclerAdapter<TracksCursorAdapt
         ViewHolder vh = new ViewHolder(itemView);
         return vh;
 
-
     }
 
     @Override
@@ -66,7 +65,7 @@ public class TracksCursorAdapter extends CursorRecyclerAdapter<TracksCursorAdapt
 //        String itemMaxSpeed = cursor.getString(maxSpeedColumnIndex);
 
         viewHolder.runIdTextView.setText(itemTitle);
-        viewHolder.timeStartTextView.setText(itemTime);
+        viewHolder.timeTextView.setText(itemTime);
         viewHolder.speedTextView.setText(itemSpeed);
         viewHolder.altitude.setText(itemAltitude);
 //        viewHolder.maxAltitude.setText(itemMaxAlt);
@@ -119,7 +118,7 @@ public class TracksCursorAdapter extends CursorRecyclerAdapter<TracksCursorAdapt
     public static class ViewHolder extends RecyclerView.ViewHolder {
 
         public TextView runIdTextView;
-        public TextView timeStartTextView;
+        public TextView timeTextView;
         public TextView speedTextView;
         public TextView maxSpeedTextView;
         public TextView altitude;
@@ -132,7 +131,7 @@ public class TracksCursorAdapter extends CursorRecyclerAdapter<TracksCursorAdapt
         public ViewHolder(View view) {
             super(view);
             runIdTextView = view.findViewById(R.id.run_id);
-            timeStartTextView = view.findViewById(R.id.start_time);
+            timeTextView = view.findViewById(R.id.start_time);
             speedTextView = view.findViewById(R.id.speed);
             maxSpeedTextView = view.findViewById(R.id.max_speed);
             altitude = view.findViewById(R.id.altitude);

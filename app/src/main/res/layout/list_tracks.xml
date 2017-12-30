@@ -48,31 +48,7 @@
             android:textSize="16sp" />
 
         <TextView
-            android:id="@+id/max_speed"
-            android:layout_width="match_parent"
-            android:layout_height="20dp"
-            android:layout_weight="0.5"
-            android:text="type"
-            android:textSize="16sp" />
-
-        <TextView
             android:id="@+id/altitude"
-            android:layout_width="match_parent"
-            android:layout_height="20dp"
-            android:layout_weight="0.5"
-            android:text="type"
-            android:textSize="16sp" />
-
-        <TextView
-            android:id="@+id/min_alt"
-            android:layout_width="match_parent"
-            android:layout_height="20dp"
-            android:layout_weight="0.5"
-            android:text="type"
-            android:textSize="16sp" />
-
-        <TextView
-            android:id="@+id/max_alt"
             android:layout_width="match_parent"
             android:layout_height="20dp"
             android:layout_weight="0.5"
