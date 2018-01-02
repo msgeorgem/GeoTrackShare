@@ -104,8 +104,9 @@ public class RealTimeFragment extends Fragment {
     private final static String KEY_LOCATION = "location";
     private final static String KEY_ALTITUDE = "altitude";
     private final static String KEY_SPEED = "speed";
-    private final static String KEY_LAST_UPDATED_TIME_STRING = "last-updated-time-string";
-    private final static String KEY_LAST_UPDATED_ETIME_STRING = "last-updated-elapsedtime-string";
+    private final static String KEY_LAST_UPDATED_TIME = "last-updated-time-string";
+    private final static String KEY_LAST_UPDATED_ETIME = "last-updated-elapsedtime-string";
+    private final static String KEY_LAST_UPDATED_TDISTANCE = "last-updated-total-distance";
     private static int DISPLACEMENT = 5; // 10 meters
     long startTime;
     /**
@@ -313,8 +314,17 @@ public class RealTimeFragment extends Fragment {
             }
 
             // Update the value of mLastUpdateTime from the Bundle and update the UI.
-            if (savedInstanceState.keySet().contains(KEY_LAST_UPDATED_TIME_STRING)) {
-                mLastUpdateTime = savedInstanceState.getString(KEY_LAST_UPDATED_TIME_STRING);
+            if (savedInstanceState.keySet().contains(KEY_LAST_UPDATED_TIME)) {
+                mLastUpdateTime = savedInstanceState.getString(KEY_LAST_UPDATED_TIME);
+            }
+            // Update the value of mElapsedTime from the Bundle and update the UI.
+            if (savedInstanceState.keySet().contains(KEY_LAST_UPDATED_ETIME)) {
+                mElapsedTime = savedInstanceState.getString(KEY_LAST_UPDATED_ETIME);
+            }
+
+            // Update the value of mTotalDistance from the Bundle and update the UI.
+            if (savedInstanceState.keySet().contains(KEY_LAST_UPDATED_TDISTANCE)) {
+                mTotalDistance = savedInstanceState.getDouble(KEY_LAST_UPDATED_TDISTANCE);
             }
             updateUI();
         }
@@ -596,11 +606,11 @@ public class RealTimeFragment extends Fragment {
 
     private double calculateDistance(int id) {
 
-//        mPreviousLatitude = queryPreviousLocation(id)[0];
-//        mPreviousLongitude = queryPreviousLocation(id)[1];
+        mPreviousLatitude = queryPreviousLocation(id)[0];
+        mPreviousLongitude = queryPreviousLocation(id)[1];
 
-        mPreviousLatitude = 34.2000001;
-        mPreviousLongitude = -86.8000002;
+//        mPreviousLatitude = 34.2000001;
+//        mPreviousLongitude = -86.8000002;
 
         mCurrentLatitude = mCurrentLocation.getLatitude();
         mCurrentLongitude = mCurrentLocation.getLongitude();
@@ -879,9 +889,9 @@ public class RealTimeFragment extends Fragment {
         savedInstanceState.putParcelable(KEY_LOCATION, mCurrentLocation);
         savedInstanceState.putParcelable(KEY_ALTITUDE, mCurrentLocation);
         savedInstanceState.putParcelable(KEY_SPEED, mCurrentLocation);
-        savedInstanceState.putString(KEY_LAST_UPDATED_TIME_STRING, mLastUpdateTime);
-        savedInstanceState.putString(KEY_LAST_UPDATED_ETIME_STRING, mElapsedTime);
-
+        savedInstanceState.putString(KEY_LAST_UPDATED_TIME, mLastUpdateTime);
+        savedInstanceState.putString(KEY_LAST_UPDATED_ETIME, mElapsedTime);
+        savedInstanceState.putDouble(KEY_LAST_UPDATED_TDISTANCE, mTotalDistance);
         super.onSaveInstanceState(savedInstanceState);
     }
 
