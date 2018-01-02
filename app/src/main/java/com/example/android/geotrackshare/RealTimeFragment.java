@@ -4,6 +4,7 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.ContentValues;
+import android.content.Context;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.content.pm.PackageManager;
@@ -104,6 +105,7 @@ public class RealTimeFragment extends Fragment {
     private final static String KEY_ALTITUDE = "altitude";
     private final static String KEY_SPEED = "speed";
     private final static String KEY_LAST_UPDATED_TIME_STRING = "last-updated-time-string";
+    private final static String KEY_LAST_UPDATED_ETIME_STRING = "last-updated-elapsedtime-string";
     private static int DISPLACEMENT = 5; // 10 meters
     long startTime;
     /**
@@ -176,16 +178,16 @@ public class RealTimeFragment extends Fragment {
      * Time when the location was updated represented as a String.
      */
     private String mLastUpdateTime, mElapsedTime;
+    private Context mContext;
 
     public RealTimeFragment() {
         // Required empty public constructor
     }
 
-
-
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+        mContext = getActivity();
         // Inflate the layout for this fragment
         View v = inflater.inflate(R.layout.fragment_real_time, container, false);
         // Locate the UI widgets.
@@ -204,8 +206,6 @@ public class RealTimeFragment extends Fragment {
         mMaxAltitudeTextView = v.findViewById(R.id.max_alt);
         mElapsedTimeTextView = v.findViewById(R.id.total_time);
         mTotalDistanceTextView = v.findViewById(R.id.total_distance);
-
-
 
         // Set labels.
         mCurrentRunLabel = "Current Run Number";
@@ -230,14 +230,15 @@ public class RealTimeFragment extends Fragment {
         // Update values using data stored in the Bundle.
         updateValuesFromBundle(savedInstanceState);
 
-        mFusedLocationClient = LocationServices.getFusedLocationProviderClient(getActivity());
-        mSettingsClient = LocationServices.getSettingsClient(getActivity());
+        mFusedLocationClient = LocationServices.getFusedLocationProviderClient(mContext);
+        mSettingsClient = LocationServices.getSettingsClient(mContext);
 
         // Kick off the process of building the LocationCallback, LocationRequest, and
         // LocationSettingsRequest objects.
         createLocationCallback();
         createLocationRequest();
         buildLocationSettingsRequest();
+
 
         mRunNumber.setText(String.format(Locale.ENGLISH, "%s: %s",
                 mLastRunLabel, queryMaxId()));
@@ -431,7 +432,7 @@ public class RealTimeFragment extends Fragment {
         // It is a good practice to remove location requests when the activity is in a paused or
         // stopped state. Doing so helps battery performance and is especially
         // recommended in applications that request frequent location updates.
-//        stopLocationUpdates();
+        stopLocationUpdates();
     }
 
     /**
@@ -441,7 +442,7 @@ public class RealTimeFragment extends Fragment {
     private void startLocationUpdates() {
         // Begin by checking if the device has the necessary location settings.
         mSettingsClient.checkLocationSettings(mLocationSettingsRequest)
-                .addOnSuccessListener(getActivity(), new OnSuccessListener<LocationSettingsResponse>() {
+                .addOnSuccessListener((Activity) mContext, new OnSuccessListener<LocationSettingsResponse>() {
                     @SuppressLint("MissingPermission")
                     @Override
                     public void onSuccess(LocationSettingsResponse locationSettingsResponse) {
@@ -454,7 +455,7 @@ public class RealTimeFragment extends Fragment {
                         updateUI();
                     }
                 })
-                .addOnFailureListener(getActivity(), new OnFailureListener() {
+                .addOnFailureListener((Activity) mContext, new OnFailureListener() {
                     @Override
                     public void onFailure(@NonNull Exception e) {
                         int statusCode = ((ApiException) e).getStatusCode();
@@ -466,7 +467,7 @@ public class RealTimeFragment extends Fragment {
                                     // Show the dialog by calling startResolutionForResult(), and check the
                                     // result in onActivityResult().
                                     ResolvableApiException rae = (ResolvableApiException) e;
-                                    rae.startResolutionForResult(getActivity(), REQUEST_CHECK_SETTINGS);
+                                    rae.startResolutionForResult((Activity) mContext, REQUEST_CHECK_SETTINGS);
                                 } catch (IntentSender.SendIntentException sie) {
                                     Log.i(TAG, "PendingIntent unable to execute request.");
                                 }
@@ -475,7 +476,7 @@ public class RealTimeFragment extends Fragment {
                                 String errorMessage = "Location settings are inadequate, and cannot be " +
                                         "fixed here. Fix in Settings.";
                                 Log.e(TAG, errorMessage);
-                                Toast.makeText(getActivity(), errorMessage, Toast.LENGTH_LONG).show();
+                                Toast.makeText(mContext, errorMessage, Toast.LENGTH_LONG).show();
                                 mRequestingLocationUpdates = false;
                         }
 
@@ -532,7 +533,7 @@ public class RealTimeFragment extends Fragment {
                     mMaxAltitudeLabel, queryMaxAlt(mCurrentId)));
             mMinAltitudeTextView.setText(String.format(Locale.ENGLISH, "%s: %f",
                     mMinAltitudeLabel, queryMinAlt(mCurrentId)));
-            mTotalDistanceTextView.setText(String.format(Locale.ENGLISH, "%s: %f",
+            mTotalDistanceTextView.setText(String.format(Locale.ENGLISH, "%s: %s",
                     mDistanceLabel, calculateTotalDistance(mCurrentId)));
 
             mCurrentLatitude = mCurrentLocation.getLatitude();
@@ -560,13 +561,13 @@ public class RealTimeFragment extends Fragment {
     }
 
     private double calculateTotalDistance(int id) {
-        int totalDistance = 0;
+        double totalDistance = 0;
         String specificID = String.valueOf(id);
         String mSelectionClause = TrackContract.TrackingEntry.COLUMN_RUN_ID;
         String SELECTION = mSelectionClause + " = '" + specificID + "'";
         String[] PROJECTION = {TrackContract.TrackingEntry.COLUMN_DISTANCE};
         try {
-            cur = getActivity().getContentResolver()
+            cur = mContext.getContentResolver()
                     .query(TrackContract.TrackingEntry.CONTENT_URI, PROJECTION, SELECTION, null, null);
 
             ArrayList<Double> distanceTempList = new ArrayList<>();
@@ -595,9 +596,12 @@ public class RealTimeFragment extends Fragment {
 
     private double calculateDistance(int id) {
 
+//        mPreviousLatitude = queryPreviousLocation(id)[0];
+//        mPreviousLongitude = queryPreviousLocation(id)[1];
 
-        mPreviousLatitude = queryPreviousLocation(id)[0];
-        mPreviousLongitude = queryPreviousLocation(id)[1];
+        mPreviousLatitude = 34.2000001;
+        mPreviousLongitude = -86.8000002;
+
         mCurrentLatitude = mCurrentLocation.getLatitude();
         mCurrentLongitude = mCurrentLocation.getLongitude();
 
@@ -620,10 +624,10 @@ public class RealTimeFragment extends Fragment {
         String specificID = String.valueOf(id);
         String mSelectionClause = TrackContract.TrackingEntry.COLUMN_RUN_ID;
         String SELECTION = mSelectionClause + " = '" + specificID + "'";
-        String ORDER = " " + _ID + " DESC LIMIT 1";
+        String ORDER = " " + _ID + " DESC LIMIT 1 OFFSET 2";
 
         try {
-            cur = getActivity().getContentResolver()
+            cur = mContext.getContentResolver()
                     .query(TrackContract.TrackingEntry.CONTENT_URI, null, SELECTION, null, ORDER);
 
             if (cur != null && cur.moveToFirst()) {
@@ -654,7 +658,7 @@ public class RealTimeFragment extends Fragment {
 
         String ORDER = " " + COLUMN_RUN_ID + " DESC LIMIT 1";
         try {
-            cur = getActivity().getContentResolver()
+            cur = mContext.getContentResolver()
                     .query(TrackContract.TrackingEntry.CONTENT_URI, null, null, null, ORDER);
 
             if (cur != null && cur.moveToFirst()) {
@@ -681,7 +685,7 @@ public class RealTimeFragment extends Fragment {
         String ORDER = " " + COLUMN_SPEED + " DESC LIMIT 1";
 
         try {
-            cur = getActivity().getContentResolver()
+            cur = mContext.getContentResolver()
                     .query(TrackContract.TrackingEntry.CONTENT_URI, null, SELECTION, null, ORDER);
 
             if (cur != null && cur.moveToFirst()) {
@@ -709,7 +713,7 @@ public class RealTimeFragment extends Fragment {
         String ORDER = " " + COLUMN_ALTITUDE + " DESC LIMIT 1";
 
         try {
-            cur = getActivity().getContentResolver()
+            cur = mContext.getContentResolver()
                     .query(TrackContract.TrackingEntry.CONTENT_URI, null, SELECTION, null, ORDER);
 
             if (cur != null && cur.moveToFirst()) {
@@ -737,7 +741,7 @@ public class RealTimeFragment extends Fragment {
 //        String[] PROJECTION = {TrackContract.TrackingEntry.COLUMN_ALTITUDE};
 
         try {
-            cur = getActivity().getContentResolver()
+            cur = mContext.getContentResolver()
                     .query(TrackContract.TrackingEntry.CONTENT_URI, null, SELECTION, null, ORDER);
 
             if (cur != null && cur.moveToFirst()) {
@@ -768,7 +772,7 @@ public class RealTimeFragment extends Fragment {
         String SELECTION = mSelectionClause + " = '" + specificID + "'";
         String[] PROJECTION = {TrackContract.TrackingEntry.COLUMN_SPEED};
         try {
-            cur = getActivity().getContentResolver()
+            cur = mContext.getContentResolver()
                     .query(TrackContract.TrackingEntry.CONTENT_URI, PROJECTION, SELECTION, null, null);
 
             ArrayList<Double> speedTempList = new ArrayList<>();
@@ -817,9 +821,10 @@ public class RealTimeFragment extends Fragment {
         values.put(COLUMN_DISTANCE, currentDistance);
         values.put(COLUMN_TOTAL_DISTANCE, currentTotalDistance);
 
+
         // This is a NEW item, so insert a new item into the provider,
         // returning the content URI for the item item.
-        getActivity().getContentResolver().insert(CONTENT_URI, values);
+        mContext.getContentResolver().insert(CONTENT_URI, values);
 
     }
     /**
@@ -835,7 +840,7 @@ public class RealTimeFragment extends Fragment {
         // stopped state. Doing so helps battery performance and is especially
         // recommended in applications that request frequent location updates.
         mFusedLocationClient.removeLocationUpdates(mLocationCallback)
-                .addOnCompleteListener(getActivity(), new OnCompleteListener<Void>() {
+                .addOnCompleteListener((Activity) mContext, new OnCompleteListener<Void>() {
                     @Override
                     public void onComplete(@NonNull Task<Void> task) {
                         mRequestingLocationUpdates = false;
@@ -863,7 +868,7 @@ public class RealTimeFragment extends Fragment {
         super.onPause();
 
         // Remove location updates to save battery.
-        stopLocationUpdates();
+        //stopLocationUpdates();
     }
 
     /**
@@ -875,6 +880,8 @@ public class RealTimeFragment extends Fragment {
         savedInstanceState.putParcelable(KEY_ALTITUDE, mCurrentLocation);
         savedInstanceState.putParcelable(KEY_SPEED, mCurrentLocation);
         savedInstanceState.putString(KEY_LAST_UPDATED_TIME_STRING, mLastUpdateTime);
+        savedInstanceState.putString(KEY_LAST_UPDATED_ETIME_STRING, mElapsedTime);
+
         super.onSaveInstanceState(savedInstanceState);
     }
 
@@ -898,14 +905,14 @@ public class RealTimeFragment extends Fragment {
      * Return the current state of the permissions needed.
      */
     private boolean checkPermissions() {
-        int permissionState = ActivityCompat.checkSelfPermission(getActivity(),
+        int permissionState = ActivityCompat.checkSelfPermission(mContext,
                 Manifest.permission.ACCESS_FINE_LOCATION);
         return permissionState == PackageManager.PERMISSION_GRANTED;
     }
 
     private void requestPermissions() {
         boolean shouldProvideRationale =
-                ActivityCompat.shouldShowRequestPermissionRationale(getActivity(),
+                ActivityCompat.shouldShowRequestPermissionRationale((Activity) mContext,
                         Manifest.permission.ACCESS_FINE_LOCATION);
 
         // Provide an additional rationale to the user. This would happen if the user denied the
@@ -917,7 +924,7 @@ public class RealTimeFragment extends Fragment {
                         @Override
                         public void onClick(View view) {
                             // Request permission
-                            ActivityCompat.requestPermissions(getActivity(),
+                            ActivityCompat.requestPermissions((Activity) mContext,
                                     new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
                                     REQUEST_PERMISSIONS_REQUEST_CODE);
                         }
@@ -927,7 +934,7 @@ public class RealTimeFragment extends Fragment {
             // Request permission. It's possible this can be auto answered if device policy
             // sets the permission in a given state or the user denied the permission
             // previously and checked "Never ask again".
-            ActivityCompat.requestPermissions(getActivity(),
+            ActivityCompat.requestPermissions((Activity) mContext,
                     new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
                     REQUEST_PERMISSIONS_REQUEST_CODE);
         }
