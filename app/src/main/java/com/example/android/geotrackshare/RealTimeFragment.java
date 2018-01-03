@@ -14,10 +14,12 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Looper;
 import android.provider.Settings;
+import android.provider.Settings.Secure;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
+import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -49,6 +51,7 @@ import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Locale;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_ALTITUDE;
@@ -108,7 +111,10 @@ public class RealTimeFragment extends Fragment {
     private final static String KEY_LAST_UPDATED_ETIME = "last-updated-elapsedtime-string";
     private final static String KEY_LAST_UPDATED_TDISTANCE = "last-updated-total-distance";
     private static int DISPLACEMENT = 5; // 10 meters
+    public String tmDevice, tmSerial, androidId, deviceId;
+    public TelephonyManager tm;
     long startTime;
+    UUID deviceUuid;
     /**
      * Provides access to the Fused Location Provider API.
      */
@@ -140,6 +146,9 @@ public class RealTimeFragment extends Fragment {
     private TextView mLastUpdateTimeTextView;
     private TextView mLatitudeTextView;
     private TextView mLongitudeTextView;
+    private TextView mPrevLatitudeTextView;
+    private TextView mPrevLongitudeTextView;
+    private TextView mDevIDTextView;
     private TextView mAltitudeTextView;
     private TextView mSpeedTextView;
     private TextView mMaxSpeedTextView;
@@ -153,6 +162,8 @@ public class RealTimeFragment extends Fragment {
     // Labels.
     private String mLatitudeLabel;
     private String mLongitudeLabel;
+    private String mPrevLatitudeLabel;
+    private String mPrevLongitudeLabel;
     private String mLastUpdateTimeLabel;
     private String mAltitudeLabel;
     private String mSpeedLabel;
@@ -164,17 +175,18 @@ public class RealTimeFragment extends Fragment {
     private String mLastRunLabel;
     private String mCurrentRunLabel;
     private String mDistanceLabel;
+    private String mAndroid_idLabel;
+    private String mAndroid_id;
     private int mMaxId, mCurrentId;
     private double mCurrentLatitude, mCurrentLongitude, mCurrentAltitude, mCurrentSpeed, mMaxSpeed,
             mAverageSpeed, mMaxAltitude, mMinAltitude, mTotalTime, mDistance, mTotalDistance,
-            mPreviousLatitude, mPreviousLongitude;
+            mPreviousLatitude, mPreviousLongitude, mRoundedDistance;
     private Cursor cur;
     /**
      * Tracks the status of the location updates request. Value changes when the user presses the
      * Start Updates and Stop Updates buttons.
      */
     private Boolean mRequestingLocationUpdates;
-
     /**
      * Time when the location was updated represented as a String.
      */
@@ -185,6 +197,7 @@ public class RealTimeFragment extends Fragment {
         // Required empty public constructor
     }
 
+    @SuppressLint("HardwareIds")
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -198,6 +211,11 @@ public class RealTimeFragment extends Fragment {
         mStopUpdatesButton = v.findViewById(R.id.stop_updates_button);
         mLatitudeTextView = v.findViewById(R.id.latitude_text);
         mLongitudeTextView = v.findViewById(R.id.longitude_text);
+
+        mPrevLatitudeTextView = v.findViewById(R.id.prev_latitude_text);
+        mPrevLongitudeTextView = v.findViewById(R.id.prev_longitude_text);
+        mDevIDTextView = v.findViewById(R.id.device_id);
+
         mAltitudeTextView = v.findViewById(R.id.altitude_text);
         mSpeedTextView = v.findViewById(R.id.speed_text);
         mLastUpdateTimeTextView = v.findViewById(R.id.last_update_time_text);
@@ -214,6 +232,8 @@ public class RealTimeFragment extends Fragment {
         mLatitudeLabel = getResources().getString(R.string.latitude_label);
         mLongitudeLabel = getResources().getString(R.string.longitude_label);
         mAltitudeLabel = getResources().getString(R.string.altitude_label);
+        mPrevLatitudeLabel = "Prev Latitude";
+        mPrevLongitudeLabel = "Prev Latitude";
         mSpeedLabel = getResources().getString(R.string.speed_label);
         mLastUpdateTimeLabel = getResources().getString(R.string.last_update_time_label);
         mMaxSpeedLabel = "Max Speed";
@@ -222,6 +242,8 @@ public class RealTimeFragment extends Fragment {
         mMaxAltitudeLabel = "Maximum Altitude";
         mElapsedTimeLabel = "Elapsed Time";
         mDistanceLabel = "Total distance";
+        mAndroid_idLabel = "Android ID";
+        mAndroid_id = Secure.getString(getContext().getContentResolver(), Secure.ANDROID_ID);
 
         mRequestingLocationUpdates = false;
         mLastUpdateTime = "";
@@ -239,8 +261,18 @@ public class RealTimeFragment extends Fragment {
         createLocationCallback();
         createLocationRequest();
         buildLocationSettingsRequest();
+        // Permission checked below
+//        readPhoneState();
 
+        tm = (TelephonyManager) getContext().getSystemService(Context.TELEPHONY_SERVICE);
+        androidId = "" + android.provider.Settings.Secure.getString(mContext.getContentResolver(), android.provider.Settings.Secure.ANDROID_ID);
+//        deviceUuid = new UUID(androidId.hashCode(), ((long)tmDevice.hashCode() << 32) | tmSerial.hashCode());
+//        deviceId = deviceUuid.toString();
 
+//        WifiManager wm = (WifiManager)Ctxt.getSystemService(Context.WIFI_SERVICE);
+//        return wm.getConnectionInfo().getMacAddress();
+        mDevIDTextView.setText(String.format(Locale.ENGLISH, "%s: %s", mAndroid_idLabel,
+                mAndroid_id));
         mRunNumber.setText(String.format(Locale.ENGLISH, "%s: %s",
                 mLastRunLabel, queryMaxId()));
 
@@ -389,7 +421,6 @@ public class RealTimeFragment extends Fragment {
         mElapsedTimeTextView.setText(String.format(Locale.ENGLISH, "%s: %s",
                 mElapsedTimeLabel, mElapsedTime));
     }
-
 
 
     /**
@@ -546,6 +577,12 @@ public class RealTimeFragment extends Fragment {
             mTotalDistanceTextView.setText(String.format(Locale.ENGLISH, "%s: %s",
                     mDistanceLabel, calculateTotalDistance(mCurrentId)));
 
+            mPrevLatitudeTextView.setText(String.format(Locale.ENGLISH, "%s: %f", mPrevLatitudeLabel,
+                    queryPreviousLocation(mCurrentId)[0]));
+            mPrevLongitudeTextView.setText(String.format(Locale.ENGLISH, "%s: %f", mPrevLongitudeLabel,
+                    queryPreviousLocation(mCurrentId)[1]));
+
+
             mCurrentLatitude = mCurrentLocation.getLatitude();
             mCurrentLongitude = mCurrentLocation.getLongitude();
             mCurrentAltitude = mCurrentLocation.getAltitude();
@@ -606,26 +643,27 @@ public class RealTimeFragment extends Fragment {
 
     private double calculateDistance(int id) {
 
-        mPreviousLatitude = queryPreviousLocation(id)[0];
-        mPreviousLongitude = queryPreviousLocation(id)[1];
-
+        double mRoundedPreviousLatitude = Math.round((queryPreviousLocation(id)[0]) * 10000) / 10000.0d;
+        double mRoundedPreviousLongitude = Math.round((queryPreviousLocation(id)[1]) * 10000) / 10000.0d;
 //        mPreviousLatitude = 34.2000001;
 //        mPreviousLongitude = -86.8000002;
 
-        mCurrentLatitude = mCurrentLocation.getLatitude();
-        mCurrentLongitude = mCurrentLocation.getLongitude();
+        double mRoundedCurrentLatitude = Math.round((mCurrentLocation.getLatitude()) * 10000) / 10000.0d;
+        double mRoundedCurrentLongitude = Math.round((mCurrentLocation.getLongitude()) * 10000) / 10000.0d;
 
         if (mPreviousLatitude != 0.0 && mPreviousLongitude != 0.0) {
-            mDistance = DistanceCalculator.greatCircleInKilometers(mPreviousLatitude,
-                    mPreviousLongitude, mCurrentLatitude, mCurrentLongitude);
-            Log.i("Print PreviousLatitude", String.valueOf(mPreviousLatitude));
-            Log.i("Print PreviousLongitude", String.valueOf(mPreviousLongitude));
-            Log.i("Print CurrentLatitude", String.valueOf(mCurrentLatitude));
-            Log.i("Print CurrentLongitude", String.valueOf(mCurrentLongitude));
+            mDistance = DistanceCalculator.greatCircleInKilometers(mRoundedPreviousLatitude,
+                    mRoundedPreviousLongitude, mRoundedCurrentLatitude, mRoundedCurrentLongitude);
+            Log.i("Print PreviousLatitude", String.valueOf(mRoundedPreviousLatitude));
+            Log.i("Print PreviousLongitude", String.valueOf(mRoundedPreviousLongitude));
+            Log.i("Print CurrentLatitude", String.valueOf(mRoundedCurrentLatitude));
+            Log.i("Print CurrentLongitude", String.valueOf(mRoundedCurrentLongitude));
             Log.i("Print Distance", String.valueOf(mDistance));
         } else {
             mDistance = 0.0;
         }
+
+
         return mDistance;
     }
 
@@ -634,7 +672,7 @@ public class RealTimeFragment extends Fragment {
         String specificID = String.valueOf(id);
         String mSelectionClause = TrackContract.TrackingEntry.COLUMN_RUN_ID;
         String SELECTION = mSelectionClause + " = '" + specificID + "'";
-        String ORDER = " " + _ID + " DESC LIMIT 1 OFFSET 2";
+        String ORDER = " " + _ID + " DESC LIMIT 1";
 
         try {
             cur = mContext.getContentResolver()
@@ -837,6 +875,7 @@ public class RealTimeFragment extends Fragment {
         mContext.getContentResolver().insert(CONTENT_URI, values);
 
     }
+
     /**
      * Removes location updates from the FusedLocationApi.
      */
@@ -864,12 +903,12 @@ public class RealTimeFragment extends Fragment {
         super.onResume();
         // Within {@code onPause()}, we remove location updates. Here, we resume receiving
         // location updates if the user has requested them.
-        if (mRequestingLocationUpdates && checkPermissions()) {
+        if (mRequestingLocationUpdates && checkPermissionsFineLocation()) {
             startLocationUpdates();
-        } else if (!checkPermissions()) {
+        } else if (!checkPermissionsFineLocation()) {
             requestPermissions();
         }
-
+//        readPhoneState();
         updateUI();
     }
 
@@ -914,20 +953,41 @@ public class RealTimeFragment extends Fragment {
     /**
      * Return the current state of the permissions needed.
      */
-    private boolean checkPermissions() {
+    private boolean checkPermissionsFineLocation() {
         int permissionState = ActivityCompat.checkSelfPermission(mContext,
                 Manifest.permission.ACCESS_FINE_LOCATION);
         return permissionState == PackageManager.PERMISSION_GRANTED;
     }
 
+    private boolean checkPermissionsReadPhoneState() {
+        int permissionState = ActivityCompat.checkSelfPermission(mContext,
+                Manifest.permission.READ_PHONE_STATE);
+        return permissionState == PackageManager.PERMISSION_GRANTED;
+    }
+
+
+    private void readPhoneState() {
+        if (checkPermissionsReadPhoneState()) {
+
+//            tmDevice = "" + tm.getDeviceId();
+//            tmSerial = "" + tm.getSimSerialNumber();
+            mDevIDTextView.setText(String.format(Locale.ENGLISH, "%s: %s", mAndroid_idLabel,
+                    tmDevice));
+        } else if (!checkPermissionsReadPhoneState()) {
+            requestPermissions();
+        }
+    }
     private void requestPermissions() {
         boolean shouldProvideRationale =
                 ActivityCompat.shouldShowRequestPermissionRationale((Activity) mContext,
                         Manifest.permission.ACCESS_FINE_LOCATION);
+        boolean shouldProvideRationale1 =
+                ActivityCompat.shouldShowRequestPermissionRationale((Activity) mContext,
+                        Manifest.permission.READ_PHONE_STATE);
 
         // Provide an additional rationale to the user. This would happen if the user denied the
         // request previously, but didn't check the "Don't ask again" checkbox.
-        if (shouldProvideRationale) {
+        if (shouldProvideRationale || shouldProvideRationale1) {
             Log.i(TAG, "Displaying permission rationale to provide additional context.");
             showSnackbar(R.string.permission_rationale,
                     android.R.string.ok, new View.OnClickListener() {
@@ -936,6 +996,10 @@ public class RealTimeFragment extends Fragment {
                             // Request permission
                             ActivityCompat.requestPermissions((Activity) mContext,
                                     new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                                    REQUEST_PERMISSIONS_REQUEST_CODE);
+                            // Request permission
+                            ActivityCompat.requestPermissions((Activity) mContext,
+                                    new String[]{Manifest.permission.READ_PHONE_STATE},
                                     REQUEST_PERMISSIONS_REQUEST_CODE);
                         }
                     });
@@ -946,6 +1010,9 @@ public class RealTimeFragment extends Fragment {
             // previously and checked "Never ask again".
             ActivityCompat.requestPermissions((Activity) mContext,
                     new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                    REQUEST_PERMISSIONS_REQUEST_CODE);
+            ActivityCompat.requestPermissions((Activity) mContext,
+                    new String[]{Manifest.permission.READ_PHONE_STATE},
                     REQUEST_PERMISSIONS_REQUEST_CODE);
         }
     }
