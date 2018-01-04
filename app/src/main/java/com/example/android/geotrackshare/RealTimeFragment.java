@@ -9,6 +9,10 @@ import android.content.Intent;
 import android.content.IntentSender;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
@@ -54,6 +58,7 @@ import java.util.Locale;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
+import static android.content.Context.SENSOR_SERVICE;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_ALTITUDE;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_AVR_SPEED;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_DISTANCE;
@@ -79,7 +84,7 @@ import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry
  * Use the {@link RealTimeFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class RealTimeFragment extends Fragment {
+public class RealTimeFragment extends Fragment implements SensorEventListener {
     private static final String TAG = MainActivity.class.getSimpleName();
 
     /**
@@ -111,6 +116,7 @@ public class RealTimeFragment extends Fragment {
     private final static String KEY_LAST_UPDATED_ETIME = "last-updated-elapsedtime-string";
     private final static String KEY_LAST_UPDATED_TDISTANCE = "last-updated-total-distance";
     private static int DISPLACEMENT = 5; // 10 meters
+    private final double NOISE = 0.3;
     public String tmDevice, tmSerial, androidId, deviceId;
     public TelephonyManager tm;
     long startTime;
@@ -182,6 +188,11 @@ public class RealTimeFragment extends Fragment {
             mAverageSpeed, mMaxAltitude, mMinAltitude, mTotalTime, mDistance, mTotalDistance,
             mPreviousLatitude, mPreviousLongitude, mRoundedDistance;
     private Cursor cur;
+    private SensorManager mSensorManager;
+    private double ax, ay, az;   // these are the acceleration in x,y and z axis
+    private double mLastX, mLastY, mLastZ;
+    private double deltaX, deltaY, deltaZ;
+    private double checkX, checkY, checkZ;
     /**
      * Tracks the status of the location updates request. Value changes when the user presses the
      * Start Updates and Stop Updates buttons.
@@ -192,6 +203,7 @@ public class RealTimeFragment extends Fragment {
      */
     private String mLastUpdateTime, mElapsedTime;
     private Context mContext;
+    private boolean mInitialized = false;
 
     public RealTimeFragment() {
         // Required empty public constructor
@@ -275,7 +287,8 @@ public class RealTimeFragment extends Fragment {
                 mAndroid_id));
         mRunNumber.setText(String.format(Locale.ENGLISH, "%s: %s",
                 mLastRunLabel, queryMaxId()));
-
+        mSensorManager = (SensorManager) mContext.getSystemService(SENSOR_SERVICE);
+        mSensorManager.registerListener(this, mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER), SensorManager.SENSOR_DELAY_NORMAL);
         mLocation.setOnClickListener(new View.OnClickListener() {
 
             @Override
@@ -593,6 +606,9 @@ public class RealTimeFragment extends Fragment {
             mAverageSpeed = calculateAverageSpeed(mCurrentId);
             mDistance = calculateDistance(mCurrentId);
             mTotalDistance = calculateTotalDistance(mCurrentId);
+            checkX = deltaX;
+            checkY = deltaY;
+            checkZ = deltaZ;
 
             mLastUpdateTime = DateFormat.getTimeInstance().format(new Date());
             getElapsedTime();
@@ -643,26 +659,31 @@ public class RealTimeFragment extends Fragment {
 
     private double calculateDistance(int id) {
 
-        double mRoundedPreviousLatitude = Math.round((queryPreviousLocation(id)[0]) * 10000) / 10000.0d;
-        double mRoundedPreviousLongitude = Math.round((queryPreviousLocation(id)[1]) * 10000) / 10000.0d;
+        double mRoundedPreviousLatitude = Math.round((queryPreviousLocation(id)[0]) * 1000000) / 1000000.0d;
+        double mRoundedPreviousLongitude = Math.round((queryPreviousLocation(id)[1]) * 1000000) / 1000000.0d;
 //        mPreviousLatitude = 34.2000001;
 //        mPreviousLongitude = -86.8000002;
 
-        double mRoundedCurrentLatitude = Math.round((mCurrentLocation.getLatitude()) * 10000) / 10000.0d;
-        double mRoundedCurrentLongitude = Math.round((mCurrentLocation.getLongitude()) * 10000) / 10000.0d;
+        double mRoundedCurrentLatitude = Math.round((mCurrentLocation.getLatitude()) * 1000000) / 1000000.0d;
+        double mRoundedCurrentLongitude = Math.round((mCurrentLocation.getLongitude()) * 1000000) / 1000000.0d;
 
-        if (mPreviousLatitude != 0.0 && mPreviousLongitude != 0.0) {
-            mDistance = DistanceCalculator.greatCircleInKilometers(mRoundedPreviousLatitude,
-                    mRoundedPreviousLongitude, mRoundedCurrentLatitude, mRoundedCurrentLongitude);
-            Log.i("Print PreviousLatitude", String.valueOf(mRoundedPreviousLatitude));
-            Log.i("Print PreviousLongitude", String.valueOf(mRoundedPreviousLongitude));
-            Log.i("Print CurrentLatitude", String.valueOf(mRoundedCurrentLatitude));
-            Log.i("Print CurrentLongitude", String.valueOf(mRoundedCurrentLongitude));
-            Log.i("Print Distance", String.valueOf(mDistance));
+        if (checkX != 0.0 || checkY != 0.0 || checkZ != 0.0) {
+
+            if (mPreviousLatitude != 0.0 && mPreviousLongitude != 0.0) {
+                mDistance = DistanceCalculator.greatCircleInKilometers(mRoundedPreviousLatitude,
+                        mRoundedPreviousLongitude, mRoundedCurrentLatitude, mRoundedCurrentLongitude);
+                Log.i("Print PreviousLatitude", String.valueOf(mRoundedPreviousLatitude));
+                Log.i("Print PreviousLongitude", String.valueOf(mRoundedPreviousLongitude));
+                Log.i("Print CurrentLatitude", String.valueOf(mRoundedCurrentLatitude));
+                Log.i("Print CurrentLongitude", String.valueOf(mRoundedCurrentLongitude));
+                Log.i("Print Distance", String.valueOf(mDistance));
+            } else {
+                mDistance = 0.0;
+            }
+
         } else {
             mDistance = 0.0;
         }
-
 
         return mDistance;
     }
@@ -909,6 +930,8 @@ public class RealTimeFragment extends Fragment {
             requestPermissions();
         }
 //        readPhoneState();
+//        mSensorManager.registerListener((SensorEventListener) mContext, mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER), SensorManager.SENSOR_DELAY_NORMAL);
+
         updateUI();
     }
 
@@ -918,6 +941,7 @@ public class RealTimeFragment extends Fragment {
 
         // Remove location updates to save battery.
         //stopLocationUpdates();
+//        mSensorManager.unregisterListener((SensorEventListener) mContext);
     }
 
     /**
@@ -977,6 +1001,7 @@ public class RealTimeFragment extends Fragment {
             requestPermissions();
         }
     }
+
     private void requestPermissions() {
         boolean shouldProvideRationale =
                 ActivityCompat.shouldShowRequestPermissionRationale((Activity) mContext,
@@ -1063,6 +1088,42 @@ public class RealTimeFragment extends Fragment {
                         });
             }
         }
+    }
+
+    @Override
+    public void onSensorChanged(SensorEvent sensorEvent) {
+        if (sensorEvent.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
+            ax = sensorEvent.values[0];
+            ay = sensorEvent.values[1];
+            az = sensorEvent.values[2];
+
+            if (!mInitialized) {
+                mLastX = ax;
+                mLastY = ay;
+                mLastZ = az;
+                mInitialized = true;
+            } else {
+                deltaX = Math.abs(mLastX - ax);
+                deltaY = Math.abs(mLastY - ay);
+                deltaZ = Math.abs(mLastZ - az);
+                if (deltaX < NOISE) deltaX = 0.0;
+                if (deltaY < NOISE) deltaY = 0.0;
+                if (deltaZ < NOISE) deltaZ = 0.0;
+                mLastX = ax;
+                mLastY = ay;
+                mLastZ = az;
+                Log.i("Print deltaX", String.valueOf(deltaX));
+                Log.i("Print deltaY", String.valueOf(deltaY));
+                Log.i("Print deltaZ", String.valueOf(deltaZ));
+
+
+            }
+        }
+    }
+
+    @Override
+    public void onAccuracyChanged(Sensor sensor, int i) {
+
     }
 }
 
