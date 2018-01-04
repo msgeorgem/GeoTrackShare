@@ -9,14 +9,16 @@ import android.databinding.DataBindingUtil;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Parcelable;
+import android.support.design.widget.FloatingActionButton;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.NavUtils;
 import android.support.v4.app.ShareCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
-import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.CompoundButton;
 import android.widget.Toast;
 import android.widget.ToggleButton;
@@ -70,6 +72,15 @@ public class DetailActivity extends AppCompatActivity {
         // Sets the Toolbar to act as the ActionBar for this Activity window.
         // Make sure the toolbar exists in the activity and is not null
         setSupportActionBar(toolbar);
+
+        FloatingActionButton fab = findViewById(R.id.fab);
+        fab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
+                        .setAction("Action", null).show();
+            }
+        });
 
         // Examine the intent that was used to launch this activity,
         // in order to figure out if we're creating a new item or editing an existing one.
@@ -205,9 +216,9 @@ public class DetailActivity extends AppCompatActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         /* Use AppCompatActivity's method getMenuInflater to get a handle on the menu inflater */
-        MenuInflater inflater = getMenuInflater();
+//        MenuInflater inflater = getMenuInflater();
         /* Use the inflater's inflate method to inflate our menu layout to this menu */
-        inflater.inflate(R.menu.detail, menu);
+//        inflater.inflate(R.menu.detail, menu);
         /* Return true so that the menu is displayed in the Toolbar */
         return true;
     }
@@ -223,11 +234,11 @@ public class DetailActivity extends AppCompatActivity {
             return true;
         }
         /* Share menu item clicked */
-        if (id == R.id.action_share_d) {
-            Intent shareIntent = createShareMovieIntent();
-            startActivity(shareIntent);
-            return true;
-        }
+//        if (id == R.id.action_share_d) {
+//            Intent shareIntent = createShareMovieIntent();
+//            startActivity(shareIntent);
+//            return true;
+//        }
         return super.onOptionsItemSelected(item);
     }
 
