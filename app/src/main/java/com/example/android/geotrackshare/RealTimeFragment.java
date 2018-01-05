@@ -67,6 +67,7 @@ import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_MAX_ALT;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_MAX_SPEED;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_MIN_ALT;
+import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_MOVE;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_RUN_ID;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_SPEED;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_TIME;
@@ -100,7 +101,12 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
     /**
      * The desired interval for location updates. Inexact. Updates may be more or less frequent.
      */
-    private static final long UPDATE_INTERVAL_IN_MILLISECONDS = 5000; // 10 sec
+    private static final long UPDATE_INTERVAL_IN_MILLISECONDS = 5000; // 5 sec
+
+    /**
+     * Time without move.
+     */
+    private static final long CHECK_NO_MOVE_TIME_IN_MILLISECONDS = 180000; // 3 min
     /**
      * The fastest rate for active location updates. Exact. Updates will never be more frequent
      * than this value.
@@ -192,7 +198,7 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
     private double ax, ay, az;   // these are the acceleration in x,y and z axis
     private double mLastX, mLastY, mLastZ;
     private double deltaX, deltaY, deltaZ;
-    private double checkX, checkY, checkZ;
+    private double checkX, checkY, checkZ, mMoveXYZ;
     /**
      * Tracks the status of the location updates request. Value changes when the user presses the
      * Start Updates and Stop Updates buttons.
@@ -204,6 +210,7 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
     private String mLastUpdateTime, mElapsedTime;
     private Context mContext;
     private boolean mInitialized = false;
+    private boolean mInMove = false;
 
     public RealTimeFragment() {
         // Required empty public constructor
@@ -273,6 +280,7 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
         createLocationCallback();
         createLocationRequest();
         buildLocationSettingsRequest();
+        stopLocationNoMovement();
         // Permission checked below
 //        readPhoneState();
 
@@ -609,14 +617,17 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
             checkX = deltaX;
             checkY = deltaY;
             checkZ = deltaZ;
+            mMoveXYZ = (checkX + checkY + checkZ) / 3;
+            checkMove(mCurrentId);
 
+//            TODO (1): Change saving time to miliseconds. More flexible
             mLastUpdateTime = DateFormat.getTimeInstance().format(new Date());
             getElapsedTime();
 
             try {
                 saveItem(mCurrentId, mLastUpdateTime, mCurrentLatitude, mCurrentLongitude,
                         mCurrentAltitude, mMaxAltitude, mMinAltitude, mCurrentSpeed, mMaxSpeed,
-                        mAverageSpeed, mElapsedTime, mDistance, mTotalDistance);
+                        mAverageSpeed, mElapsedTime, mDistance, mTotalDistance, mMoveXYZ);
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -667,20 +678,16 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
         double mRoundedCurrentLatitude = Math.round((mCurrentLocation.getLatitude()) * 1000000) / 1000000.0d;
         double mRoundedCurrentLongitude = Math.round((mCurrentLocation.getLongitude()) * 1000000) / 1000000.0d;
 
-        if (checkX != 0.0 || checkY != 0.0 || checkZ != 0.0) {
 
-            if (mPreviousLatitude != 0.0 && mPreviousLongitude != 0.0) {
-                mDistance = DistanceCalculator.greatCircleInKilometers(mRoundedPreviousLatitude,
-                        mRoundedPreviousLongitude, mRoundedCurrentLatitude, mRoundedCurrentLongitude);
-                Log.i("Print PreviousLatitude", String.valueOf(mRoundedPreviousLatitude));
-                Log.i("Print PreviousLongitude", String.valueOf(mRoundedPreviousLongitude));
-                Log.i("Print CurrentLatitude", String.valueOf(mRoundedCurrentLatitude));
-                Log.i("Print CurrentLongitude", String.valueOf(mRoundedCurrentLongitude));
-                Log.i("Print Distance", String.valueOf(mDistance));
-            } else {
-                mDistance = 0.0;
-            }
-
+        if (mPreviousLatitude != 0.0 && mPreviousLongitude != 0.0 &&
+                (checkX != 0.0 || checkY != 0.0 || checkZ != 0.0)) {
+            mDistance = DistanceCalculator.greatCircleInKilometers(mRoundedPreviousLatitude,
+                    mRoundedPreviousLongitude, mRoundedCurrentLatitude, mRoundedCurrentLongitude);
+            Log.i("Print PreviousLatitude", String.valueOf(mRoundedPreviousLatitude));
+            Log.i("Print PreviousLongitude", String.valueOf(mRoundedPreviousLongitude));
+            Log.i("Print CurrentLatitude", String.valueOf(mRoundedCurrentLatitude));
+            Log.i("Print CurrentLongitude", String.valueOf(mRoundedCurrentLongitude));
+            Log.i("Print Distance", String.valueOf(mDistance));
         } else {
             mDistance = 0.0;
         }
@@ -869,11 +876,52 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
         return averageSpeed;
     }
 
+    private boolean checkMove(int id) {
+        int sum = 0;
+        int size;
+//        TODO (2): Compare saved times after changing them to miiliseconds to timeInPast. At this moment
+//        TODO (2): At this moment we leave last ten records no matter what time in past last record was
+//        long currentTime = System.currentTimeMillis();
+//        long timeInPast = currentTime - CHECK_NO_MOVE_TIME_IN_MILLISECONDS;
+
+        String specificID = String.valueOf(id);
+        String mSelectionClause = TrackContract.TrackingEntry.COLUMN_RUN_ID;
+        String SELECTION = mSelectionClause + " = '" + specificID + "'";
+        String[] PROJECTION = {TrackContract.TrackingEntry.COLUMN_MOVE};
+        String ORDER = " " + COLUMN_TIME_COUNTER + " DESC LIMIT 10";
+        try {
+            cur = mContext.getContentResolver()
+                    .query(TrackContract.TrackingEntry.CONTENT_URI, PROJECTION, SELECTION, null, ORDER);
+
+            ArrayList<Double> speedTempList = new ArrayList<>();
+            if (cur != null && cur.moveToFirst()) {
+                while (cur.moveToNext()) {
+                    Double i = cur.getDouble(cur.getColumnIndex(COLUMN_MOVE));
+                    speedTempList.add(i);
+                }
+            }
+//            Log.i("Print list", speedTempList.toString());
+
+            for (int i = 0; i < speedTempList.size(); i++) {
+                sum += speedTempList.get(i);
+            }
+            mInMove = !(sum == 0.0);
+
+            if (cur != null) {
+                cur.close();
+            }
+
+        } catch (Exception e) {
+            Log.e("Path Error", e.toString());
+        }
+        return mInMove;
+    }
 
     private void saveItem(int runId, String currentTime, double currentLatitude, double currentLongitude,
                           double currentAltitude, double currentMaxAlt, double currentMinAlt,
                           double currentSpeed, double currentMaxSpeed, double currentAvrSpeed,
-                          String currentElapsedTime, double currentDistance, double currentTotalDistance) throws IOException {
+                          String currentElapsedTime, double currentDistance, double currentTotalDistance,
+                          double currentMove) throws IOException {
 
         ContentValues values = new ContentValues();
         values.put(COLUMN_RUN_ID, runId);
@@ -889,6 +937,7 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
         values.put(COLUMN_TIME_COUNTER, currentElapsedTime);
         values.put(COLUMN_DISTANCE, currentDistance);
         values.put(COLUMN_TOTAL_DISTANCE, currentTotalDistance);
+        values.put(COLUMN_MOVE, currentMove);
 
 
         // This is a NEW item, so insert a new item into the provider,
@@ -918,6 +967,14 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
                     }
                 });
     }
+
+    private void stopLocationNoMovement() {
+
+        if (!mInMove) {
+            stopLocationUpdates();
+        }
+    }
+
 
     @Override
     public void onResume() {
@@ -1115,8 +1172,6 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
                 Log.i("Print deltaX", String.valueOf(deltaX));
                 Log.i("Print deltaY", String.valueOf(deltaY));
                 Log.i("Print deltaZ", String.valueOf(deltaZ));
-
-
             }
         }
     }

@@ -36,6 +36,8 @@ public class TrackContract {
         public static final String COLUMN_TIME_COUNTER = "count_timer";
         public static final String COLUMN_DISTANCE = "distance";
         public static final String COLUMN_TOTAL_DISTANCE = "total_distance";
+        public static final String COLUMN_MOVE = "move";
+
 
 
         /**
