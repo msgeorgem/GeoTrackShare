@@ -210,7 +210,7 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
     private String mLastUpdateTime, mElapsedTime;
     private Context mContext;
     private boolean mInitialized = false;
-    private boolean mInMove = false;
+    private boolean mNoMove = false;
 
     public RealTimeFragment() {
         // Required empty public constructor
@@ -280,7 +280,7 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
         createLocationCallback();
         createLocationRequest();
         buildLocationSettingsRequest();
-        stopLocationNoMovement();
+
         // Permission checked below
 //        readPhoneState();
 
@@ -619,8 +619,9 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
             checkZ = deltaZ;
             mMoveXYZ = (checkX + checkY + checkZ) / 3;
             checkMove(mCurrentId);
+            stopLocationNoMovement();
 
-//            TODO (1): Change saving time to miliseconds. More flexible
+//            TODO (1): Change saving time to milliseconds. More flexible
             mLastUpdateTime = DateFormat.getTimeInstance().format(new Date());
             getElapsedTime();
 
@@ -878,7 +879,7 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
 
     private boolean checkMove(int id) {
         int sum = 0;
-        int size;
+        int size = 0;
 //        TODO (2): Compare saved times after changing them to miiliseconds to timeInPast. At this moment
 //        TODO (2): At this moment we leave last ten records no matter what time in past last record was
 //        long currentTime = System.currentTimeMillis();
@@ -888,7 +889,7 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
         String mSelectionClause = TrackContract.TrackingEntry.COLUMN_RUN_ID;
         String SELECTION = mSelectionClause + " = '" + specificID + "'";
         String[] PROJECTION = {TrackContract.TrackingEntry.COLUMN_MOVE};
-        String ORDER = " " + COLUMN_TIME_COUNTER + " DESC LIMIT 10";
+        String ORDER = " " + COLUMN_TIME_COUNTER + " DESC LIMIT 25";
         try {
             cur = mContext.getContentResolver()
                     .query(TrackContract.TrackingEntry.CONTENT_URI, PROJECTION, SELECTION, null, ORDER);
@@ -898,23 +899,29 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
                 while (cur.moveToNext()) {
                     Double i = cur.getDouble(cur.getColumnIndex(COLUMN_MOVE));
                     speedTempList.add(i);
+                    size = speedTempList.size();
+                    Log.i("speedTempList:", String.valueOf(size));
                 }
             }
 //            Log.i("Print list", speedTempList.toString());
 
             for (int i = 0; i < speedTempList.size(); i++) {
                 sum += speedTempList.get(i);
+                size = speedTempList.size();
             }
-            mInMove = !(sum == 0.0);
-
+            mNoMove = sum == 0.0 && size == 24;
+            Log.i("No Move:", String.valueOf(mNoMove));
             if (cur != null) {
                 cur.close();
             }
+            //TODO (4) Delete last rows minus 1, and get geolocation for this coordinates,
+            //TODO (4)    automatically delete empty run
+            //TODO (4)handle geolocation, fences?
 
         } catch (Exception e) {
             Log.e("Path Error", e.toString());
         }
-        return mInMove;
+        return mNoMove;
     }
 
     private void saveItem(int runId, String currentTime, double currentLatitude, double currentLongitude,
@@ -938,7 +945,6 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
         values.put(COLUMN_DISTANCE, currentDistance);
         values.put(COLUMN_TOTAL_DISTANCE, currentTotalDistance);
         values.put(COLUMN_MOVE, currentMove);
-
 
         // This is a NEW item, so insert a new item into the provider,
         // returning the content URI for the item item.
@@ -970,7 +976,7 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
 
     private void stopLocationNoMovement() {
 
-        if (!mInMove) {
+        if (mNoMove) {
             stopLocationUpdates();
         }
     }
@@ -1147,6 +1153,7 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
         }
     }
 
+    //TODO (3) handle sensor to stop working while no action and start working when needed
     @Override
     public void onSensorChanged(SensorEvent sensorEvent) {
         if (sensorEvent.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
@@ -1169,9 +1176,9 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
                 mLastX = ax;
                 mLastY = ay;
                 mLastZ = az;
-                Log.i("Print deltaX", String.valueOf(deltaX));
-                Log.i("Print deltaY", String.valueOf(deltaY));
-                Log.i("Print deltaZ", String.valueOf(deltaZ));
+//                Log.i("Print deltaX", String.valueOf(deltaX));
+//                Log.i("Print deltaY", String.valueOf(deltaY));
+//                Log.i("Print deltaZ", String.valueOf(deltaZ));
             }
         }
     }
