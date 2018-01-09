@@ -125,6 +125,11 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
     private final double NOISE = 0.3;
     public String tmDevice, tmSerial, androidId, deviceId;
     public TelephonyManager tm;
+    /**
+     * Time when the location was updated represented as a String.
+     */
+    public String mLastUpdateTime;
+    public String mElapsedTime;
     long startTime;
     UUID deviceUuid;
     /**
@@ -190,6 +195,7 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
     private String mAndroid_idLabel;
     private String mAndroid_id;
     private int mMaxId, mCurrentId;
+    private long mLastUpdateTimeMillis, mElapsedTimeMillis;
     private double mCurrentLatitude, mCurrentLongitude, mCurrentAltitude, mCurrentSpeed, mMaxSpeed,
             mAverageSpeed, mMaxAltitude, mMinAltitude, mTotalTime, mDistance, mTotalDistance,
             mPreviousLatitude, mPreviousLongitude, mRoundedDistance;
@@ -204,10 +210,6 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
      * Start Updates and Stop Updates buttons.
      */
     private Boolean mRequestingLocationUpdates;
-    /**
-     * Time when the location was updated represented as a String.
-     */
-    private String mLastUpdateTime, mElapsedTime;
     private Context mContext;
     private boolean mInitialized = false;
     private boolean mNoMove = false;
@@ -433,11 +435,11 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
     private void getElapsedTime() {
 
         // Get elapsed time in milliseconds
-        long elapsedTimeMillis = System.currentTimeMillis() - startTime;
+        mElapsedTimeMillis = System.currentTimeMillis() - startTime;
 
-        mElapsedTime = String.format("%02d:%02d:%02d", TimeUnit.MILLISECONDS.toHours(elapsedTimeMillis),
-                TimeUnit.MILLISECONDS.toMinutes(elapsedTimeMillis) % TimeUnit.HOURS.toMinutes(1),
-                TimeUnit.MILLISECONDS.toSeconds(elapsedTimeMillis) % TimeUnit.MINUTES.toSeconds(1));
+        mElapsedTime = String.format("%02d:%02d:%02d", TimeUnit.MILLISECONDS.toHours(mElapsedTimeMillis),
+                TimeUnit.MILLISECONDS.toMinutes(mElapsedTimeMillis) % TimeUnit.HOURS.toMinutes(1),
+                TimeUnit.MILLISECONDS.toSeconds(mElapsedTimeMillis) % TimeUnit.MINUTES.toSeconds(1));
 
         mElapsedTimeTextView.setText(String.format(Locale.ENGLISH, "%s: %s",
                 mElapsedTimeLabel, mElapsedTime));
@@ -486,7 +488,6 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
             startLocationUpdates();
         }
     }
-
     /**
      * Handles the Stop Updates button, and requests removal of location updates.
      */
@@ -623,12 +624,14 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
 
 //            TODO (1): Change saving time to milliseconds. More flexible
             mLastUpdateTime = DateFormat.getTimeInstance().format(new Date());
+            mLastUpdateTimeMillis = System.currentTimeMillis();
+
             getElapsedTime();
 
             try {
-                saveItem(mCurrentId, mLastUpdateTime, mCurrentLatitude, mCurrentLongitude,
+                saveItem(mCurrentId, mLastUpdateTimeMillis, mCurrentLatitude, mCurrentLongitude,
                         mCurrentAltitude, mMaxAltitude, mMinAltitude, mCurrentSpeed, mMaxSpeed,
-                        mAverageSpeed, mElapsedTime, mDistance, mTotalDistance, mMoveXYZ);
+                        mAverageSpeed, mElapsedTimeMillis, mDistance, mTotalDistance, mMoveXYZ);
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -924,10 +927,10 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
         return mNoMove;
     }
 
-    private void saveItem(int runId, String currentTime, double currentLatitude, double currentLongitude,
+    private void saveItem(int runId, long currentTime, double currentLatitude, double currentLongitude,
                           double currentAltitude, double currentMaxAlt, double currentMinAlt,
                           double currentSpeed, double currentMaxSpeed, double currentAvrSpeed,
-                          String currentElapsedTime, double currentDistance, double currentTotalDistance,
+                          long currentElapsedTime, double currentDistance, double currentTotalDistance,
                           double currentMove) throws IOException {
 
         ContentValues values = new ContentValues();

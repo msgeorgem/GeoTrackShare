@@ -16,6 +16,12 @@ import com.example.android.geotrackshare.Data.TrackContract;
 import com.example.android.geotrackshare.DetailActivity;
 import com.example.android.geotrackshare.R;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
+import java.util.concurrent.TimeUnit;
+
 
 /**
  * Created by Marcin on 2017-10-28.
@@ -43,6 +49,7 @@ public class TracksCursorAdapter extends CursorRecyclerAdapter<TracksCursorAdapt
     public void onBindViewHolder(final ViewHolder viewHolder, Cursor cursor) {
 
         final long id;
+        final String mmElapsedTime, mDate, mHours;
         final int id1;
         final int mQuantity;
 
@@ -62,23 +69,35 @@ public class TracksCursorAdapter extends CursorRecyclerAdapter<TracksCursorAdapt
 
         // Read the item attributes from the Cursor for the current item
         final String itemTitle = cursor.getString(runColumnIndex);
-        String itemTime = cursor.getString(timeColumnIndex);
+        long itemTime = cursor.getLong(timeColumnIndex);
         String itemAvgSpeed = cursor.getString(avgSpeedColumnIndex);
 //        String itemAltitude = cursor.getString(altColumnIndex);
-        String itemTimeCount = cursor.getString(timeCountColumnIndex);
+        long itemTimeCount = cursor.getLong(timeCountColumnIndex);
         String itemDistance = String.valueOf(cursor.getDouble(distColumnIndex));
 
 //        String itemMaxAlt = cursor.getString(maxAltColumnIndex);
 //        String itemMinAlt = cursor.getString(minAltColumnIndex);
 //        String itemMaxSpeed = cursor.getString(maxSpeedColumnIndex);
+//        mDate = new Date(itemTime).toString();
+        mDate = DateFormat.getDateInstance(DateFormat.LONG).format(itemTime);
+        mHours = new SimpleDateFormat("HH:mm:ss").format(new Date(itemTime));
+
+
+        mmElapsedTime = String.format("%02d:%02d:%02d", TimeUnit.MILLISECONDS.toHours(itemTimeCount),
+                TimeUnit.MILLISECONDS.toMinutes(itemTimeCount) % TimeUnit.HOURS.toMinutes(1),
+                TimeUnit.MILLISECONDS.toSeconds(itemTimeCount) % TimeUnit.MINUTES.toSeconds(1));
+
 
         viewHolder.runIdTextView.setText(itemTitle);
-        viewHolder.timeTextView.setText(itemTime);
-        viewHolder.speedTextView.setText(itemAvgSpeed);
+        viewHolder.dateTextView.setText(mDate);
+        viewHolder.hoursTextView.setText(mHours);
+        viewHolder.speedTextView.setText(String.format(Locale.ENGLISH, "%s: %s",
+                "Average Speed km/h", itemAvgSpeed));
 //        viewHolder.altitude.setText(itemAltitude);
-        viewHolder.timeCounter.setText(itemTimeCount);
-        viewHolder.totalDistance.setText(itemDistance);
-
+        viewHolder.timeCounter.setText(String.format(Locale.ENGLISH, "%s: %s",
+                "Total Time", mmElapsedTime));
+        viewHolder.totalDistance.setText(String.format(Locale.ENGLISH, "%s: %s",
+                "Total Distance km", itemDistance));
 //        viewHolder.maxAltitude.setText(itemMaxAlt);
 //        viewHolder.minAltitude.setText(itemMinAlt);
 //        viewHolder.maxSpeedTextView.setText(itemMaxSpeed);
@@ -129,7 +148,8 @@ public class TracksCursorAdapter extends CursorRecyclerAdapter<TracksCursorAdapt
     public static class ViewHolder extends RecyclerView.ViewHolder {
 
         public TextView runIdTextView;
-        public TextView timeTextView;
+        public TextView dateTextView;
+        public TextView hoursTextView;
         public TextView speedTextView;
         public TextView maxSpeedTextView;
         public TextView altitude;
@@ -145,7 +165,8 @@ public class TracksCursorAdapter extends CursorRecyclerAdapter<TracksCursorAdapt
         public ViewHolder(View view) {
             super(view);
             runIdTextView = view.findViewById(R.id.run_id);
-            timeTextView = view.findViewById(R.id.day);
+            dateTextView = view.findViewById(R.id.day);
+            hoursTextView = view.findViewById(R.id.hours);
             speedTextView = view.findViewById(R.id.avg_speed);
             minAltitude = view.findViewById(R.id.min_alt);
             maxAltitude = view.findViewById(R.id.max_alt);
