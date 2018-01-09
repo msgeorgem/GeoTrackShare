@@ -30,6 +30,7 @@ import com.example.android.geotrackshare.DetailActivity;
 import com.example.android.geotrackshare.R;
 
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_ALTITUDE;
+import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_AVR_SPEED;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_LATITUDE;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_LONGITUDE;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_RUN_ID;
@@ -54,7 +55,8 @@ public class RunListFragment extends Fragment implements LoaderManager.LoaderCal
     public static final String EXTRA_SPEED = "EXTRA_SPEED";
 
     private static final int FAV_LOADER = 0;
-    private static final String[] PROJECTION1 = {
+
+    private static final String[] PROJECTION = {
             TrackContract.TrackingEntry._ID,
             COLUMN_RUN_ID,
             COLUMN_TIME,
@@ -62,13 +64,11 @@ public class RunListFragment extends Fragment implements LoaderManager.LoaderCal
             COLUMN_LONGITUDE,
             COLUMN_ALTITUDE,
             COLUMN_SPEED,
+            COLUMN_AVR_SPEED,
             COLUMN_TIME_COUNTER,
             COLUMN_TOTAL_DISTANCE
     };
-    private static final String[] PROJECTION = {
-            TrackContract.TrackingEntry._ID,
-            COLUMN_RUN_ID
-    };
+
 
     //   Just a rough idea how to sort in query
     private static final String SORT_ORDER_ID = TrackContract.TrackingEntry._ID + " DESC";
@@ -119,8 +119,8 @@ public class RunListFragment extends Fragment implements LoaderManager.LoaderCal
         return getActivity().getContentResolver().query(TrackContract.TrackingEntry.CONTENT_URI, null, null, null, SORT_ORDER_ID);
     }
 
-    void deleteOneItem(long id) {
-        int rowDeleted = getActivity().getContentResolver().delete(TrackContract.TrackingEntry.CONTENT_URI, TrackContract.TrackingEntry._ID + "=" + id, null);
+    void deleteOneItem(int runId) {
+        int rowDeleted = getActivity().getContentResolver().delete(TrackContract.TrackingEntry.CONTENT_URI, TrackContract.TrackingEntry.COLUMN_RUN_ID + "=" + runId, null);
         Toast.makeText(getActivity(), rowDeleted + " " + getString(R.string.delete_one_item), Toast.LENGTH_SHORT).show();
 //        mFavsAdapter.swapCursor(querY());
     }
@@ -128,7 +128,7 @@ public class RunListFragment extends Fragment implements LoaderManager.LoaderCal
     public void showDeleteConfirmationDialogOneItem(final RecyclerView.ViewHolder viewHolder) {
         //Inside, get the viewHolder's itemView's tag and store in a long variable id
         //get the iD of the item being swiped
-        final long iD = (long) viewHolder.itemView.getTag();
+        final int runId = (int) viewHolder.itemView.getTag();
 
         // Create an AlertDialog.Builder and set the message, and click listeners
         // for the positive and negative buttons on the dialog.
@@ -138,7 +138,7 @@ public class RunListFragment extends Fragment implements LoaderManager.LoaderCal
             public void onClick(DialogInterface dialog, int id) {
                 // User clicked the "Delete" button, so delete the item.
                 //remove from DB
-                deleteOneItem(iD);
+                deleteOneItem(runId);
             }
         });
         builder.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
@@ -179,6 +179,7 @@ public class RunListFragment extends Fragment implements LoaderManager.LoaderCal
         super.onStop();
     }
 
+
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
 
@@ -190,14 +191,16 @@ public class RunListFragment extends Fragment implements LoaderManager.LoaderCal
 
         );
 
-        String SORT_ORDER = COLUMN + " DESC";
+        String SELECTION = COLUMN_RUN_ID + " GROUP BY " + COLUMN_RUN_ID;
+        String SORT_ORDER = COLUMN + " DESC ";
+
 
         // Perform a query using CursorLoader
         return new CursorLoader(getActivity(),    // Parent activity context
                 TrackContract.TrackingEntry.CONTENT_URI, // Provider content URI to query
-                PROJECTION1,            // The columns to include in the resulting Cursor
-                null,         // The values for the WHERE clause
-                null,      // No SELECTION arguments
+                PROJECTION,            // The columns to include in the resulting Cursor
+                SELECTION,         // The values for the WHERE clause
+                null,   // No SELECTION arguments
                 SORT_ORDER);
     }
 
@@ -241,7 +244,7 @@ public class RunListFragment extends Fragment implements LoaderManager.LoaderCal
         String specificID = String.valueOf(id);
         String mSelectionClause = TrackContract.TrackingEntry._ID;
         try {
-            Cursor cursor = getActivity().getContentResolver().query(TrackContract.TrackingEntry.CONTENT_URI, PROJECTION1, mSelectionClause + " = '" + specificID + "'", null, null);
+            Cursor cursor = getActivity().getContentResolver().query(TrackContract.TrackingEntry.CONTENT_URI, PROJECTION, mSelectionClause + " = '" + specificID + "'", null, null);
             if (cursor != null && cursor.moveToFirst()) {
                 do {
                     int runColumnIndex = cursor.getColumnIndex(COLUMN_RUN_ID);

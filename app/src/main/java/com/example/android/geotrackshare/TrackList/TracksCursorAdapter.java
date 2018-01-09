@@ -43,13 +43,15 @@ public class TracksCursorAdapter extends CursorRecyclerAdapter<TracksCursorAdapt
     public void onBindViewHolder(final ViewHolder viewHolder, Cursor cursor) {
 
         final long id;
+        final int id1;
         final int mQuantity;
 
         // Find the columns of item attributes that we're interested in
         id = cursor.getLong(cursor.getColumnIndex(TrackContract.TrackingEntry._ID));
+        id1 = cursor.getInt(cursor.getColumnIndex(TrackContract.TrackingEntry.COLUMN_RUN_ID));
         int runColumnIndex = cursor.getColumnIndex(TrackContract.TrackingEntry.COLUMN_RUN_ID);
         int timeColumnIndex = cursor.getColumnIndex(TrackContract.TrackingEntry.COLUMN_TIME);
-        int speedColumnIndex = cursor.getColumnIndex(TrackContract.TrackingEntry.COLUMN_SPEED);
+        int avgSpeedColumnIndex = cursor.getColumnIndex(TrackContract.TrackingEntry.COLUMN_AVR_SPEED);
         int altColumnIndex = cursor.getColumnIndex(TrackContract.TrackingEntry.COLUMN_ALTITUDE);
         int timeCountColumnIndex = cursor.getColumnIndex(TrackContract.TrackingEntry.COLUMN_TIME_COUNTER);
         int distColumnIndex = cursor.getColumnIndex(TrackContract.TrackingEntry.COLUMN_TOTAL_DISTANCE);
@@ -61,8 +63,8 @@ public class TracksCursorAdapter extends CursorRecyclerAdapter<TracksCursorAdapt
         // Read the item attributes from the Cursor for the current item
         final String itemTitle = cursor.getString(runColumnIndex);
         String itemTime = cursor.getString(timeColumnIndex);
-        String itemSpeed = cursor.getString(speedColumnIndex);
-        String itemAltitude = cursor.getString(altColumnIndex);
+        String itemAvgSpeed = cursor.getString(avgSpeedColumnIndex);
+//        String itemAltitude = cursor.getString(altColumnIndex);
         String itemTimeCount = cursor.getString(timeCountColumnIndex);
         String itemDistance = String.valueOf(cursor.getDouble(distColumnIndex));
 
@@ -72,8 +74,8 @@ public class TracksCursorAdapter extends CursorRecyclerAdapter<TracksCursorAdapt
 
         viewHolder.runIdTextView.setText(itemTitle);
         viewHolder.timeTextView.setText(itemTime);
-        viewHolder.speedTextView.setText(itemSpeed);
-        viewHolder.altitude.setText(itemAltitude);
+        viewHolder.speedTextView.setText(itemAvgSpeed);
+//        viewHolder.altitude.setText(itemAltitude);
         viewHolder.timeCounter.setText(itemTimeCount);
         viewHolder.totalDistance.setText(itemDistance);
 
@@ -82,7 +84,7 @@ public class TracksCursorAdapter extends CursorRecyclerAdapter<TracksCursorAdapt
 //        viewHolder.maxSpeedTextView.setText(itemMaxSpeed);
 
 
-        viewHolder.itemView.setTag(id);
+        viewHolder.itemView.setTag(id1);
 
         viewHolder.itemView.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -143,10 +145,8 @@ public class TracksCursorAdapter extends CursorRecyclerAdapter<TracksCursorAdapt
         public ViewHolder(View view) {
             super(view);
             runIdTextView = view.findViewById(R.id.run_id);
-            timeTextView = view.findViewById(R.id.start_time);
-            speedTextView = view.findViewById(R.id.speed);
-            maxSpeedTextView = view.findViewById(R.id.max_speed);
-            altitude = view.findViewById(R.id.altitude);
+            timeTextView = view.findViewById(R.id.day);
+            speedTextView = view.findViewById(R.id.avg_speed);
             minAltitude = view.findViewById(R.id.min_alt);
             maxAltitude = view.findViewById(R.id.max_alt);
             timeCounter = view.findViewById(R.id.current_total_time);
