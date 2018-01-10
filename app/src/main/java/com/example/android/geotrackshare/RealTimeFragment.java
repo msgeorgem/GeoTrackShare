@@ -51,7 +51,7 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 
 import java.io.IOException;
-import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Locale;
@@ -130,7 +130,7 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
      */
     public String mLastUpdateTime;
     public String mElapsedTime;
-    long startTime;
+    long startTime = 0;
     UUID deviceUuid;
     /**
      * Provides access to the Fused Location Provider API.
@@ -425,26 +425,11 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
                 super.onLocationResult(locationResult);
 
                 mCurrentLocation = locationResult.getLastLocation();
-                mLastUpdateTime = DateFormat.getTimeInstance().format(new Date());
+//                mLastUpdateTime = DateFormat.getTimeInstance().format(new Date());
                 updateLocationUI();
             }
         };
     }
-
-    @SuppressLint("DefaultLocale")
-    private void getElapsedTime() {
-
-        // Get elapsed time in milliseconds
-        mElapsedTimeMillis = System.currentTimeMillis() - startTime;
-
-        mElapsedTime = String.format("%02d:%02d:%02d", TimeUnit.MILLISECONDS.toHours(mElapsedTimeMillis),
-                TimeUnit.MILLISECONDS.toMinutes(mElapsedTimeMillis) % TimeUnit.HOURS.toMinutes(1),
-                TimeUnit.MILLISECONDS.toSeconds(mElapsedTimeMillis) % TimeUnit.MINUTES.toSeconds(1));
-
-        mElapsedTimeTextView.setText(String.format(Locale.ENGLISH, "%s: %s",
-                mElapsedTimeLabel, mElapsedTime));
-    }
-
 
     /**
      * Uses a {@link com.google.android.gms.location.LocationSettingsRequest.Builder} to build
@@ -585,8 +570,7 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
                     mCurrentLocation.getAltitude()));
             mSpeedTextView.setText(String.format(Locale.ENGLISH, "%s: %f", mSpeedLabel,
                     ((mCurrentLocation.getSpeed()) * 3.6)));
-            mLastUpdateTimeTextView.setText(String.format(Locale.ENGLISH, "%s: %s",
-                    mLastUpdateTimeLabel, mLastUpdateTime));
+
 
             mAvgSpeedTextView.setText(String.format(Locale.ENGLISH, "%s: %f",
                     mAvgSpeedLabel, calculateAverageSpeed(mCurrentId)));
@@ -620,22 +604,41 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
             checkZ = deltaZ;
             mMoveXYZ = (checkX + checkY + checkZ) / 3;
             checkMove(mCurrentId);
-            stopLocationNoMovement();
+            stopLocationNoMovement(mCurrentId);
 
-//            TODO (1): Change saving time to milliseconds. More flexible
-            mLastUpdateTime = DateFormat.getTimeInstance().format(new Date());
-            mLastUpdateTimeMillis = System.currentTimeMillis();
-
-            getElapsedTime();
-
-            try {
-                saveItem(mCurrentId, mLastUpdateTimeMillis, mCurrentLatitude, mCurrentLongitude,
-                        mCurrentAltitude, mMaxAltitude, mMinAltitude, mCurrentSpeed, mMaxSpeed,
-                        mAverageSpeed, mElapsedTimeMillis, mDistance, mTotalDistance, mMoveXYZ);
-            } catch (IOException e) {
-                e.printStackTrace();
+            if (mRequestingLocationUpdates) {
+                getElapsedTime();
+                try {
+                    saveItem(mCurrentId, mLastUpdateTimeMillis, mCurrentLatitude, mCurrentLongitude,
+                            mCurrentAltitude, mMaxAltitude, mMinAltitude, mCurrentSpeed, mMaxSpeed,
+                            mAverageSpeed, mElapsedTimeMillis, mDistance, mTotalDistance, mMoveXYZ);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
         }
+    }
+
+    @SuppressLint("DefaultLocale")
+    private void getElapsedTime() {
+
+        mLastUpdateTimeMillis = System.currentTimeMillis();
+        // Get elapsed time in milliseconds
+        mElapsedTimeMillis = mLastUpdateTimeMillis - startTime;
+        if (mElapsedTimeMillis < 0) {
+            mElapsedTimeMillis = 0;
+        }
+
+        mElapsedTime = String.format("%02d:%02d:%02d", TimeUnit.MILLISECONDS.toHours(mElapsedTimeMillis),
+                TimeUnit.MILLISECONDS.toMinutes(mElapsedTimeMillis) % TimeUnit.HOURS.toMinutes(1),
+                TimeUnit.MILLISECONDS.toSeconds(mElapsedTimeMillis) % TimeUnit.MINUTES.toSeconds(1));
+
+        mElapsedTimeTextView.setText(String.format(Locale.ENGLISH, "%s: %s",
+                mElapsedTimeLabel, mElapsedTime));
+
+        String mHours = new SimpleDateFormat("HH:mm:ss").format(new Date(mLastUpdateTimeMillis));
+        mLastUpdateTimeTextView.setText(String.format(Locale.ENGLISH, "%s: %s",
+                mLastUpdateTimeLabel, mHours));
     }
 
     private double calculateTotalDistance(int id) {
@@ -646,7 +649,7 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
         String[] PROJECTION = {TrackContract.TrackingEntry.COLUMN_DISTANCE};
         try {
             cur = mContext.getContentResolver()
-                    .query(TrackContract.TrackingEntry.CONTENT_URI, PROJECTION, SELECTION, null, null);
+                    .query(CONTENT_URI, PROJECTION, SELECTION, null, null);
 
             ArrayList<Double> distanceTempList = new ArrayList<>();
             if (cur != null && cur.moveToFirst()) {
@@ -708,7 +711,7 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
 
         try {
             cur = mContext.getContentResolver()
-                    .query(TrackContract.TrackingEntry.CONTENT_URI, null, SELECTION, null, ORDER);
+                    .query(CONTENT_URI, null, SELECTION, null, ORDER);
 
             if (cur != null && cur.moveToFirst()) {
                 do {
@@ -739,7 +742,7 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
         String ORDER = " " + COLUMN_RUN_ID + " DESC LIMIT 1";
         try {
             cur = mContext.getContentResolver()
-                    .query(TrackContract.TrackingEntry.CONTENT_URI, null, null, null, ORDER);
+                    .query(CONTENT_URI, null, null, null, ORDER);
 
             if (cur != null && cur.moveToFirst()) {
                 do {
@@ -757,6 +760,41 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
         }
         return mMaxId;
     }
+//    private void indentifyLastId(int runId) {
+//
+//        String specificID = String.valueOf(runId);
+//        String mSelectionClause = TrackContract.TrackingEntry.COLUMN_RUN_ID;
+//        String SELECTION = mSelectionClause + " = '" + specificID + "'";
+//        String ORDER = " " + _ID + " DESC LIMIT 24";
+//
+//
+//        try {
+//            cur = mContext.getContentResolver()
+//                    .query(TrackContract.TrackingEntry.CONTENT_URI, null, SELECTION, null, ORDER);
+//
+//            ArrayList<String>mSelectionArgs = new ArrayList();
+//            if (cur != null && cur.moveToFirst()) {
+//                while (cur.moveToNext()) {
+//                    String i = String.valueOf(cur.getColumnIndex(COLUMN_MOVE));
+//                    mSelectionArgs.add(i);
+//                }
+//            }
+//
+//            String[] mSelectionArgsArray = new String[mSelectionArgs.size()];
+//            mSelectionArgsArray = mSelectionArgs.toArray(mSelectionArgsArray);
+//            ContentValues data = new ContentValues();
+//            data.put(COLUMN_MOVE, 99);
+//            mContext.getContentResolver().update(TrackContract.TrackingEntry.CONTENT_URI, data, SELECTION, mSelectionArgsArray);
+//
+//            if (cur != null) {
+//                cur.close();
+//            }
+//
+//        } catch (Exception e) {
+//            Log.e("Path Error", e.toString());
+//        }
+//    }
+
 
     public double queryMaxSpeed(int id) {
         String specificID = String.valueOf(id);
@@ -766,7 +804,7 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
 
         try {
             cur = mContext.getContentResolver()
-                    .query(TrackContract.TrackingEntry.CONTENT_URI, null, SELECTION, null, ORDER);
+                    .query(CONTENT_URI, null, SELECTION, null, ORDER);
 
             if (cur != null && cur.moveToFirst()) {
                 do {
@@ -794,7 +832,7 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
 
         try {
             cur = mContext.getContentResolver()
-                    .query(TrackContract.TrackingEntry.CONTENT_URI, null, SELECTION, null, ORDER);
+                    .query(CONTENT_URI, null, SELECTION, null, ORDER);
 
             if (cur != null && cur.moveToFirst()) {
                 do {
@@ -822,7 +860,7 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
 
         try {
             cur = mContext.getContentResolver()
-                    .query(TrackContract.TrackingEntry.CONTENT_URI, null, SELECTION, null, ORDER);
+                    .query(CONTENT_URI, null, SELECTION, null, ORDER);
 
             if (cur != null && cur.moveToFirst()) {
                 do {
@@ -853,7 +891,7 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
         String[] PROJECTION = {TrackContract.TrackingEntry.COLUMN_SPEED};
         try {
             cur = mContext.getContentResolver()
-                    .query(TrackContract.TrackingEntry.CONTENT_URI, PROJECTION, SELECTION, null, null);
+                    .query(CONTENT_URI, PROJECTION, SELECTION, null, null);
 
             ArrayList<Double> speedTempList = new ArrayList<>();
             if (cur != null && cur.moveToFirst()) {
@@ -892,10 +930,10 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
         String mSelectionClause = TrackContract.TrackingEntry.COLUMN_RUN_ID;
         String SELECTION = mSelectionClause + " = '" + specificID + "'";
         String[] PROJECTION = {TrackContract.TrackingEntry.COLUMN_MOVE};
-        String ORDER = " " + COLUMN_TIME_COUNTER + " DESC LIMIT 25";
+        String ORDER = " " + COLUMN_TIME_COUNTER + " DESC LIMIT 10";
         try {
             cur = mContext.getContentResolver()
-                    .query(TrackContract.TrackingEntry.CONTENT_URI, PROJECTION, SELECTION, null, ORDER);
+                    .query(CONTENT_URI, PROJECTION, SELECTION, null, ORDER);
 
             ArrayList<Double> speedTempList = new ArrayList<>();
             if (cur != null && cur.moveToFirst()) {
@@ -912,7 +950,7 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
                 sum += speedTempList.get(i);
                 size = speedTempList.size();
             }
-            mNoMove = sum == 0.0 && size == 24;
+            mNoMove = (sum == 0.0) && (size == 9);
             Log.i("No Move:", String.valueOf(mNoMove));
             if (cur != null) {
                 cur.close();
@@ -927,6 +965,14 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
         return mNoMove;
     }
 
+    void deletelastNoMove(int runId) {
+        String lastRows = " id IN ( SELECT id FROM my_chat ORDER BY id DESC LIMIT 0, 2)";
+        String descLimit = COLUMN_TIME_COUNTER + " IN (ORDER BY " + COLUMN_TIME_COUNTER + " DESC LIMIT 5)";
+        String currentRun = TrackContract.TrackingEntry.COLUMN_RUN_ID + "=" + runId;
+
+        int rowDeleted = getActivity().getContentResolver().delete(CONTENT_URI, currentRun + " AND " + descLimit, null);
+        Toast.makeText(getActivity(), rowDeleted + " " + getString(R.string.delete_one_item), Toast.LENGTH_SHORT).show();
+    }
     private void saveItem(int runId, long currentTime, double currentLatitude, double currentLongitude,
                           double currentAltitude, double currentMaxAlt, double currentMinAlt,
                           double currentSpeed, double currentMaxSpeed, double currentAvrSpeed,
@@ -977,13 +1023,13 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
                 });
     }
 
-    private void stopLocationNoMovement() {
+    private void stopLocationNoMovement(int id) {
 
         if (mNoMove) {
             stopLocationUpdates();
+//            deletelastNoMove(id);
         }
     }
-
 
     @Override
     public void onResume() {

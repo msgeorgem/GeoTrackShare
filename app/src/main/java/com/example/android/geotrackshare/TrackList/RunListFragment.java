@@ -29,6 +29,9 @@ import com.example.android.geotrackshare.Data.TrackContract;
 import com.example.android.geotrackshare.DetailActivity;
 import com.example.android.geotrackshare.R;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_ALTITUDE;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_AVR_SPEED;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_LATITUDE;
@@ -255,14 +258,16 @@ public class RunListFragment extends Fragment implements LoaderManager.LoaderCal
                     int speedColumnIndex = cursor.getColumnIndex(COLUMN_SPEED);
 
                     String runID = cursor.getString(runColumnIndex);
-                    String timeTitle = cursor.getString(timeColumnIndex);
+                    Long timeTitle = cursor.getLong(timeColumnIndex);
+                    String mHours = new SimpleDateFormat("HH:mm:ss").format(new Date(timeTitle));
+
                     String latitude = cursor.getString(latitudeColumnIndex);
                     String longitude = cursor.getString(londitudeColumnIndex);
                     String altitude = cursor.getString(altitudeColumnIndex);
                     String speed = cursor.getString(speedColumnIndex);
 
                     intent.putExtra(EXTRA_RUN_ID, runID);
-                    intent.putExtra(EXTRA_TIME, timeTitle);
+                    intent.putExtra(EXTRA_TIME, mHours);
                     intent.putExtra(EXTRA_LATITUDE, latitude);
                     intent.putExtra(EXTRA_LONGITUDE, longitude);
                     intent.putExtra(EXTRA_ALTITUDE, altitude);

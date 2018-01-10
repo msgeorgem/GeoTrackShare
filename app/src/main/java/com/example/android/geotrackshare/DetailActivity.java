@@ -33,6 +33,7 @@ import java.util.ArrayList;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_RUN_ID;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_TIME;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.CONTENT_URI;
+import static com.example.android.geotrackshare.TrackList.RunListFragment.EXTRA_TIME;
 
 /**
  * Created by Marcin on 2017-11-29.
@@ -90,7 +91,7 @@ public class DetailActivity extends AppCompatActivity {
         CURRENT_RUN_ID = intent.getStringExtra(RunListFragment.EXTRA_RUN_ID);
         runId = CURRENT_RUN_ID;
         currentRun = intent.getStringExtra(RunListFragment.EXTRA_RUN_ID);
-        currentTimeStart = intent.getStringExtra(RunListFragment.EXTRA_TIME);
+        currentTimeStart = intent.getStringExtra(EXTRA_TIME);
 
         mDetailBinding.part2.runId.setText(currentRun);
         mDetailBinding.part2.startTime.setText(currentTimeStart);
