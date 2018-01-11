@@ -70,10 +70,10 @@ public class TracksCursorAdapter extends CursorRecyclerAdapter<TracksCursorAdapt
         // Read the item attributes from the Cursor for the current item
         final String itemTitle = cursor.getString(runColumnIndex);
         long itemTime = cursor.getLong(timeColumnIndex);
-        String itemAvgSpeed = cursor.getString(avgSpeedColumnIndex);
+        double itemAvgSpeed = cursor.getDouble(avgSpeedColumnIndex);
 //        String itemAltitude = cursor.getString(altColumnIndex);
         long itemTimeCount = cursor.getLong(timeCountColumnIndex);
-        String itemDistance = String.valueOf(cursor.getDouble(distColumnIndex));
+        double itemDistance = cursor.getDouble(distColumnIndex);
 
 //        String itemMaxAlt = cursor.getString(maxAltColumnIndex);
 //        String itemMinAlt = cursor.getString(minAltColumnIndex);
@@ -91,12 +91,12 @@ public class TracksCursorAdapter extends CursorRecyclerAdapter<TracksCursorAdapt
         viewHolder.runIdTextView.setText(itemTitle);
         viewHolder.dateTextView.setText(mDate);
         viewHolder.hoursTextView.setText(mHours);
-        viewHolder.speedTextView.setText(String.format(Locale.ENGLISH, "%s: %s",
+        viewHolder.speedTextView.setText(String.format(Locale.ENGLISH, "%s: %.1f",
                 "Average Speed km/h", itemAvgSpeed));
 //        viewHolder.altitude.setText(itemAltitude);
         viewHolder.timeCounter.setText(String.format(Locale.ENGLISH, "%s: %s",
                 "Total Time", mmElapsedTime));
-        viewHolder.totalDistance.setText(String.format(Locale.ENGLISH, "%s: %s",
+        viewHolder.totalDistance.setText(String.format(Locale.ENGLISH, "%s: %.3f",
                 "Total Distance km", itemDistance));
 //        viewHolder.maxAltitude.setText(itemMaxAlt);
 //        viewHolder.minAltitude.setText(itemMinAlt);

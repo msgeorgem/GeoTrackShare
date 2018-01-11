@@ -9,6 +9,7 @@ import android.content.Intent;
 import android.content.IntentSender;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -33,6 +34,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.android.geotrackshare.Data.TrackContract;
+import com.example.android.geotrackshare.Data.TrackDbHelper;
 import com.example.android.geotrackshare.Utils.DistanceCalculator;
 import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.common.api.ResolvableApiException;
@@ -122,7 +124,7 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
     private final static String KEY_LAST_UPDATED_ETIME = "last-updated-elapsedtime-string";
     private final static String KEY_LAST_UPDATED_TDISTANCE = "last-updated-total-distance";
     private static int DISPLACEMENT = 5; // 10 meters
-    private final double NOISE = 0.3;
+    private final double NOISE = 0.2;
     public String tmDevice, tmSerial, androidId, deviceId;
     public TelephonyManager tm;
     /**
@@ -213,6 +215,9 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
     private Context mContext;
     private boolean mInitialized = false;
     private boolean mNoMove = false;
+
+    private TrackDbHelper dbHelper;
+    private SQLiteDatabase db;
 
     public RealTimeFragment() {
         // Required empty public constructor
@@ -966,12 +971,14 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
     }
 
     void deletelastNoMove(int runId) {
+        dbHelper = new TrackDbHelper(this.getActivity());
+        db = dbHelper.getWritableDatabase();
         String lastRows = " id IN ( SELECT id FROM my_chat ORDER BY id DESC LIMIT 0, 2)";
         String descLimit = COLUMN_TIME_COUNTER + " IN (ORDER BY " + COLUMN_TIME_COUNTER + " DESC LIMIT 5)";
         String currentRun = TrackContract.TrackingEntry.COLUMN_RUN_ID + "=" + runId;
-
-        int rowDeleted = getActivity().getContentResolver().delete(CONTENT_URI, currentRun + " AND " + descLimit, null);
-        Toast.makeText(getActivity(), rowDeleted + " " + getString(R.string.delete_one_item), Toast.LENGTH_SHORT).show();
+//        int rowDeleted1 = db.delete(String.valueOf(CONTENT_URI),TrackContract.TrackingEntry.COLUMN_RUN_ID + "=" + runId,null,null,null,null)
+        int rowDeleted0 = getActivity().getContentResolver().delete(CONTENT_URI, currentRun + " AND " + descLimit, null);
+//        Toast.makeText(getActivity(), rowDeleted1 + " " + getString(R.string.delete_one_item), Toast.LENGTH_SHORT).show();
     }
     private void saveItem(int runId, long currentTime, double currentLatitude, double currentLongitude,
                           double currentAltitude, double currentMaxAlt, double currentMinAlt,
