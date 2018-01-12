@@ -190,8 +190,7 @@ public class RunListFragment extends Fragment implements LoaderManager.LoaderCal
 
         String COLUMN = sharedPrefs.getString(
                 getString(R.string.run_settings_order_by_key),
-                getString(R.string.run_settings_order_by_label)
-
+                getString(R.string.run_settings_order_by_key)
         );
 
         String SELECTION = COLUMN_RUN_ID + " GROUP BY " + COLUMN_RUN_ID;

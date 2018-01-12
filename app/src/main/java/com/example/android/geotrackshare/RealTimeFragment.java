@@ -125,6 +125,7 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
     private final static String KEY_LAST_UPDATED_TDISTANCE = "last-updated-total-distance";
     private static int DISPLACEMENT = 5; // 10 meters
     private final double NOISE = 0.2;
+    private final int DELETE_LAST_ROWS = 10;
     public String tmDevice, tmSerial, androidId, deviceId;
     public TelephonyManager tm;
     /**
@@ -196,7 +197,7 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
     private String mDistanceLabel;
     private String mAndroid_idLabel;
     private String mAndroid_id;
-    private int mMaxId, mCurrentId;
+    private int mMaxId, mCurrentId, mLast_ID;
     private long mLastUpdateTimeMillis, mElapsedTimeMillis;
     private double mCurrentLatitude, mCurrentLongitude, mCurrentAltitude, mCurrentSpeed, mMaxSpeed,
             mAverageSpeed, mMaxAltitude, mMinAltitude, mTotalTime, mDistance, mTotalDistance,
@@ -337,7 +338,6 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
 
         return v;
     }
-
 
     /**
      * Updates fields based on data stored in the bundle.
@@ -561,7 +561,6 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
             mStopUpdatesButton.setEnabled(false);
         }
     }
-
     /**
      * Sets the value of the UI fields for the location latitude, longitude and last update time.
      */
@@ -575,7 +574,6 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
                     mCurrentLocation.getAltitude()));
             mSpeedTextView.setText(String.format(Locale.ENGLISH, "%s: %f", mSpeedLabel,
                     ((mCurrentLocation.getSpeed()) * 3.6)));
-
 
             mAvgSpeedTextView.setText(String.format(Locale.ENGLISH, "%s: %f",
                     mAvgSpeedLabel, calculateAverageSpeed(mCurrentId)));
@@ -592,7 +590,6 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
                     queryPreviousLocation(mCurrentId)[0]));
             mPrevLongitudeTextView.setText(String.format(Locale.ENGLISH, "%s: %f", mPrevLongitudeLabel,
                     queryPreviousLocation(mCurrentId)[1]));
-
 
             mCurrentLatitude = mCurrentLocation.getLatitude();
             mCurrentLongitude = mCurrentLocation.getLongitude();
@@ -765,6 +762,30 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
         }
         return mMaxId;
     }
+
+    private int queryLast_ID() {
+
+        String ORDER = " " + _ID + " DESC LIMIT 1";
+        try {
+            cur = mContext.getContentResolver()
+                    .query(CONTENT_URI, null, null, null, ORDER);
+
+            if (cur != null && cur.moveToFirst()) {
+                do {
+                    int idColumnIndex = cur.getColumnIndex(_ID);
+                    mLast_ID = cur.getInt(idColumnIndex);
+
+                } while (cur.moveToNext());
+            }
+            if (cur != null) {
+                cur.close();
+            }
+
+        } catch (Exception e) {
+            Log.e("Path Error", e.toString());
+        }
+        return mLast_ID;
+    }
 //    private void indentifyLastId(int runId) {
 //
 //        String specificID = String.valueOf(runId);
@@ -935,7 +956,7 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
         String mSelectionClause = TrackContract.TrackingEntry.COLUMN_RUN_ID;
         String SELECTION = mSelectionClause + " = '" + specificID + "'";
         String[] PROJECTION = {TrackContract.TrackingEntry.COLUMN_MOVE};
-        String ORDER = " " + COLUMN_TIME_COUNTER + " DESC LIMIT 10";
+        String ORDER = " " + COLUMN_TIME_COUNTER + " DESC LIMIT " + DELETE_LAST_ROWS;
         try {
             cur = mContext.getContentResolver()
                     .query(CONTENT_URI, PROJECTION, SELECTION, null, ORDER);
@@ -955,7 +976,7 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
                 sum += speedTempList.get(i);
                 size = speedTempList.size();
             }
-            mNoMove = (sum == 0.0) && (size == 9);
+            mNoMove = (sum == 0.0) && (size == (DELETE_LAST_ROWS - 1));
             Log.i("No Move:", String.valueOf(mNoMove));
             if (cur != null) {
                 cur.close();
@@ -970,15 +991,13 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
         return mNoMove;
     }
 
-    void deletelastNoMove(int runId) {
-        dbHelper = new TrackDbHelper(this.getActivity());
-        db = dbHelper.getWritableDatabase();
-        String lastRows = " id IN ( SELECT id FROM my_chat ORDER BY id DESC LIMIT 0, 2)";
-        String descLimit = COLUMN_TIME_COUNTER + " IN (ORDER BY " + COLUMN_TIME_COUNTER + " DESC LIMIT 5)";
-        String currentRun = TrackContract.TrackingEntry.COLUMN_RUN_ID + "=" + runId;
-//        int rowDeleted1 = db.delete(String.valueOf(CONTENT_URI),TrackContract.TrackingEntry.COLUMN_RUN_ID + "=" + runId,null,null,null,null)
-        int rowDeleted0 = getActivity().getContentResolver().delete(CONTENT_URI, currentRun + " AND " + descLimit, null);
-//        Toast.makeText(getActivity(), rowDeleted1 + " " + getString(R.string.delete_one_item), Toast.LENGTH_SHORT).show();
+    void deletelastNoMoveRows() {
+        for (int i = 0; i < (DELETE_LAST_ROWS - 1); i++) {
+            int last_ID = queryLast_ID();
+            String lastRow = TrackContract.TrackingEntry._ID + "=" + last_ID;
+            getActivity().getContentResolver().delete(CONTENT_URI, lastRow, null);
+            Toast.makeText(getActivity(), (DELETE_LAST_ROWS - 1) + " " + getString(R.string.delete_one_item), Toast.LENGTH_SHORT).show();
+        }
     }
     private void saveItem(int runId, long currentTime, double currentLatitude, double currentLongitude,
                           double currentAltitude, double currentMaxAlt, double currentMinAlt,
@@ -1034,7 +1053,7 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
 
         if (mNoMove) {
             stopLocationUpdates();
-//            deletelastNoMove(id);
+            deletelastNoMoveRows();
         }
     }
 
