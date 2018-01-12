@@ -252,5 +252,8 @@ public class DetailActivity extends AppCompatActivity {
         return shareIntent;
     }
 
+    //TODO (4) and get geolocation for first and last position,
+    //TODO (5) show track on map
+    //TODO (5) show speeds on graph
 
 }

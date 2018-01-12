@@ -9,7 +9,6 @@ import android.content.Intent;
 import android.content.IntentSender;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -34,7 +33,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.android.geotrackshare.Data.TrackContract;
-import com.example.android.geotrackshare.Data.TrackDbHelper;
 import com.example.android.geotrackshare.Utils.DistanceCalculator;
 import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.common.api.ResolvableApiException;
@@ -217,8 +215,6 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
     private boolean mInitialized = false;
     private boolean mNoMove = false;
 
-    private TrackDbHelper dbHelper;
-    private SQLiteDatabase db;
 
     public RealTimeFragment() {
         // Required empty public constructor
@@ -981,7 +977,7 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
             if (cur != null) {
                 cur.close();
             }
-            //TODO (4) Delete last rows minus 1, and get geolocation for this coordinates,
+
             //TODO (4)    automatically delete empty run
             //TODO (4)handle geolocation, fences?
 
