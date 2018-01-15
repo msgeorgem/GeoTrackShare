@@ -1,10 +1,10 @@
-package com.example.android.geotrackshare.Data;
+package com.example.android.geotrackshare.Utils;
 
-import android.app.Application;
 import android.content.Context;
 import android.os.Environment;
 
 import com.example.android.geotrackshare.R;
+import com.example.android.geotrackshare.TrackList.RunListFragment;
 
 import java.io.File;
 
@@ -12,9 +12,11 @@ import java.io.File;
  * Created by Marcin on 2018-01-12.
  */
 
-public class FileUtils extends Application {
+public class FileUtils {
 
-    private static Context context;
+
+    private static RunListFragment fragment = new RunListFragment();
+    private static Context context = fragment.getActivity();
 
 
     public static String getAppDir() {

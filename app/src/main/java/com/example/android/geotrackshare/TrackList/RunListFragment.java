@@ -1,13 +1,16 @@
 package com.example.android.geotrackshare.TrackList;
 
 import android.content.ContentUris;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Parcelable;
 import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
@@ -26,8 +29,10 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.android.geotrackshare.Data.TrackContract;
+import com.example.android.geotrackshare.Data.TrackDbHelper;
 import com.example.android.geotrackshare.DetailActivity;
 import com.example.android.geotrackshare.R;
+import com.example.android.geotrackshare.Utils.SqliteExporter;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -56,9 +61,9 @@ public class RunListFragment extends Fragment implements LoaderManager.LoaderCal
     public static final String EXTRA_LONGITUDE = "EXTRA_LONGITUDE";
     public static final String EXTRA_ALTITUDE = "EXTRA_ALTITUDE";
     public static final String EXTRA_SPEED = "EXTRA_SPEED";
-
+    //   Just a rough idea how to sort in query
+    public static final String SORT_ORDER_ID = TrackContract.TrackingEntry._ID + " DESC";
     private static final int FAV_LOADER = 0;
-
     private static final String[] PROJECTION = {
             TrackContract.TrackingEntry._ID,
             COLUMN_RUN_ID,
@@ -71,11 +76,8 @@ public class RunListFragment extends Fragment implements LoaderManager.LoaderCal
             COLUMN_TIME_COUNTER,
             COLUMN_TOTAL_DISTANCE
     };
-
-
-    //   Just a rough idea how to sort in query
-    private static final String SORT_ORDER_ID = TrackContract.TrackingEntry._ID + " DESC";
     private static final String BUNDLE_RECYCLER_LAYOUT = "TrackListFragment.tracksRecyclerView";
+    public static Context mContext;
     public TracksCursorAdapter mTracksAdapter;
     Parcelable state;
     private View mloadingIndicator;
@@ -83,6 +85,17 @@ public class RunListFragment extends Fragment implements LoaderManager.LoaderCal
     private View view;
     //    private static final String SELECTION = TrackContract.TrackingEntry.getGreaterThanZero();
     private RecyclerView tracksRecyclerView;
+    private TrackDbHelper mDbHelper;
+
+    /* Checks if external storage is available for read and write */
+    public static boolean isExternalStorageWritable() {
+        String state = Environment.getExternalStorageState();
+        return Environment.MEDIA_MOUNTED.equals(state);
+    }
+
+//    public Cursor querY() {
+//        return getActivity().getContentResolver().query(TrackContract.TrackingEntry.CONTENT_URI, null, null, null, SORT_ORDER_ID);
+//    }
 
     @Override
     public View onCreateView(final LayoutInflater inflater, ViewGroup container,
@@ -115,24 +128,23 @@ public class RunListFragment extends Fragment implements LoaderManager.LoaderCal
         mloadingIndicator = view.findViewById(R.id.loading_indicator_runs);
         //kick off the loader
         getLoaderManager().initLoader(FAV_LOADER, null, this);
-        return view;
-    }
+        mDbHelper = new TrackDbHelper(getActivity());
+        mContext = getActivity();
+//        fileName = createBackupFileName(runID);
 
-    public Cursor querY() {
-        return getActivity().getContentResolver().query(TrackContract.TrackingEntry.CONTENT_URI, null, null, null, SORT_ORDER_ID);
+        return view;
     }
 
     void deleteOneItem(int runId) {
         int rowDeleted = getActivity().getContentResolver().delete(TrackContract.TrackingEntry.CONTENT_URI, TrackContract.TrackingEntry.COLUMN_RUN_ID + "=" + runId, null);
         Toast.makeText(getActivity(), rowDeleted + " " + getString(R.string.delete_one_item), Toast.LENGTH_SHORT).show();
-//        mFavsAdapter.swapCursor(querY());
+
     }
 
     public void showDeleteConfirmationDialogOneItem(final RecyclerView.ViewHolder viewHolder) {
         //Inside, get the viewHolder's itemView's tag and store in a long variable id
         //get the iD of the item being swiped
         final int runId = (int) viewHolder.itemView.getTag();
-
         // Create an AlertDialog.Builder and set the message, and click listeners
         // for the positive and negative buttons on the dialog.
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
@@ -150,15 +162,17 @@ public class RunListFragment extends Fragment implements LoaderManager.LoaderCal
                 if (dialog != null) {
                     dialog.dismiss();
                 }
-                //call swapCursor on mAdapter passing in null as the argument
-                //update the list
-                mTracksAdapter.swapCursor(querY());
+
+                //update the list (no changes to the list!) very improtant line
+                mTracksAdapter.notifyDataSetChanged();
+
             }
         });
         // Create and show the AlertDialog
         AlertDialog alertDialog = builder.create();
         alertDialog.show();
         alertDialog.setCanceledOnTouchOutside(false);
+
     }
 
     @Override
@@ -181,7 +195,6 @@ public class RunListFragment extends Fragment implements LoaderManager.LoaderCal
     public void onStop() {
         super.onStop();
     }
-
 
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
@@ -240,6 +253,20 @@ public class RunListFragment extends Fragment implements LoaderManager.LoaderCal
         outState.putParcelable(BUNDLE_RECYCLER_LAYOUT, tracksRecyclerView.getLayoutManager().onSaveInstanceState());
     }
 
+//    public static String getAppDir() {
+//
+//        return mContext.getFilesDir() + "/" + mContext.getString(R.string.app_name);
+//    }
+//
+//    public static File createDirIfNotExist() {
+//        String path = getAppDir()+ "/backup";
+//        File dir = new File(path);
+//        if (!dir.exists()) {
+//            dir.mkdir();
+//        }
+//        return dir;
+//    }
+
     public void onItemClick(long id) {
         Intent intent = new Intent(getActivity(), DetailActivity.class);
 
@@ -286,4 +313,36 @@ public class RunListFragment extends Fragment implements LoaderManager.LoaderCal
         intent.setData(currentProductUri);
         startActivity(intent);
     }
+
+//    /* Checks if external storage is available to at least read */
+//    public static boolean isExternalStorageReadable() {
+//        String state = Environment.getExternalStorageState();
+//        return Environment.MEDIA_MOUNTED.equals(state) ||
+//                Environment.MEDIA_MOUNTED_READ_ONLY.equals(state);
+//    }
+
+    public void shareViaEmail(int runId) {
+        try {
+            SQLiteDatabase database = mDbHelper.getReadableDatabase();
+            String filelocation1 = SqliteExporter.export(database, runId);
+            String file_name = SqliteExporter.createBackupFileName(runId);
+//            File Root= Environment.getExternalStorageDirectory();
+//            String filelocation=Root.getAbsolutePath() + folder_name + "/" + file_name;
+            Intent intent = new Intent(Intent.ACTION_SENDTO);
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+//            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            intent.setType("text/plain");
+            String message = "File to be shared is " + file_name + ".";
+            intent.putExtra(Intent.EXTRA_SUBJECT, "Subject");
+            intent.putExtra(Intent.EXTRA_STREAM, Uri.parse("file://" + filelocation1));
+            intent.putExtra(Intent.EXTRA_TEXT, message);
+            intent.setData(Uri.parse("mailto:xyz@gmail.com"));
+
+
+            startActivityForResult(intent, 1);
+        } catch (Exception e) {
+            System.out.println("is exception raises during sending mail" + e);
+        }
+    }
+
 }

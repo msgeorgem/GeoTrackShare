@@ -121,6 +121,7 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
     private final static String KEY_LAST_UPDATED_TIME = "last-updated-time-string";
     private final static String KEY_LAST_UPDATED_ETIME = "last-updated-elapsedtime-string";
     private final static String KEY_LAST_UPDATED_TDISTANCE = "last-updated-total-distance";
+    public static Context mContext;
     private static int DISPLACEMENT = 5; // 10 meters
     private final double NOISE = 0.2;
     private final int DELETE_LAST_ROWS = 10;
@@ -211,7 +212,6 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
      * Start Updates and Stop Updates buttons.
      */
     private Boolean mRequestingLocationUpdates;
-    private Context mContext;
     private boolean mInitialized = false;
     private boolean mNoMove = false;
 
@@ -225,6 +225,7 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         mContext = getActivity();
+
         // Inflate the layout for this fragment
         View v = inflater.inflate(R.layout.fragment_real_time, container, false);
         // Locate the UI widgets.
