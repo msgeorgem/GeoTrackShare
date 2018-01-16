@@ -37,7 +37,6 @@ public class SqliteExporter {
             throw new IOException("Cannot write to external storage");
         }
 
-
         String fileName = TracksCursorAdapter.fileName;
         File backupDirEXT = new File(RunListFragment.mContext.getExternalCacheDir(), fileName);
 //       file saved on internal drive will not be read by gmail without permissions

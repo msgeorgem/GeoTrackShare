@@ -123,8 +123,8 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
     private final static String KEY_LAST_UPDATED_TDISTANCE = "last-updated-total-distance";
     public static Context mContext;
     private static int DISPLACEMENT = 5; // 10 meters
-    private final double NOISE = 0.2;
-    private final int DELETE_LAST_ROWS = 10;
+    private final double NOISE = 0.10;
+    private final int DELETE_LAST_ROWS = 20;
     public String tmDevice, tmSerial, androidId, deviceId;
     public TelephonyManager tm;
     /**
@@ -569,12 +569,12 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
                     mCurrentLocation.getLongitude()));
             mAltitudeTextView.setText(String.format(Locale.ENGLISH, "%s: %f", mAltitudeLabel,
                     mCurrentLocation.getAltitude()));
-            mSpeedTextView.setText(String.format(Locale.ENGLISH, "%s: %f", mSpeedLabel,
+            mSpeedTextView.setText(String.format(Locale.ENGLISH, "%s: %.1f", mSpeedLabel,
                     ((mCurrentLocation.getSpeed()) * 3.6)));
 
-            mAvgSpeedTextView.setText(String.format(Locale.ENGLISH, "%s: %f",
+            mAvgSpeedTextView.setText(String.format(Locale.ENGLISH, "%s: %.1f",
                     mAvgSpeedLabel, calculateAverageSpeed(mCurrentId)));
-            mMaxSpeedTextView.setText(String.format(Locale.ENGLISH, "%s: %f",
+            mMaxSpeedTextView.setText(String.format(Locale.ENGLISH, "%s: %.1f",
                     mMaxSpeedLabel, queryMaxSpeed(mCurrentId)));
             mMaxAltitudeTextView.setText(String.format(Locale.ENGLISH, "%s: %f",
                     mMaxAltitudeLabel, queryMaxAlt(mCurrentId)));
@@ -832,7 +832,7 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
             if (cur != null && cur.moveToFirst()) {
                 do {
                     int idColumnIndex = cur.getColumnIndex(COLUMN_SPEED);
-                    mMaxSpeed = cur.getInt(idColumnIndex);
+                    mMaxSpeed = cur.getDouble(idColumnIndex);
 
                 } while (cur.moveToNext());
             }
@@ -904,8 +904,8 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
     }
 
     private double calculateAverageSpeed(int id) {
-        int sum = 0;
-        int averageSpeed = 0;
+        double sum = 0;
+        double averageSpeed = 0;
         int size;
 
         String specificID = String.valueOf(id);
