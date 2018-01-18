@@ -13,6 +13,8 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.location.Address;
+import android.location.Geocoder;
 import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
@@ -54,11 +56,13 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import static android.content.Context.SENSOR_SERVICE;
+import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_ADDRESS;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_ALTITUDE;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_AVR_SPEED;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_DISTANCE;
@@ -67,7 +71,8 @@ import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_MAX_ALT;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_MAX_SPEED;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_MIN_ALT;
-import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_MOVE;
+import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_MOVE_CLOSE;
+import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_MOVE_DISTANCE;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_RUN_ID;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_SPEED;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_TIME;
@@ -86,6 +91,8 @@ import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry
  * create an instance of this fragment.
  */
 public class RealTimeFragment extends Fragment implements SensorEventListener {
+
+
     private static final String TAG = MainActivity.class.getSimpleName();
 
     /**
@@ -123,8 +130,10 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
     private final static String KEY_LAST_UPDATED_TDISTANCE = "last-updated-total-distance";
     public static Context mContext;
     private static int DISPLACEMENT = 5; // 10 meters
-    private final double NOISE = 0.10;
-    private final int DELETE_LAST_ROWS = 20;
+    private final double NOISEd = 0.20;
+    private final double NOISEc = 0.05;
+    private final int DELETE_LAST_ROWS = 21;
+    private final int GET_GEOLOCATION_LAST_ROWS = 5;
     public String tmDevice, tmSerial, androidId, deviceId;
     public TelephonyManager tm;
     /**
@@ -177,6 +186,7 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
     private TextView mElapsedTimeTextView;
     private TextView mTotalDistanceTextView;
     private TextView mRunNumber;
+    private TextView mAddressOutputTextView;
     private View mLocation;
     // Labels.
     private String mLatitudeLabel;
@@ -196,6 +206,7 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
     private String mDistanceLabel;
     private String mAndroid_idLabel;
     private String mAndroid_id;
+    private String mAddressOutput;
     private int mMaxId, mCurrentId, mLast_ID;
     private long mLastUpdateTimeMillis, mElapsedTimeMillis;
     private double mCurrentLatitude, mCurrentLongitude, mCurrentAltitude, mCurrentSpeed, mMaxSpeed,
@@ -205,15 +216,17 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
     private SensorManager mSensorManager;
     private double ax, ay, az;   // these are the acceleration in x,y and z axis
     private double mLastX, mLastY, mLastZ;
-    private double deltaX, deltaY, deltaZ;
-    private double checkX, checkY, checkZ, mMoveXYZ;
+    private double deltaXD, deltaYD, deltaZD, deltaXC, deltaYC, deltaZC;
+    private double checkXD, checkYD, checkZD, mMoveDistance;
+    private double checkXC, checkYC, checkZC, mMoveClose;
     /**
      * Tracks the status of the location updates request. Value changes when the user presses the
      * Start Updates and Stop Updates buttons.
      */
     private Boolean mRequestingLocationUpdates;
     private boolean mInitialized = false;
-    private boolean mNoMove = false;
+    private boolean mNoMoveDistance = false;
+    private boolean mNoMoveClose = false;
 
 
     public RealTimeFragment() {
@@ -233,6 +246,9 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
         mLocation = v.findViewById(R.id.locate_on_map);
         mStartUpdatesButton = v.findViewById(R.id.start_updates_button);
         mStopUpdatesButton = v.findViewById(R.id.stop_updates_button);
+
+        mAddressOutputTextView = v.findViewById(R.id.address_text);
+
         mLatitudeTextView = v.findViewById(R.id.latitude_text);
         mLongitudeTextView = v.findViewById(R.id.longitude_text);
 
@@ -563,6 +579,7 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
      */
     private void updateLocationUI() {
         if (mCurrentLocation != null) {
+
             mLatitudeTextView.setText(String.format(Locale.ENGLISH, "%s: %f", mLatitudeLabel,
                     mCurrentLocation.getLatitude()));
             mLongitudeTextView.setText(String.format(Locale.ENGLISH, "%s: %f", mLongitudeLabel,
@@ -580,7 +597,7 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
                     mMaxAltitudeLabel, queryMaxAlt(mCurrentId)));
             mMinAltitudeTextView.setText(String.format(Locale.ENGLISH, "%s: %f",
                     mMinAltitudeLabel, queryMinAlt(mCurrentId)));
-            mTotalDistanceTextView.setText(String.format(Locale.ENGLISH, "%s: %s",
+            mTotalDistanceTextView.setText(String.format(Locale.ENGLISH, "%s: %.3f",
                     mDistanceLabel, calculateTotalDistance(mCurrentId)));
 
             mPrevLatitudeTextView.setText(String.format(Locale.ENGLISH, "%s: %f", mPrevLatitudeLabel,
@@ -598,19 +615,36 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
             mAverageSpeed = calculateAverageSpeed(mCurrentId);
             mDistance = calculateDistance(mCurrentId);
             mTotalDistance = calculateTotalDistance(mCurrentId);
-            checkX = deltaX;
-            checkY = deltaY;
-            checkZ = deltaZ;
-            mMoveXYZ = (checkX + checkY + checkZ) / 3;
-            checkMove(mCurrentId);
+
+            checkXD = deltaXD;
+            checkYD = deltaYD;
+            checkZD = deltaZD;
+            mMoveDistance = (checkXD + checkYD + checkZD) / 3;
+
+            checkXC = deltaXC;
+            checkYC = deltaYC;
+            checkZC = deltaZC;
+            mMoveClose = (checkXC + checkYC + checkZC) / 3;
+
+            checkMoveDistance(mCurrentId);
+            checkMoveClose(mCurrentId);
             stopLocationNoMovement(mCurrentId);
+            String mCurrentAddress = "";
+            if (mNoMoveDistance) {
+                mCurrentAddress = getCompleteAddressString(mCurrentLatitude, mCurrentLongitude);
+                mAddressOutputTextView.setText(mCurrentAddress);
+            } else {
+                mAddressOutputTextView.setText(R.string.in_motion);
+                mCurrentAddress = "";
+            }
 
             if (mRequestingLocationUpdates) {
                 getElapsedTime();
                 try {
                     saveItem(mCurrentId, mLastUpdateTimeMillis, mCurrentLatitude, mCurrentLongitude,
                             mCurrentAltitude, mMaxAltitude, mMinAltitude, mCurrentSpeed, mMaxSpeed,
-                            mAverageSpeed, mElapsedTimeMillis, mDistance, mTotalDistance, mMoveXYZ);
+                            mAverageSpeed, mElapsedTimeMillis, mDistance, mTotalDistance, mMoveDistance,
+                            mMoveClose, mCurrentAddress);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -686,7 +720,7 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
 
 
         if (mPreviousLatitude != 0.0 && mPreviousLongitude != 0.0 &&
-                (checkX != 0.0 || checkY != 0.0 || checkZ != 0.0)) {
+                (checkXD != 0.0 || checkYD != 0.0 || checkZD != 0.0)) {
             mDistance = DistanceCalculator.greatCircleInKilometers(mRoundedPreviousLatitude,
                     mRoundedPreviousLongitude, mRoundedCurrentLatitude, mRoundedCurrentLongitude);
             Log.i("Print PreviousLatitude", String.valueOf(mRoundedPreviousLatitude));
@@ -941,7 +975,7 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
         return averageSpeed;
     }
 
-    private boolean checkMove(int id) {
+    private boolean checkMoveDistance(int id) {
         int sum = 0;
         int size = 0;
 //        TODO (2): Compare saved times after changing them to miiliseconds to timeInPast. At this moment
@@ -952,29 +986,74 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
         String specificID = String.valueOf(id);
         String mSelectionClause = TrackContract.TrackingEntry.COLUMN_RUN_ID;
         String SELECTION = mSelectionClause + " = '" + specificID + "'";
-        String[] PROJECTION = {TrackContract.TrackingEntry.COLUMN_MOVE};
+        String[] PROJECTION = {TrackContract.TrackingEntry.COLUMN_MOVE_DISTANCE};
+        String ORDER = " " + COLUMN_TIME_COUNTER + " DESC LIMIT " + GET_GEOLOCATION_LAST_ROWS;
+        try {
+            cur = mContext.getContentResolver()
+                    .query(CONTENT_URI, PROJECTION, SELECTION, null, ORDER);
+
+            ArrayList<Double> nomoveDistance = new ArrayList<>();
+            if (cur != null && cur.moveToFirst()) {
+                while (cur.moveToNext()) {
+                    Double i = cur.getDouble(cur.getColumnIndex(COLUMN_MOVE_DISTANCE));
+                    nomoveDistance.add(i);
+                    size = nomoveDistance.size();
+                    Log.i("nomoveDistance:", String.valueOf(size));
+                }
+            }
+//            Log.i("Print list", speedTempList.toString());
+
+            for (int i = 0; i < nomoveDistance.size(); i++) {
+                sum += nomoveDistance.get(i);
+                size = nomoveDistance.size();
+            }
+            mNoMoveDistance = (sum == 0.0) && (size == (GET_GEOLOCATION_LAST_ROWS - 1));
+            Log.i("No Move:", String.valueOf(mNoMoveDistance));
+            if (cur != null) {
+                cur.close();
+            }
+
+        } catch (Exception e) {
+            Log.e("Path Error", e.toString());
+        }
+        return mNoMoveDistance;
+    }
+
+
+    private boolean checkMoveClose(int id) {
+        int sum = 0;
+        int size = 0;
+//        TODO (2): Compare saved times after changing them to miiliseconds to timeInPast. At this moment
+//        TODO (2): At this moment we leave last ten records no matter what time in past last record was
+//        long currentTime = System.currentTimeMillis();
+//        long timeInPast = currentTime - CHECK_NO_MOVE_TIME_IN_MILLISECONDS;
+
+        String specificID = String.valueOf(id);
+        String mSelectionClause = TrackContract.TrackingEntry.COLUMN_RUN_ID;
+        String SELECTION = mSelectionClause + " = '" + specificID + "'";
+        String[] PROJECTION = {TrackContract.TrackingEntry.COLUMN_MOVE_CLOSE};
         String ORDER = " " + COLUMN_TIME_COUNTER + " DESC LIMIT " + DELETE_LAST_ROWS;
         try {
             cur = mContext.getContentResolver()
                     .query(CONTENT_URI, PROJECTION, SELECTION, null, ORDER);
 
-            ArrayList<Double> speedTempList = new ArrayList<>();
+            ArrayList<Double> moveCloseList = new ArrayList<>();
             if (cur != null && cur.moveToFirst()) {
                 while (cur.moveToNext()) {
-                    Double i = cur.getDouble(cur.getColumnIndex(COLUMN_MOVE));
-                    speedTempList.add(i);
-                    size = speedTempList.size();
-                    Log.i("speedTempList:", String.valueOf(size));
+                    Double i = cur.getDouble(cur.getColumnIndex(COLUMN_MOVE_CLOSE));
+                    moveCloseList.add(i);
+                    size = moveCloseList.size();
+                    Log.i("moveCloseList:", String.valueOf(size));
                 }
             }
 //            Log.i("Print list", speedTempList.toString());
 
-            for (int i = 0; i < speedTempList.size(); i++) {
-                sum += speedTempList.get(i);
-                size = speedTempList.size();
+            for (int i = 0; i < moveCloseList.size(); i++) {
+                sum += moveCloseList.get(i);
+                size = moveCloseList.size();
             }
-            mNoMove = (sum == 0.0) && (size == (DELETE_LAST_ROWS - 1));
-            Log.i("No Move:", String.valueOf(mNoMove));
+            mNoMoveClose = (sum == 0.0) && (size == (DELETE_LAST_ROWS - 4));
+            Log.i("No Move:", String.valueOf(mNoMoveClose));
             if (cur != null) {
                 cur.close();
             }
@@ -985,22 +1064,22 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
         } catch (Exception e) {
             Log.e("Path Error", e.toString());
         }
-        return mNoMove;
+        return mNoMoveClose;
     }
 
     void deletelastNoMoveRows() {
-        for (int i = 0; i < (DELETE_LAST_ROWS - 1); i++) {
+        for (int i = 0; i < (DELETE_LAST_ROWS - GET_GEOLOCATION_LAST_ROWS); i++) {
             int last_ID = queryLast_ID();
             String lastRow = TrackContract.TrackingEntry._ID + "=" + last_ID;
             getActivity().getContentResolver().delete(CONTENT_URI, lastRow, null);
-            Toast.makeText(getActivity(), (DELETE_LAST_ROWS - 1) + " " + getString(R.string.delete_one_item), Toast.LENGTH_SHORT).show();
+            Toast.makeText(getActivity(), (DELETE_LAST_ROWS - GET_GEOLOCATION_LAST_ROWS) + " " + getString(R.string.delete_one_item), Toast.LENGTH_SHORT).show();
         }
     }
     private void saveItem(int runId, long currentTime, double currentLatitude, double currentLongitude,
                           double currentAltitude, double currentMaxAlt, double currentMinAlt,
                           double currentSpeed, double currentMaxSpeed, double currentAvrSpeed,
                           long currentElapsedTime, double currentDistance, double currentTotalDistance,
-                          double currentMove) throws IOException {
+                          double currentMoveDistance, double currentMoveClose, String currentAddress) throws IOException {
 
         ContentValues values = new ContentValues();
         values.put(COLUMN_RUN_ID, runId);
@@ -1016,12 +1095,13 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
         values.put(COLUMN_TIME_COUNTER, currentElapsedTime);
         values.put(COLUMN_DISTANCE, currentDistance);
         values.put(COLUMN_TOTAL_DISTANCE, currentTotalDistance);
-        values.put(COLUMN_MOVE, currentMove);
+        values.put(COLUMN_MOVE_DISTANCE, currentMoveDistance);
+        values.put(COLUMN_MOVE_CLOSE, currentMoveClose);
+        values.put(COLUMN_ADDRESS, currentAddress);
 
         // This is a NEW item, so insert a new item into the provider,
         // returning the content URI for the item item.
         mContext.getContentResolver().insert(CONTENT_URI, values);
-
     }
 
     /**
@@ -1048,11 +1128,12 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
 
     private void stopLocationNoMovement(int id) {
 
-        if (mNoMove) {
+        if (mNoMoveClose) {
             stopLocationUpdates();
             deletelastNoMoveRows();
         }
     }
+
 
     @Override
     public void onResume() {
@@ -1225,7 +1306,6 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
         }
     }
 
-    //TODO (3) handle sensor to stop working while no action and start working when needed
     @Override
     public void onSensorChanged(SensorEvent sensorEvent) {
         if (sensorEvent.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
@@ -1239,18 +1319,25 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
                 mLastZ = az;
                 mInitialized = true;
             } else {
-                deltaX = Math.abs(mLastX - ax);
-                deltaY = Math.abs(mLastY - ay);
-                deltaZ = Math.abs(mLastZ - az);
-                if (deltaX < NOISE) deltaX = 0.0;
-                if (deltaY < NOISE) deltaY = 0.0;
-                if (deltaZ < NOISE) deltaZ = 0.0;
+                deltaXD = Math.abs(mLastX - ax);
+                deltaYD = Math.abs(mLastY - ay);
+                deltaZD = Math.abs(mLastZ - az);
+                if (deltaXD < NOISEd) deltaXD = 0.0;
+                if (deltaYD < NOISEd) deltaYD = 0.0;
+                if (deltaZD < NOISEd) deltaZD = 0.0;
+                deltaXC = Math.abs(mLastX - ax);
+                deltaYC = Math.abs(mLastY - ay);
+                deltaZC = Math.abs(mLastZ - az);
+                if (deltaXC < NOISEc) deltaXC = 0.0;
+                if (deltaYC < NOISEc) deltaYC = 0.0;
+                if (deltaZC < NOISEc) deltaZC = 0.0;
+
                 mLastX = ax;
                 mLastY = ay;
                 mLastZ = az;
-//                Log.i("Print deltaX", String.valueOf(deltaX));
-//                Log.i("Print deltaY", String.valueOf(deltaY));
-//                Log.i("Print deltaZ", String.valueOf(deltaZ));
+//                Log.i("Print deltaXD", String.valueOf(deltaXD));
+//                Log.i("Print deltaYD", String.valueOf(deltaYD));
+//                Log.i("Print deltaZD", String.valueOf(deltaZD));
             }
         }
     }
@@ -1259,5 +1346,32 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
     public void onAccuracyChanged(Sensor sensor, int i) {
 
     }
+
+
+    private String getCompleteAddressString(double LATITUDE, double LONGITUDE) {
+
+        Geocoder geocoder = new Geocoder(mContext, Locale.getDefault());
+        try {
+            List<Address> addresses = geocoder.getFromLocation(LATITUDE, LONGITUDE, 1);
+            if (addresses != null) {
+                Address returnedAddress = addresses.get(0);
+                StringBuilder strReturnedAddress = new StringBuilder("");
+
+                for (int i = 0; i <= returnedAddress.getMaxAddressLineIndex(); i++) {
+                    strReturnedAddress.append(returnedAddress.getAddressLine(i)).append("\n");
+                }
+                mAddressOutput = strReturnedAddress.toString();
+                Log.w("My address", strReturnedAddress.toString());
+            } else {
+                Log.w("My address", "No Address returned!");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            Log.w("Myloction address", "Canont get Address!");
+        }
+        return mAddressOutput;
+    }
+
+
 }
 

@@ -67,4 +67,6 @@
     <string name="no_runs">Run list is empty. You can add run by
         turning tracking button. Just click it! </string>
 
+    <string name="address_found">Address Found! </string>
+    <string name="in_motion">…in motion…</string>
 </resources>

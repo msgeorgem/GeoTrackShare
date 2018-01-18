@@ -30,6 +30,7 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
 
+
         <!--android:grantUriPermissions="true"
              The API key for Google Maps-based APIs is defined as a string resource.
              (See the file "res/values/google_maps_api.xml").
@@ -87,7 +88,6 @@
             android:name="com.example.android.geotrackshare.Data.TrackProvider"
             android:authorities="com.example.android.geotrackshare"
             android:exported="false" />
-
 
     </application>
 
