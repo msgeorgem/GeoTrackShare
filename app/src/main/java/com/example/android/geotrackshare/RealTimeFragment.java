@@ -130,7 +130,7 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
     private final static String KEY_LAST_UPDATED_TDISTANCE = "last-updated-total-distance";
     public static Context mContext;
     private static int DISPLACEMENT = 5; // 10 meters
-    private final double NOISEd = 0.20;
+    private final double NOISEd = 0.1;
     private final double NOISEc = 0.05;
     private final int DELETE_LAST_ROWS = 21;
     private final int GET_GEOLOCATION_LAST_ROWS = 5;
@@ -207,6 +207,7 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
     private String mAndroid_idLabel;
     private String mAndroid_id;
     private String mAddressOutput;
+    private String mCurrentAddress = "";
     private int mMaxId, mCurrentId, mLast_ID;
     private long mLastUpdateTimeMillis, mElapsedTimeMillis;
     private double mCurrentLatitude, mCurrentLongitude, mCurrentAltitude, mCurrentSpeed, mMaxSpeed,
@@ -629,14 +630,7 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
             checkMoveDistance(mCurrentId);
             checkMoveClose(mCurrentId);
             stopLocationNoMovement(mCurrentId);
-            String mCurrentAddress = "";
-            if (mNoMoveDistance) {
-                mCurrentAddress = getCompleteAddressString(mCurrentLatitude, mCurrentLongitude);
-                mAddressOutputTextView.setText(mCurrentAddress);
-            } else {
-                mAddressOutputTextView.setText(R.string.in_motion);
-                mCurrentAddress = "";
-            }
+
 
             if (mRequestingLocationUpdates) {
                 getElapsedTime();
@@ -648,6 +642,14 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
+                if (mNoMoveDistance) {
+                    mCurrentAddress = getCompleteAddressString(mCurrentLatitude, mCurrentLongitude);
+                    mAddressOutputTextView.setText(mCurrentAddress);
+                } else {
+                    mAddressOutputTextView.setText(R.string.in_motion);
+                    mCurrentAddress = "";
+                }
+
             }
         }
     }
@@ -1068,11 +1070,11 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
     }
 
     void deletelastNoMoveRows() {
-        for (int i = 0; i < (DELETE_LAST_ROWS - GET_GEOLOCATION_LAST_ROWS); i++) {
-            int last_ID = queryLast_ID();
+        for (int i = 0; i < (DELETE_LAST_ROWS - 1); i++) {
+            int last_ID = queryLast_ID() - 1;
             String lastRow = TrackContract.TrackingEntry._ID + "=" + last_ID;
             getActivity().getContentResolver().delete(CONTENT_URI, lastRow, null);
-            Toast.makeText(getActivity(), (DELETE_LAST_ROWS - GET_GEOLOCATION_LAST_ROWS) + " " + getString(R.string.delete_one_item), Toast.LENGTH_SHORT).show();
+            Toast.makeText(getActivity(), (DELETE_LAST_ROWS - 1) + " " + getString(R.string.delete_one_item), Toast.LENGTH_SHORT).show();
         }
     }
     private void saveItem(int runId, long currentTime, double currentLatitude, double currentLongitude,
@@ -1371,7 +1373,6 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
         }
         return mAddressOutput;
     }
-
 
 }
 
