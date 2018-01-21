@@ -130,8 +130,8 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
     private final static String KEY_LAST_UPDATED_TDISTANCE = "last-updated-total-distance";
     public static Context mContext;
     private static int DISPLACEMENT = 5; // 10 meters
-    private final double NOISEd = 0.1;
-    private final double NOISEc = 0.05;
+    private final double NOISEd = 0.9;
+    private final double NOISEc = 0.04;
     private final int DELETE_LAST_ROWS = 21;
     private final int GET_GEOLOCATION_LAST_ROWS = 5;
     public String tmDevice, tmSerial, androidId, deviceId;
@@ -289,7 +289,6 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
         mRequestingLocationUpdates = false;
         mLastUpdateTime = "";
         mElapsedTime = "";
-
 
         // Update values using data stored in the Bundle.
         updateValuesFromBundle(savedInstanceState);
@@ -627,8 +626,8 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
             checkZC = deltaZC;
             mMoveClose = (checkXC + checkYC + checkZC) / 3;
 
-            checkMoveDistance(mCurrentId);
-            checkMoveClose(mCurrentId);
+            mNoMoveDistance = checkMoveDistance(mCurrentId);
+            mNoMoveClose = checkMoveClose(mCurrentId);
             stopLocationNoMovement(mCurrentId);
 
 
@@ -980,6 +979,7 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
     private boolean checkMoveDistance(int id) {
         int sum = 0;
         int size = 0;
+        boolean mNoMove = false;
 //        TODO (2): Compare saved times after changing them to miiliseconds to timeInPast. At this moment
 //        TODO (2): At this moment we leave last ten records no matter what time in past last record was
 //        long currentTime = System.currentTimeMillis();
@@ -1009,8 +1009,8 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
                 sum += nomoveDistance.get(i);
                 size = nomoveDistance.size();
             }
-            mNoMoveDistance = (sum == 0.0) && (size == (GET_GEOLOCATION_LAST_ROWS - 1));
-            Log.i("No Move:", String.valueOf(mNoMoveDistance));
+            mNoMove = (sum == 0.0) && (size == (GET_GEOLOCATION_LAST_ROWS - 1));
+            Log.i("No Move:", String.valueOf(mNoMove));
             if (cur != null) {
                 cur.close();
             }
@@ -1018,13 +1018,14 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
         } catch (Exception e) {
             Log.e("Path Error", e.toString());
         }
-        return mNoMoveDistance;
+        return mNoMove;
     }
 
 
     private boolean checkMoveClose(int id) {
         int sum = 0;
         int size = 0;
+        boolean mNoMove = false;
 //        TODO (2): Compare saved times after changing them to miiliseconds to timeInPast. At this moment
 //        TODO (2): At this moment we leave last ten records no matter what time in past last record was
 //        long currentTime = System.currentTimeMillis();
@@ -1054,8 +1055,8 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
                 sum += moveCloseList.get(i);
                 size = moveCloseList.size();
             }
-            mNoMoveClose = (sum == 0.0) && (size == (DELETE_LAST_ROWS - 4));
-            Log.i("No Move:", String.valueOf(mNoMoveClose));
+            mNoMove = (sum == 0.0) && (size == (DELETE_LAST_ROWS - 1));
+            Log.i("No Move:", String.valueOf(mNoMove));
             if (cur != null) {
                 cur.close();
             }
@@ -1066,15 +1067,15 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
         } catch (Exception e) {
             Log.e("Path Error", e.toString());
         }
-        return mNoMoveClose;
+        return mNoMove;
     }
 
     void deletelastNoMoveRows() {
-        for (int i = 0; i < (DELETE_LAST_ROWS - 1); i++) {
-            int last_ID = queryLast_ID() - 1;
+        for (int i = 0; i < (DELETE_LAST_ROWS - GET_GEOLOCATION_LAST_ROWS - 2); i++) {
+            int last_ID = queryLast_ID();
             String lastRow = TrackContract.TrackingEntry._ID + "=" + last_ID;
             getActivity().getContentResolver().delete(CONTENT_URI, lastRow, null);
-            Toast.makeText(getActivity(), (DELETE_LAST_ROWS - 1) + " " + getString(R.string.delete_one_item), Toast.LENGTH_SHORT).show();
+            Toast.makeText(getActivity(), (DELETE_LAST_ROWS - GET_GEOLOCATION_LAST_ROWS) + " " + getString(R.string.delete_one_item), Toast.LENGTH_SHORT).show();
         }
     }
     private void saveItem(int runId, long currentTime, double currentLatitude, double currentLongitude,
