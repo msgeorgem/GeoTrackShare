@@ -130,9 +130,9 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
     private final static String KEY_LAST_UPDATED_TDISTANCE = "last-updated-total-distance";
     public static Context mContext;
     private static int DISPLACEMENT = 5; // 10 meters
-    private final double NOISEd = 0.9;
+    private final double NOISEd = 0.05;
     private final double NOISEc = 0.04;
-    private final int DELETE_LAST_ROWS = 21;
+    private final int DELETE_LAST_ROWS = 10;
     private final int GET_GEOLOCATION_LAST_ROWS = 5;
     public String tmDevice, tmSerial, androidId, deviceId;
     public TelephonyManager tm;
