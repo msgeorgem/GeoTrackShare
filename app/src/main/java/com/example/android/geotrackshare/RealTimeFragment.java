@@ -108,7 +108,7 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
     /**
      * The desired interval for location updates. Inexact. Updates may be more or less frequent.
      */
-    private static final long UPDATE_INTERVAL_IN_MILLISECONDS = 5000; // 5 sec
+    private static final long UPDATE_INTERVAL_IN_MILLISECONDS = 10000; // 10 sec
 
     /**
      * Time without move.
@@ -130,10 +130,10 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
     private final static String KEY_LAST_UPDATED_TDISTANCE = "last-updated-total-distance";
     public static Context mContext;
     private static int DISPLACEMENT = 5; // 10 meters
-    private final double NOISEd = 0.05;
-    private final double NOISEc = 0.04;
-    private final int DELETE_LAST_ROWS = 10;
-    private final int GET_GEOLOCATION_LAST_ROWS = 5;
+    private final double NOISEd = 0.07;
+    private final double NOISEc = 0.02;
+    private final int DELETE_LAST_ROWS = 27;
+    private final int GET_GEOLOCATION_LAST_ROWS = 6;
     public String tmDevice, tmSerial, androidId, deviceId;
     public TelephonyManager tm;
     /**
@@ -491,6 +491,7 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
             startLocationUpdates();
         }
     }
+
     /**
      * Handles the Stop Updates button, and requests removal of location updates.
      */
@@ -574,6 +575,7 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
             mStopUpdatesButton.setEnabled(false);
         }
     }
+
     /**
      * Sets the value of the UI fields for the location latitude, longitude and last update time.
      */
@@ -634,6 +636,13 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
             if (mRequestingLocationUpdates) {
                 getElapsedTime();
                 try {
+                    if (mNoMoveDistance) {
+                        mCurrentAddress = getCompleteAddressString(mCurrentLatitude, mCurrentLongitude);
+                        mAddressOutputTextView.setText(mCurrentAddress);
+                    } else {
+                        mAddressOutputTextView.setText(R.string.in_motion);
+                        mCurrentAddress = "";
+                    }
                     saveItem(mCurrentId, mLastUpdateTimeMillis, mCurrentLatitude, mCurrentLongitude,
                             mCurrentAltitude, mMaxAltitude, mMinAltitude, mCurrentSpeed, mMaxSpeed,
                             mAverageSpeed, mElapsedTimeMillis, mDistance, mTotalDistance, mMoveDistance,
@@ -641,14 +650,6 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-                if (mNoMoveDistance) {
-                    mCurrentAddress = getCompleteAddressString(mCurrentLatitude, mCurrentLongitude);
-                    mAddressOutputTextView.setText(mCurrentAddress);
-                } else {
-                    mAddressOutputTextView.setText(R.string.in_motion);
-                    mCurrentAddress = "";
-                }
-
             }
         }
     }
@@ -719,9 +720,9 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
         double mRoundedCurrentLatitude = Math.round((mCurrentLocation.getLatitude()) * 1000000) / 1000000.0d;
         double mRoundedCurrentLongitude = Math.round((mCurrentLocation.getLongitude()) * 1000000) / 1000000.0d;
 
-
+        double mXYZDelta = (deltaXD + deltaYD + deltaZD);
         if (mPreviousLatitude != 0.0 && mPreviousLongitude != 0.0 &&
-                (checkXD != 0.0 || checkYD != 0.0 || checkZD != 0.0)) {
+                (mXYZDelta != 0.0)) {
             mDistance = DistanceCalculator.greatCircleInKilometers(mRoundedPreviousLatitude,
                     mRoundedPreviousLongitude, mRoundedCurrentLatitude, mRoundedCurrentLongitude);
             Log.i("Print PreviousLatitude", String.valueOf(mRoundedPreviousLatitude));
@@ -1007,9 +1008,9 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
 
             for (int i = 0; i < nomoveDistance.size(); i++) {
                 sum += nomoveDistance.get(i);
-                size = nomoveDistance.size();
             }
             mNoMove = (sum == 0.0) && (size == (GET_GEOLOCATION_LAST_ROWS - 1));
+
             Log.i("No Move:", String.valueOf(mNoMove));
             if (cur != null) {
                 cur.close();
@@ -1030,7 +1031,6 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
 //        TODO (2): At this moment we leave last ten records no matter what time in past last record was
 //        long currentTime = System.currentTimeMillis();
 //        long timeInPast = currentTime - CHECK_NO_MOVE_TIME_IN_MILLISECONDS;
-
         String specificID = String.valueOf(id);
         String mSelectionClause = TrackContract.TrackingEntry.COLUMN_RUN_ID;
         String SELECTION = mSelectionClause + " = '" + specificID + "'";
@@ -1049,11 +1049,8 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
                     Log.i("moveCloseList:", String.valueOf(size));
                 }
             }
-//            Log.i("Print list", speedTempList.toString());
-
             for (int i = 0; i < moveCloseList.size(); i++) {
                 sum += moveCloseList.get(i);
-                size = moveCloseList.size();
             }
             mNoMove = (sum == 0.0) && (size == (DELETE_LAST_ROWS - 1));
             Log.i("No Move:", String.valueOf(mNoMove));
@@ -1078,6 +1075,7 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
             Toast.makeText(getActivity(), (DELETE_LAST_ROWS - GET_GEOLOCATION_LAST_ROWS) + " " + getString(R.string.delete_one_item), Toast.LENGTH_SHORT).show();
         }
     }
+
     private void saveItem(int runId, long currentTime, double currentLatitude, double currentLongitude,
                           double currentAltitude, double currentMaxAlt, double currentMinAlt,
                           double currentSpeed, double currentMaxSpeed, double currentAvrSpeed,
