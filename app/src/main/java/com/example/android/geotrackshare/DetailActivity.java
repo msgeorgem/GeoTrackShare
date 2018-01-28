@@ -33,7 +33,6 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
-import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.MarkerOptions;
@@ -51,6 +50,7 @@ import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_TIME_COUNTER;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_TOTAL_DISTANCE;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.CONTENT_URI;
+import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry._ID;
 import static com.example.android.geotrackshare.TrackList.RunListFragment.EXTRA_TIME;
 
 /**
@@ -63,10 +63,17 @@ public class DetailActivity extends AppCompatActivity implements OnMapReadyCallb
     public static final String TEST_MDB_MOVIE_PATH = "https://api.themoviedb.org/3/movie/321612/videos?api_key=1157007d8e3f7d5e0af6d7e4165e2730";
     public static final String LOG_TAG = DetailActivity.class.getSimpleName();
     private static final String BUNDLE_RECYCLER_LAYOUT = "DetailActivity.clipsRecyclerView.activity_detail";
-    private static final String[] PROJECTION = {
+    private static final String[] PROJECTION01 = {
             TrackContract.TrackingEntry._ID,
             TrackContract.TrackingEntry.COLUMN_TIME,
     };
+    private static final String[] PROJECTION02 = {
+            _ID,
+            COLUMN_RUN_ID,
+            COLUMN_LATITUDE,
+            COLUMN_LONGITUDE
+    };
+
     public static String CURRENT_RUN_ID;
     public static SharedPreferences favPrefs;
     private final String MDB_SHARE_HASHTAG = "IMDB Source";
@@ -80,11 +87,13 @@ public class DetailActivity extends AppCompatActivity implements OnMapReadyCallb
     private int runIdInt;
     private Uri mCurrentItemUri;
     private ActivityDetailBinding mDetailBinding;
-    private Cursor cur;
+    private Cursor cur, cur0, cur1;
     private GoogleMap mMap;
     private ArrayList<LatLng> coordinatesList;
     private Location mCurrentLocation;
     private LatLng here;
+    private double[] mStartLocation = new double[2];
+    private double[] mStopLocation = new double[2];
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -240,14 +249,109 @@ public class DetailActivity extends AppCompatActivity implements OnMapReadyCallb
 
     }
 
+    private double[] startLocation(int id) {
+        Log.i("Start Location", "control1");
+        String specificID = String.valueOf(id);
+        String mSelectionClause = TrackContract.TrackingEntry.COLUMN_RUN_ID;
+        String SELECTION = mSelectionClause + " = '" + specificID + "'";
+        String ORDERASC = " " + _ID + " ASC LIMIT 1";
+
+        try {
+            cur = getContentResolver()
+                    .query(CONTENT_URI, PROJECTION02, SELECTION, null, ORDERASC);
+            Log.i("Start Location", "control2");
+
+            if (cur != null && cur.moveToFirst()) {
+                do {
+                    mStartLocation[0] = cur.getDouble(cur.getColumnIndex(COLUMN_LATITUDE));
+                    mStartLocation[1] = cur.getDouble(cur.getColumnIndex(COLUMN_LONGITUDE));
+                    Log.i("Start Location", "control3");
+                    Log.i("Start Location", String.valueOf(mStartLocation[0]) +
+                            " , " + String.valueOf(mStartLocation[1]));
+                }
+                while (cur.moveToNext());
+            }
+
+            if (cur != null) {
+                cur.close();
+            }
+
+        } catch (Exception e) {
+            Log.e("Path Error", e.toString());
+        }
+        return mStartLocation;
+    }
+
+    private double[] stopLocation(int id) {
+
+        String specificID = String.valueOf(id);
+        String mSelectionClause = TrackContract.TrackingEntry.COLUMN_RUN_ID;
+        String SELECTION = mSelectionClause + " = '" + specificID + "'";
+        String ORDERDESC = " " + _ID + " DESC LIMIT 1";
+
+
+        try {
+            cur = getContentResolver()
+                    .query(CONTENT_URI, PROJECTION02, SELECTION, null, ORDERDESC);
+
+            if (cur != null && cur.moveToFirst()) {
+                do {
+                    mStopLocation[0] = cur.getDouble(cur.getColumnIndex(COLUMN_LATITUDE));
+                    mStopLocation[1] = cur.getDouble(cur.getColumnIndex(COLUMN_LONGITUDE));
+
+                    Log.i("Stop Location", String.valueOf(mStopLocation[0]) +
+                            " , " + String.valueOf(mStopLocation[1]));
+                }
+                while (cur.moveToNext());
+            }
+
+            if (cur != null) {
+                cur.close();
+            }
+
+        } catch (Exception e) {
+            Log.e("Path Error", e.toString());
+        }
+        return mStopLocation;
+    }
+
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
-        LatLng point = new LatLng(0, 0);
+        double mStartLatitude = startLocation(runIdInt)[0];
+        double mStartLongitude = startLocation(runIdInt)[1];
+        double mStopLatitude = stopLocation(runIdInt)[0];
+        double mStopLongitude = stopLocation(runIdInt)[1];
+
+        double mSouthLatitude;
+        double mWestLongitude;
+        double mNorthLatitude;
+        double mEastLongitude;
+        if (mStartLatitude > mStopLatitude) {
+            mSouthLatitude = mStopLatitude;
+            mNorthLatitude = mStartLatitude;
+        } else {
+            mSouthLatitude = mStartLatitude;
+            mNorthLatitude = mStopLatitude;
+        }
+        if (mStartLongitude > mStopLongitude) {
+            mEastLongitude = mStartLongitude;
+            mWestLongitude = mStopLongitude;
+        } else {
+            mEastLongitude = mStopLongitude;
+            mWestLongitude = mStartLongitude;
+        }
+
+        LatLng mSouthWestPoint = new LatLng(mSouthLatitude, mWestLongitude);
+        LatLng mNorthEastPoint = new LatLng(mNorthLatitude, mEastLongitude);
+
+        LatLng mStartPoint = new LatLng(mStartLatitude, mStartLongitude);
+        LatLng mStopPoint = new LatLng(mStopLatitude, mStopLongitude);
+        LatLng mPoint = new LatLng(0, 0);
         LatLng poznan = new LatLng(52.406374, 16.9251681);
-        LatLngBounds AUSTRALIA = new LatLngBounds(
-                new LatLng(-44, 113), new LatLng(-10, 154));
-        // mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(AUSTRALIA.getCenter(), 10));
+//        LatLngBounds(LatLng southwest, LatLng northeast)
+        LatLngBounds TRIP = new LatLngBounds(mSouthWestPoint, mNorthEastPoint);
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(TRIP.getCenter(), 15));
         // Add a marker in Poznan, Poland, and move the camera.
         // mMap.addMarker(new MarkerOptions().position(here).title("arker in Poznań"));
         // mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(here,15));
@@ -263,14 +367,13 @@ public class DetailActivity extends AppCompatActivity implements OnMapReadyCallb
                 .add(new LatLng(37.35, -122.0)); // Closes the polyline.
 
         for (int i = 0; i < coordinatesList.size(); i++) {
-            point = coordinatesList.get(i);
-            options.add(point);
-            Log.i("Print Locations55555", String.valueOf(coordinatesList));
+            mPoint = coordinatesList.get(i);
+            options.add(mPoint);
         }
 
         mMap.addPolyline(options);
 
-        mMap.addMarker(new MarkerOptions().position(point).title("You are here")); //add Marker in current position
+        mMap.addMarker(new MarkerOptions().position(mStopPoint).title("You are here")); //add Marker in current position
         mMap.setMinZoomPreference(1.0f);
         mMap.setMaxZoomPreference(20.0f);
 
@@ -278,16 +381,16 @@ public class DetailActivity extends AppCompatActivity implements OnMapReadyCallb
         mMap.animateCamera(CameraUpdateFactory.zoomIn());
 
         // Zoom out to zoom level 10, animating with a duration of 2 seconds.
-        mMap.animateCamera(CameraUpdateFactory.zoomTo(10), 2000, null);
+        mMap.animateCamera(CameraUpdateFactory.zoomTo(14), 2000, null);
 
         // Construct a CameraPosition focusing on Mountain View and animate the camera to that position.
-        CameraPosition cameraPosition = new CameraPosition.Builder()
-                .target(point)               // Sets the center of the map to Mountain View
-                .zoom(15)                   // Sets the zoom
-                .bearing(0)                // Sets the orientation of the camera to east
-                .tilt(30)                   // Sets the tilt of the camera to 30 degrees
-                .build();                   // Creates a CameraPosition from the builder
-        mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
+//        CameraPosition cameraPosition = new CameraPosition.Builder()
+//                .target(mStopPoint)               // Sets the center of the map to Mountain View
+//                .zoom(15)                   // Sets the zoom
+//                .bearing(0)                // Sets the orientation of the camera to east
+//                .tilt(30)                   // Sets the tilt of the camera to 30 degrees
+//                .build();                   // Creates a CameraPosition from the builder
+//        mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
 
     }
 
