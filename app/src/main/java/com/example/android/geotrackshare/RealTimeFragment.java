@@ -132,8 +132,8 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
     private static int DISPLACEMENT = 5; // 10 meters
     private final double NOISEd = 0.07;
     private final double NOISEc = 0.02;
-    private final int DELETE_LAST_ROWS = 27;
-    private final int GET_GEOLOCATION_LAST_ROWS = 6;
+    private final int DELETE_LAST_ROWS = 15;
+    private final int GET_GEOLOCATION_LAST_ROWS = 5;
     public String tmDevice, tmSerial, androidId, deviceId;
     public TelephonyManager tm;
     /**

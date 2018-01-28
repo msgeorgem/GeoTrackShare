@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.databinding.DataBindingUtil;
+import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Parcelable;
@@ -16,6 +17,7 @@ import android.support.v4.app.ShareCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -26,12 +28,23 @@ import android.widget.ToggleButton;
 import com.example.android.geotrackshare.Data.TrackContract;
 import com.example.android.geotrackshare.TrackList.RunListFragment;
 import com.example.android.geotrackshare.databinding.ActivityDetailBinding;
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Polyline;
+import com.google.android.gms.maps.model.PolylineOptions;
 
 import java.io.IOException;
 import java.util.ArrayList;
 
+import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_ALTITUDE;
+import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_LATITUDE;
+import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_LONGITUDE;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_RUN_ID;
+import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_SPEED;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_TIME;
+import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_TIME_COUNTER;
+import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_TOTAL_DISTANCE;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.CONTENT_URI;
 import static com.example.android.geotrackshare.TrackList.RunListFragment.EXTRA_TIME;
 
@@ -52,21 +65,31 @@ public class DetailActivity extends AppCompatActivity {
     public static String CURRENT_RUN_ID;
     public static SharedPreferences favPrefs;
     private final String MDB_SHARE_HASHTAG = "IMDB Source";
+    Polyline line;
     private String mMovieSummary;
-
     private Context context;
     private ToggleButton FAVtoggleButton;
     private String currentRun, currentTimeStart;
     private long currentRunId;
     private String runId;
+    private int runIdInt;
     private Uri mCurrentItemUri;
     private ActivityDetailBinding mDetailBinding;
     private Cursor cur;
+    private GoogleMap googleMap;
+    private ArrayList<LatLng> coordinatesList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         mDetailBinding = DataBindingUtil.setContentView(this, R.layout.activity_detail);
+        coordinatesList = new ArrayList<LatLng>();
+
+        SupportMapFragment fm = (SupportMapFragment) getSupportFragmentManager()
+                .findFragmentById(R.id.map);
+
+        googleMap = fm.getMapAsync();
+
 
         // Find the toolbar view inside the activity layout
         Toolbar toolbar = findViewById(R.id.toolbar);
@@ -88,15 +111,16 @@ public class DetailActivity extends AppCompatActivity {
         Intent intent = getIntent();
         mCurrentItemUri = intent.getData();
 
-        CURRENT_RUN_ID = intent.getStringExtra(RunListFragment.EXTRA_RUN_ID);
-        runId = CURRENT_RUN_ID;
+
         currentRun = intent.getStringExtra(RunListFragment.EXTRA_RUN_ID);
         currentTimeStart = intent.getStringExtra(EXTRA_TIME);
 
         mDetailBinding.part2.runId.setText(currentRun);
         mDetailBinding.part2.startTime.setText(currentTimeStart);
 
-        currentRunId = Long.parseLong(runId);
+        currentRunId = Long.parseLong(currentRun);
+        runIdInt = Integer.parseInt(currentRun);
+        queryCoordinatesList(runIdInt);
 
         context = mDetailBinding.part2.favDetToggleButton.getContext();
         FAVtoggleButton = mDetailBinding.part2.favDetToggleButton;
@@ -162,6 +186,61 @@ public class DetailActivity extends AppCompatActivity {
     public void delete(long id) {
         int rowDeleted = getContentResolver().delete(CONTENT_URI, TrackContract.TrackingEntry.COLUMN_RUN_ID + "=" + id, null);
         Toast.makeText(this, rowDeleted + " " + getString(R.string.delete_one_item), Toast.LENGTH_SHORT).show();
+    }
+
+    public void queryCoordinatesList(int id) {
+        String[] PROJECTION = {
+                COLUMN_RUN_ID,
+                COLUMN_TIME,
+                COLUMN_LATITUDE,
+                COLUMN_LONGITUDE,
+                COLUMN_ALTITUDE,
+                COLUMN_SPEED,
+                COLUMN_TIME_COUNTER,
+                COLUMN_TOTAL_DISTANCE
+        };
+        String specificID = String.valueOf(id);
+        String mSelectionClause = TrackContract.TrackingEntry.COLUMN_RUN_ID;
+        String SELECTION = mSelectionClause + " = '" + specificID + "'";
+        String ORDER = " " + COLUMN_SPEED + " DESC LIMIT 1";
+
+        try {
+            cur = getContentResolver()
+                    .query(CONTENT_URI, null, SELECTION, null, null);
+
+            if (cur != null && cur.moveToFirst()) {
+                while (cur.moveToNext()) {
+                    double latitude = cur.getDouble(cur.getColumnIndex(COLUMN_LATITUDE));
+                    double longitude = cur.getDouble(cur.getColumnIndex(COLUMN_LONGITUDE));
+                    LatLng latLng = new LatLng(latitude, longitude);
+                    Log.i("Print Current Location1", String.valueOf(latLng));
+                    coordinatesList.add(latLng);
+                    redrawLine();
+                }
+            }
+            if (cur != null) {
+                cur.close();
+            }
+
+        } catch (Exception e) {
+            Log.e("Path Error", e.toString());
+        }
+
+        Log.i("Print Locations12345", String.valueOf(coordinatesList));
+
+    }
+
+    private void redrawLine() {
+
+        googleMap.clear();  //clears all Markers and Polylines
+
+        PolylineOptions options = new PolylineOptions().width(5).color(Color.BLUE).geodesic(true);
+        for (int i = 0; i < coordinatesList.size(); i++) {
+            LatLng point = coordinatesList.get(i);
+            options.add(point);
+        }
+//        addMarker(); //add Marker in current position
+        line = googleMap.addPolyline(options); //add Polyline
     }
 
 //    private long checkIfDeleted(Long runId){

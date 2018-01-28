@@ -32,6 +32,7 @@ dependencies {
     compile 'com.android.support:preference-v7:26.+'
     compile 'com.android.support:support-v4:26.+'
     compile group: 'com.opencsv', name: 'opencsv', version: '4.1'
+    compile 'com.ToxicBakery.viewpager.transforms:view-pager-transforms:1.2.32@aar'
 
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'com.android.support.test:runner:1.0.1'
