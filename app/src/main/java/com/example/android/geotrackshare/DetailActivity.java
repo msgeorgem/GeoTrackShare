@@ -7,6 +7,7 @@ import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.databinding.DataBindingUtil;
 import android.graphics.Color;
+import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Parcelable;
@@ -28,10 +29,14 @@ import android.widget.ToggleButton;
 import com.example.android.geotrackshare.Data.TrackContract;
 import com.example.android.geotrackshare.TrackList.RunListFragment;
 import com.example.android.geotrackshare.databinding.ActivityDetailBinding;
+import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.Polyline;
+import com.google.android.gms.maps.model.LatLngBounds;
+import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PolylineOptions;
 
 import java.io.IOException;
@@ -52,7 +57,7 @@ import static com.example.android.geotrackshare.TrackList.RunListFragment.EXTRA_
  * Created by Marcin on 2017-11-29.
  */
 
-public class DetailActivity extends AppCompatActivity {
+public class DetailActivity extends AppCompatActivity implements OnMapReadyCallback {
 
 
     public static final String TEST_MDB_MOVIE_PATH = "https://api.themoviedb.org/3/movie/321612/videos?api_key=1157007d8e3f7d5e0af6d7e4165e2730";
@@ -65,7 +70,7 @@ public class DetailActivity extends AppCompatActivity {
     public static String CURRENT_RUN_ID;
     public static SharedPreferences favPrefs;
     private final String MDB_SHARE_HASHTAG = "IMDB Source";
-    Polyline line;
+
     private String mMovieSummary;
     private Context context;
     private ToggleButton FAVtoggleButton;
@@ -76,19 +81,21 @@ public class DetailActivity extends AppCompatActivity {
     private Uri mCurrentItemUri;
     private ActivityDetailBinding mDetailBinding;
     private Cursor cur;
-    private GoogleMap googleMap;
+    private GoogleMap mMap;
     private ArrayList<LatLng> coordinatesList;
+    private Location mCurrentLocation;
+    private LatLng here;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         mDetailBinding = DataBindingUtil.setContentView(this, R.layout.activity_detail);
-        coordinatesList = new ArrayList<LatLng>();
+
 
         SupportMapFragment fm = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
 
-        googleMap = fm.getMapAsync();
+        fm.getMapAsync(this);
 
 
         // Find the toolbar view inside the activity layout
@@ -188,7 +195,7 @@ public class DetailActivity extends AppCompatActivity {
         Toast.makeText(this, rowDeleted + " " + getString(R.string.delete_one_item), Toast.LENGTH_SHORT).show();
     }
 
-    public void queryCoordinatesList(int id) {
+    public ArrayList queryCoordinatesList(int id) {
         String[] PROJECTION = {
                 COLUMN_RUN_ID,
                 COLUMN_TIME,
@@ -208,14 +215,17 @@ public class DetailActivity extends AppCompatActivity {
             cur = getContentResolver()
                     .query(CONTENT_URI, null, SELECTION, null, null);
 
+            coordinatesList = new ArrayList<>();
+
             if (cur != null && cur.moveToFirst()) {
                 while (cur.moveToNext()) {
                     double latitude = cur.getDouble(cur.getColumnIndex(COLUMN_LATITUDE));
                     double longitude = cur.getDouble(cur.getColumnIndex(COLUMN_LONGITUDE));
-                    LatLng latLng = new LatLng(latitude, longitude);
-                    Log.i("Print Current Location1", String.valueOf(latLng));
-                    coordinatesList.add(latLng);
-                    redrawLine();
+//                    LatLng latLng = new LatLng(latitude, longitude);
+                    here = new LatLng(latitude, longitude);
+                    Log.i("Print Current Location1", String.valueOf(here));
+                    coordinatesList.add(here);
+
                 }
             }
             if (cur != null) {
@@ -226,22 +236,61 @@ public class DetailActivity extends AppCompatActivity {
             Log.e("Path Error", e.toString());
         }
 
-        Log.i("Print Locations12345", String.valueOf(coordinatesList));
+        return coordinatesList;
 
     }
 
-    private void redrawLine() {
+    @Override
+    public void onMapReady(GoogleMap googleMap) {
+        mMap = googleMap;
+        LatLng point = new LatLng(0, 0);
+        LatLng poznan = new LatLng(52.406374, 16.9251681);
+        LatLngBounds AUSTRALIA = new LatLngBounds(
+                new LatLng(-44, 113), new LatLng(-10, 154));
+        // mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(AUSTRALIA.getCenter(), 10));
+        // Add a marker in Poznan, Poland, and move the camera.
+        // mMap.addMarker(new MarkerOptions().position(here).title("arker in Poznań"));
+        // mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(here,15));
+        // mMap.clear();  //clears all Markers and Polylines
+        // Instantiates a new Polyline object and adds points to define a rectangle
+        PolylineOptions options = new PolylineOptions().width(10).color(Color.BLUE).geodesic(true);
 
-        googleMap.clear();  //clears all Markers and Polylines
+        PolylineOptions rectOptions = new PolylineOptions()
+                .add(new LatLng(37.35, -122.0))
+                .add(new LatLng(37.45, -122.0))  // North of the previous point, but at the same longitude
+                .add(new LatLng(37.45, -122.2))  // Same latitude, and 30km to the west
+                .add(new LatLng(37.35, -122.2))  // Same longitude, and 16km to the south
+                .add(new LatLng(37.35, -122.0)); // Closes the polyline.
 
-        PolylineOptions options = new PolylineOptions().width(5).color(Color.BLUE).geodesic(true);
         for (int i = 0; i < coordinatesList.size(); i++) {
-            LatLng point = coordinatesList.get(i);
+            point = coordinatesList.get(i);
             options.add(point);
+            Log.i("Print Locations55555", String.valueOf(coordinatesList));
         }
-//        addMarker(); //add Marker in current position
-        line = googleMap.addPolyline(options); //add Polyline
+
+        mMap.addPolyline(options);
+
+        mMap.addMarker(new MarkerOptions().position(point).title("You are here")); //add Marker in current position
+        mMap.setMinZoomPreference(1.0f);
+        mMap.setMaxZoomPreference(20.0f);
+
+        // Zoom in, animating the camera.
+        mMap.animateCamera(CameraUpdateFactory.zoomIn());
+
+        // Zoom out to zoom level 10, animating with a duration of 2 seconds.
+        mMap.animateCamera(CameraUpdateFactory.zoomTo(10), 2000, null);
+
+        // Construct a CameraPosition focusing on Mountain View and animate the camera to that position.
+        CameraPosition cameraPosition = new CameraPosition.Builder()
+                .target(point)               // Sets the center of the map to Mountain View
+                .zoom(15)                   // Sets the zoom
+                .bearing(0)                // Sets the orientation of the camera to east
+                .tilt(30)                   // Sets the tilt of the camera to 30 degrees
+                .build();                   // Creates a CameraPosition from the builder
+        mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
+
     }
+
 
 //    private long checkIfDeleted(Long runId){
 //        long tempId = 0;
@@ -330,6 +379,7 @@ public class DetailActivity extends AppCompatActivity {
         shareIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_DOCUMENT);
         return shareIntent;
     }
+
 
     //TODO (4) and get geolocation for first and last position,
     //TODO (5) show track on map
