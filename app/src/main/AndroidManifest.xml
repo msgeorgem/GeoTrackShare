@@ -24,8 +24,10 @@
 
     <application
         android:allowBackup="true"
+        android:hardwareAccelerated="false"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
+        android:largeHeap="true"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
@@ -77,6 +79,15 @@
 
         <activity
             android:name="com.example.android.geotrackshare.SettingsActivity"
+            android:label="@string/title_activity_settings"
+            android:theme="@style/AppTheme">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.example.android.geotrackshare.MainActivity" />
+        </activity>
+
+        <activity
+            android:name="com.example.android.geotrackshare.AdvancedSettingsActivity"
             android:label="@string/title_activity_settings"
             android:theme="@style/AppTheme">
             <meta-data

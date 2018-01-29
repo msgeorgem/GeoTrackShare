@@ -108,7 +108,7 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
     /**
      * The desired interval for location updates. Inexact. Updates may be more or less frequent.
      */
-    private static final long UPDATE_INTERVAL_IN_MILLISECONDS = 10000; // 10 sec
+    private static final long UPDATE_INTERVAL_IN_MILLISECONDS = 15000; // 10 sec
 
     /**
      * Time without move.
@@ -132,8 +132,8 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
     private static int DISPLACEMENT = 5; // 10 meters
     private final double NOISEd = 0.07;
     private final double NOISEc = 0.02;
-    private final int DELETE_LAST_ROWS = 15;
-    private final int GET_GEOLOCATION_LAST_ROWS = 5;
+    private final int DELETE_LAST_ROWS = 25;
+    private final int GET_GEOLOCATION_LAST_ROWS = 10;
     public String tmDevice, tmSerial, androidId, deviceId;
     public TelephonyManager tm;
     /**

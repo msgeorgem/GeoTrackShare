@@ -3,35 +3,47 @@
     xmlns:tools="http://schemas.android.com/tools"
     tools:showIn="navigation_view">
 
-    <group android:checkableBehavior="single">
+    <group
+        android:checkableBehavior="single"
+        android:enabled="true">
         <item
-            android:id="@+id/nav_camera"
-            android:icon="@drawable/ic_menu_camera"
-            android:title="Import" />
+            android:id="@+id/dev_mode"
+            android:icon="@drawable/ic_developer_board_black_48dp"
+            android:title="Ultimate Mode" />
         <item
-            android:id="@+id/nav_gallery"
-            android:icon="@drawable/ic_menu_gallery"
-            android:title="Gallery" />
+            android:id="@+id/foot_mode"
+            android:icon="@drawable/ic_directions_walk_black_24dp"
+            android:title="Foot Mode" />
         <item
-            android:id="@+id/nav_slideshow"
-            android:icon="@drawable/ic_menu_slideshow"
-            android:title="Slideshow" />
+            android:id="@+id/bike_mode"
+            android:icon="@drawable/ic_directions_bike_black_24dp"
+            android:title="Bike Mode" />
         <item
-            android:id="@+id/nav_manage"
-            android:icon="@drawable/ic_menu_manage"
-            android:title="Tools" />
+            android:id="@+id/car_mode"
+            android:icon="@drawable/ic_directions_car_black_24dp"
+            android:title="Car Mode" />
     </group>
 
-    <item android:title="Communicate">
+    <item android:title="Catch me if you can :)">
         <menu>
             <item
-                android:id="@+id/nav_share"
+                android:id="@+id/find_me_mode"
                 android:icon="@drawable/ic_menu_share"
-                android:title="Share" />
+                android:title="Find Me Mode" />
             <item
-                android:id="@+id/nav_send"
+                android:id="@+id/follow_me_mode"
                 android:icon="@drawable/ic_menu_send"
-                android:title="Send" />
+                android:title="Follow Me Mode" />
+        </menu>
+    </item>
+
+    <item android:title="Settings">
+        <menu>
+            <item
+                android:id="@+id/advanced_settings"
+                android:icon="@drawable/ic_menu_manage"
+                android:title="Advanced Settings" />
+
         </menu>
     </item>
 

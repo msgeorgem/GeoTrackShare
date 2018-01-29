@@ -250,7 +250,7 @@ public class DetailActivity extends AppCompatActivity implements OnMapReadyCallb
     }
 
     private double[] startLocation(int id) {
-        Log.i("Start Location", "control1");
+
         String specificID = String.valueOf(id);
         String mSelectionClause = TrackContract.TrackingEntry.COLUMN_RUN_ID;
         String SELECTION = mSelectionClause + " = '" + specificID + "'";
@@ -259,13 +259,12 @@ public class DetailActivity extends AppCompatActivity implements OnMapReadyCallb
         try {
             cur = getContentResolver()
                     .query(CONTENT_URI, PROJECTION02, SELECTION, null, ORDERASC);
-            Log.i("Start Location", "control2");
 
             if (cur != null && cur.moveToFirst()) {
                 do {
                     mStartLocation[0] = cur.getDouble(cur.getColumnIndex(COLUMN_LATITUDE));
                     mStartLocation[1] = cur.getDouble(cur.getColumnIndex(COLUMN_LONGITUDE));
-                    Log.i("Start Location", "control3");
+
                     Log.i("Start Location", String.valueOf(mStartLocation[0]) +
                             " , " + String.valueOf(mStartLocation[1]));
                 }
