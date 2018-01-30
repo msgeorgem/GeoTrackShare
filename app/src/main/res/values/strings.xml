@@ -38,6 +38,11 @@
     <string name="real_time">Real Time</string>
     <string name="run_list">Run List</string>
 
+    <string name="title_activity_settings">Settings</string>
+    <string name="title_activity_detail">Details</string>
+    <string name="title_advanced_settings">Advanced Setting</string>
+
+
     <string name="run_settings_order_by_maxspeed_label">Max speed</string>
     <string name="run_settings_order_by_avrgspeed_label">Average speed</string>
     <string name="run_settings_order_by_recent_label">ID</string>
@@ -51,8 +56,71 @@
     <string name="run_settings_order_by_key">_id</string>
     <string name="run_settings_order_by_label">Order</string>
 
-    <string name="title_activity_settings">Settings</string>
-    <string name="title_activity_detail">Details</string>
+
+    <string name="update_interval_by_1s_label">1s</string>
+    <string name="update_interval_by_2s_label">2s</string>
+    <string name="update_interval_by_3s_label">3s</string>
+    <string name="update_interval_by_4s_label">4s</string>
+    <string name="update_interval_by_5s_label">5s</string>
+    <string name="update_interval_by_6s_label">6s</string>
+    <string name="update_interval_by_7s_label">7s</string>
+    <string name="update_interval_by_8s_label">8s</string>
+    <string name="update_interval_by_9s_label">9s</string>
+    <string name="update_interval_by_10s_label">10s</string>
+    <string name="update_interval_by_11s_label">11s</string>
+    <string name="update_interval_by_12s_label">12s</string>
+    <string name="update_interval_by_13s_label">13s</string>
+    <string name="update_interval_by_14s_label">14s</string>
+    <string name="update_interval_by_15s_label">15s</string>
+    <string name="update_interval_by_16s_label">16s</string>
+    <string name="update_interval_by_17s_label">17s</string>
+    <string name="update_interval_by_18s_label">18s</string>
+    <string name="update_interval_by_19s_label">19s</string>
+    <string name="update_interval_by_20s_label">20s</string>
+    <string name="update_interval_by_25s_label">25s</string>
+    <string name="update_interval_by_30s_label">30s</string>
+    <string name="update_interval_by_35s_label">35s</string>
+    <string name="update_interval_by_40s_label">40s</string>
+    <string name="update_interval_by_50s_label">50s</string>
+    <string name="update_interval_by_60s_label">60s</string>
+    <string name="update_interval_by_120s_label">120s</string>
+    <string name="update_interval_by_180s_label">180s</string>
+
+    <string name="update_interval_by_1s_value">1000</string>
+    <string name="update_interval_by_2s_value">2000</string>
+    <string name="update_interval_by_3s_value">3000</string>
+    <string name="update_interval_by_4s_value">4000</string>
+    <string name="update_interval_by_5s_value">5000</string>
+    <string name="update_interval_by_6s_value">6000</string>
+    <string name="update_interval_by_7s_value">7000</string>
+    <string name="update_interval_by_8s_value">8000</string>
+    <string name="update_interval_by_9s_value">9000</string>
+    <string name="update_interval_by_10s_value">10000</string>
+    <string name="update_interval_by_11s_value">11000</string>
+    <string name="update_interval_by_12s_value">12000</string>
+    <string name="update_interval_by_13s_value">13000</string>
+    <string name="update_interval_by_14s_value">14000</string>
+    <string name="update_interval_by_15s_value">15000</string>
+    <string name="update_interval_by_16s_value">16000</string>
+    <string name="update_interval_by_17s_value">17000</string>
+    <string name="update_interval_by_18s_value">18000</string>
+    <string name="update_interval_by_19s_value">19000</string>
+    <string name="update_interval_by_20s_value">20000</string>
+    <string name="update_interval_by_25s_value">25000</string>
+    <string name="update_interval_by_30s_value">30000</string>
+    <string name="update_interval_by_35s_value">35000</string>
+    <string name="update_interval_by_40s_value">40000</string>
+    <string name="update_interval_by_50s_value">50000</string>
+    <string name="update_interval_by_60s_value">60000</string>
+    <string name="update_interval_by_120s_value">120000</string>
+    <string name="update_interval_by_180s_value">180000</string>
+
+    <string name="update_interval_by_default_car" translatable="false">10000</string>
+    <string name="update_interval_by_default_bike" translatable="false">7000</string>
+    <string name="update_interval_by_default_foot" translatable="false">4000</string>
+    <string name="update_interval_by_default_ultimate" translatable="false">1000</string>
+    <string name="update_interval_by_key">milliseconds</string>
+    <string name="update_interval_by_label">Update Interval</string>
 
 
     <string name="delete">Delete</string>

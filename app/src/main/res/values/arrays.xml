@@ -17,4 +17,70 @@
 
     </string-array>
 
+
+    <string-array name="update_interval_by_labels">
+
+        <item>@string/update_interval_by_1s_label</item>
+        <item>@string/update_interval_by_2s_label</item>
+        <item>@string/update_interval_by_3s_label</item>
+        <item>@string/update_interval_by_4s_label</item>
+        <item>@string/update_interval_by_5s_label</item>
+        <item>@string/update_interval_by_6s_label</item>
+        <item>@string/update_interval_by_7s_label</item>
+        <item>@string/update_interval_by_8s_label</item>
+        <item>@string/update_interval_by_9s_label</item>
+        <item>@string/update_interval_by_10s_label</item>
+        <item>@string/update_interval_by_11s_label</item>
+        <item>@string/update_interval_by_12s_label</item>
+        <item>@string/update_interval_by_13s_label</item>
+        <item>@string/update_interval_by_14s_label</item>
+        <item>@string/update_interval_by_15s_label</item>
+        <item>@string/update_interval_by_16s_label</item>
+        <item>@string/update_interval_by_17s_label</item>
+        <item>@string/update_interval_by_18s_label</item>
+        <item>@string/update_interval_by_19s_label</item>
+        <item>@string/update_interval_by_20s_label</item>
+        <item>@string/update_interval_by_25s_label</item>
+        <item>@string/update_interval_by_30s_label</item>
+        <item>@string/update_interval_by_35s_label</item>
+        <item>@string/update_interval_by_40s_label</item>
+        <item>@string/update_interval_by_50s_label</item>
+        <item>@string/update_interval_by_60s_label</item>
+        <item>@string/update_interval_by_120s_label</item>
+        <item>@string/update_interval_by_180s_label</item>
+
+    </string-array>
+
+    <string-array name="update_interval_by_values">
+
+        <item>@string/update_interval_by_1s_value</item>
+        <item>@string/update_interval_by_2s_value</item>
+        <item>@string/update_interval_by_3s_value</item>
+        <item>@string/update_interval_by_4s_value</item>
+        <item>@string/update_interval_by_5s_value</item>
+        <item>@string/update_interval_by_6s_value</item>
+        <item>@string/update_interval_by_7s_value</item>
+        <item>@string/update_interval_by_8s_value</item>
+        <item>@string/update_interval_by_9s_value</item>
+        <item>@string/update_interval_by_10s_value</item>
+        <item>@string/update_interval_by_11s_value</item>
+        <item>@string/update_interval_by_12s_value</item>
+        <item>@string/update_interval_by_13s_value</item>
+        <item>@string/update_interval_by_14s_value</item>
+        <item>@string/update_interval_by_15s_value</item>
+        <item>@string/update_interval_by_16s_value</item>
+        <item>@string/update_interval_by_17s_value</item>
+        <item>@string/update_interval_by_18s_value</item>
+        <item>@string/update_interval_by_19s_value</item>
+        <item>@string/update_interval_by_20s_value</item>
+        <item>@string/update_interval_by_25s_value</item>
+        <item>@string/update_interval_by_30s_value</item>
+        <item>@string/update_interval_by_35s_value</item>
+        <item>@string/update_interval_by_40s_value</item>
+        <item>@string/update_interval_by_50s_value</item>
+        <item>@string/update_interval_by_60s_value</item>
+        <item>@string/update_interval_by_120s_value</item>
+        <item>@string/update_interval_by_180s_value</item>
+
+    </string-array>
 </resources>

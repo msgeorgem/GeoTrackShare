@@ -23,16 +23,16 @@ public class AdvancedSettingsActivity extends AppCompatActivity {
 
     }
 
-    public static class MoviesPreferenceFragment extends PreferenceFragment implements Preference.OnPreferenceChangeListener {
+    public static class TracksPreferenceFragment extends PreferenceFragment implements Preference.OnPreferenceChangeListener {
 
         @Override
         public void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
-            addPreferencesFromResource(R.xml.settings_main);
+            addPreferencesFromResource(R.xml.advanced_settings);
 
 
-            Preference favOrderBy = findPreference(getString(R.string.run_settings_order_by_key));
-            bindPreferenceSummaryToValue2(favOrderBy);
+            Preference intervalBy = findPreference(getString(R.string.update_interval_by_key));
+            bindPreferenceSummaryToValue2(intervalBy);
         }
 
         @Override

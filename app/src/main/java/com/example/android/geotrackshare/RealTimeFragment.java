@@ -7,6 +7,7 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentSender;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.hardware.Sensor;
@@ -19,6 +20,7 @@ import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Looper;
+import android.preference.PreferenceManager;
 import android.provider.Settings;
 import android.provider.Settings.Secure;
 import android.support.annotation.NonNull;
@@ -104,22 +106,10 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
      * Constant used in the location settings dialog.
      */
     private static final int REQUEST_CHECK_SETTINGS = 0x1;
-
-    /**
-     * The desired interval for location updates. Inexact. Updates may be more or less frequent.
-     */
-    private static final long UPDATE_INTERVAL_IN_MILLISECONDS = 15000; // 10 sec
-
     /**
      * Time without move.
      */
     private static final long CHECK_NO_MOVE_TIME_IN_MILLISECONDS = 180000; // 3 min
-    /**
-     * The fastest rate for active location updates. Exact. Updates will never be more frequent
-     * than this value.
-     */
-    private static final long FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS =
-            UPDATE_INTERVAL_IN_MILLISECONDS / 5;
     // Keys for storing activity state in the Bundle.
     private final static String KEY_REQUESTING_LOCATION_UPDATES = "requesting-location-updates";
     private final static String KEY_LOCATION = "location";
@@ -129,6 +119,16 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
     private final static String KEY_LAST_UPDATED_ETIME = "last-updated-elapsedtime-string";
     private final static String KEY_LAST_UPDATED_TDISTANCE = "last-updated-total-distance";
     public static Context mContext;
+    /**
+     * The desired interval for location updates. Inexact. Updates may be more or less frequent.
+     */
+    private static long UPDATE_INTERVAL_IN_MILLISECONDS = 10000; // 10 sec
+    /**
+     * The fastest rate for active location updates. Exact. Updates will never be more frequent
+     * than this value.
+     */
+    private static final long FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS =
+            UPDATE_INTERVAL_IN_MILLISECONDS / 5;
     private static int DISPLACEMENT = 5; // 10 meters
     private final double NOISEd = 0.07;
     private final double NOISEc = 0.02;
@@ -228,7 +228,7 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
     private boolean mInitialized = false;
     private boolean mNoMoveDistance = false;
     private boolean mNoMoveClose = false;
-
+    private SharedPreferences sharedPrefs;
 
     public RealTimeFragment() {
         // Required empty public constructor
@@ -239,6 +239,18 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         mContext = getActivity();
+        sharedPrefs = PreferenceManager.getDefaultSharedPreferences(mContext);
+
+        Integer i = R.string.update_interval_by_default_ultimate;
+
+        long number = i.longValue();
+        String key = getResources().getString(R.string.update_interval_by_key);
+        //Long defValue = getString(R.string.update_interval_by_default_ultimate);
+        //Log.i("key1", key1);
+        UPDATE_INTERVAL_IN_MILLISECONDS = sharedPrefs.getLong(
+                "update_interval_by_key",
+                10000
+        );
 
         // Inflate the layout for this fragment
         View v = inflater.inflate(R.layout.fragment_real_time, container, false);

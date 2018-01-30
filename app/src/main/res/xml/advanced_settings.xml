@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
-    android:title="@string/title_activity_settings">
+    android:title="@string/title_advanced_settings">
 
 
     <ListPreference
-        android:defaultValue="@string/run_settings_order_by_default"
-        android:entries="@array/run_settings_order_by_labels"
-        android:entryValues="@array/run_settings_order_by_values"
-        android:key="@string/run_settings_order_by_key"
-        android:title="@string/run_settings_order_by_label" />
+        android:defaultValue="@string/update_interval_by_default_ultimate"
+        android:entries="@array/update_interval_by_labels"
+        android:entryValues="@array/update_interval_by_values"
+        android:key="@string/update_interval_by_key"
+        android:title="@string/update_interval_by_label" />
 
 
     <CheckBoxPreference
@@ -16,5 +16,4 @@
         android:key="applicationUpdates"
         android:summary="This option if selected will allow the application to check for latest versions."
         android:title="Application Updates" />
-
 </PreferenceScreen>
