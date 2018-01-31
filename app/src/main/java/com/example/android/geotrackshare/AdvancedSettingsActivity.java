@@ -1,5 +1,6 @@
 package com.example.android.geotrackshare;
 
+import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.ListPreference;
@@ -14,12 +15,12 @@ import android.support.v7.app.AppCompatActivity;
 
 public class AdvancedSettingsActivity extends AppCompatActivity {
 
+    Context mContext = RealTimeFragment.mContext;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.advanced_settings_activity);
-
-        //     getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
     }
 

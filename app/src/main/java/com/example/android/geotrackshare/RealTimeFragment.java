@@ -95,8 +95,8 @@ import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry
 public class RealTimeFragment extends Fragment implements SensorEventListener {
 
 
+    public static final String MY_PREFERENCE_KEY = "mili";
     private static final String TAG = MainActivity.class.getSimpleName();
-
     /**
      * Code used in requesting runtime permissions.
      */
@@ -229,6 +229,7 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
     private boolean mNoMoveDistance = false;
     private boolean mNoMoveClose = false;
     private SharedPreferences sharedPrefs;
+    private String defValue;
 
     public RealTimeFragment() {
         // Required empty public constructor
@@ -242,16 +243,19 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
         sharedPrefs = PreferenceManager.getDefaultSharedPreferences(mContext);
 
         Integer i = R.string.update_interval_by_default_ultimate;
+        String numberAsString = "1234";
 
-        long number = i.longValue();
-        String key = getResources().getString(R.string.update_interval_by_key);
-        //Long defValue = getString(R.string.update_interval_by_default_ultimate);
-        //Log.i("key1", key1);
-        UPDATE_INTERVAL_IN_MILLISECONDS = sharedPrefs.getLong(
-                "update_interval_by_key",
-                10000
-        );
+        long number = Long.parseLong(getResources().getString(R.string.update_interval_by_default_ultimate));
+        defValue = getString(R.string.update_interval_by_default_ultimate);
+        String key = getString(R.string.update_interval_by_key);
+        //Long defValue = Long.parseLong(R.string.update_interval_by_default_ultimate);
+        Log.i("key", key);
 
+
+//        UPDATE_INTERVAL_IN_MILLISECONDS = sharedPrefs.getLong(
+//                MY_PREFERENCE_KEY,
+//                number
+//        );
         // Inflate the layout for this fragment
         View v = inflater.inflate(R.layout.fragment_real_time, container, false);
         // Locate the UI widgets.
@@ -348,6 +352,13 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
                 startTime = System.currentTimeMillis();
                 mRunNumber.setText(String.format(Locale.ENGLISH, "%s: %s",
                         mCurrentRunLabel, mCurrentId));
+
+                String UPDATE_INTERVAL_IN_MILLISECONDS_STRING = sharedPrefs.getString(
+                        getString(R.string.update_interval_by_key),
+                        getString(R.string.update_interval_by_default_ultimate)
+                );
+
+                UPDATE_INTERVAL_IN_MILLISECONDS = Long.parseLong(UPDATE_INTERVAL_IN_MILLISECONDS_STRING);
             }
         });
 
@@ -592,6 +603,7 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
      * Sets the value of the UI fields for the location latitude, longitude and last update time.
      */
     private void updateLocationUI() {
+
         if (mCurrentLocation != null) {
 
             mLatitudeTextView.setText(String.format(Locale.ENGLISH, "%s: %f", mLatitudeLabel,

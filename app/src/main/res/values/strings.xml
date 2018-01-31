@@ -118,8 +118,8 @@
     <string name="update_interval_by_default_car" translatable="false">10000</string>
     <string name="update_interval_by_default_bike" translatable="false">7000</string>
     <string name="update_interval_by_default_foot" translatable="false">4000</string>
-    <string name="update_interval_by_default_ultimate" translatable="false">1000</string>
-    <string name="update_interval_by_key">milliseconds</string>
+    <string name="update_interval_by_default_ultimate" translatable="false">20000</string>
+    <string name="update_interval_by_key">miliseconds</string>
     <string name="update_interval_by_label">Update Interval</string>
 
 
