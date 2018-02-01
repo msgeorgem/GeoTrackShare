@@ -119,9 +119,31 @@
     <string name="update_interval_by_default_bike" translatable="false">7000</string>
     <string name="update_interval_by_default_foot" translatable="false">4000</string>
     <string name="update_interval_by_default_ultimate" translatable="false">20000</string>
-    <string name="update_interval_by_key">miliseconds</string>
+    <string name="update_interval_by_key">milliseconds</string>
     <string name="update_interval_by_label">Update Interval</string>
 
+    <string name="delete_loops_by_5_label">5 loops</string>
+    <string name="delete_loops_by_10_label">10 loops</string>
+    <string name="delete_loops_by_15_label">15 loops</string>
+    <string name="delete_loops_by_20_label">20 loops</string>
+    <string name="delete_loops_by_25_label">25 loops</string>
+    <string name="delete_loops_by_30_label">30 loops</string>
+    <string name="delete_loops_by_35_label">35 loops</string>
+
+    <string name="delete_loops_by_5_value">5</string>
+    <string name="delete_loops_by_10_value">10</string>
+    <string name="delete_loops_by_15_value">15</string>
+    <string name="delete_loops_by_20_value">20</string>
+    <string name="delete_loops_by_25_value">25</string>
+    <string name="delete_loops_by_30_value">30</string>
+    <string name="delete_loops_by_35_value">35</string>
+
+    <string name="delete_loops_by_default_car" translatable="false">20</string>
+    <string name="delete_loops_by_default_bike" translatable="false">20</string>
+    <string name="delete_loops_by_default_foot" translatable="false">20</string>
+    <string name="delete_loops_by_default_ultimate" translatable="false">20</string>
+    <string name="delete_loops_by_key">deleteloop</string>
+    <string name="delete_loops_by_label">Auto delete rule</string>
 
     <string name="delete">Delete</string>
     <string name="cancel">Cancel</string>

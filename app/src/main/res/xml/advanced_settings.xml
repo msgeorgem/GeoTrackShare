@@ -10,6 +10,12 @@
         android:key="@string/update_interval_by_key"
         android:title="@string/update_interval_by_label" />
 
+    <ListPreference
+        android:defaultValue="@string/delete_loops_by_default_ultimate"
+        android:entries="@array/delete_loops_by_labels"
+        android:entryValues="@array/delete_loops_by_values"
+        android:key="@string/delete_loops_by_key"
+        android:title="@string/delete_loops_by_label" />
 
     <CheckBoxPreference
         android:defaultValue="false"

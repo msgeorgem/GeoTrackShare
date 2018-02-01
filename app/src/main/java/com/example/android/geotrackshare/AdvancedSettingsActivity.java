@@ -1,13 +1,15 @@
 package com.example.android.geotrackshare;
 
-import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.ListPreference;
 import android.preference.Preference;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
+
+import static com.example.android.geotrackshare.RealTimeFragment.UPDATE_INTERVAL_IN_MILLISECONDS_STRING;
 
 /**
  * Created by Marcin on 2017-09-12.
@@ -15,14 +17,32 @@ import android.support.v7.app.AppCompatActivity;
 
 public class AdvancedSettingsActivity extends AppCompatActivity {
 
-    Context mContext = RealTimeFragment.mContext;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.advanced_settings_activity);
 
+        ActionBar actionBar = getSupportActionBar();
+
+        if (actionBar != null) {
+            actionBar.setDisplayHomeAsUpEnabled(true);
+//            actionBar.setDisplayShowHomeEnabled(true);
+        }
+
     }
+
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        UPDATE_INTERVAL_IN_MILLISECONDS_STRING = RealTimeFragment.sharedPrefs.getString(
+                getString(R.string.update_interval_by_key),
+                getString(R.string.update_interval_by_default_ultimate)
+        );
+        RealTimeFragment.UPDATE_INTERVAL_IN_MILLISECONDS = Long.parseLong(UPDATE_INTERVAL_IN_MILLISECONDS_STRING);
+    }
+
 
     public static class TracksPreferenceFragment extends PreferenceFragment implements Preference.OnPreferenceChangeListener {
 
@@ -33,7 +53,11 @@ public class AdvancedSettingsActivity extends AppCompatActivity {
 
 
             Preference intervalBy = findPreference(getString(R.string.update_interval_by_key));
-            bindPreferenceSummaryToValue2(intervalBy);
+            bindPreferenceSummaryToValue1(intervalBy);
+
+            Preference deleteloopBy = findPreference(getString(R.string.delete_loops_by_key));
+            bindPreferenceSummaryToValue2(deleteloopBy);
+
         }
 
         @Override

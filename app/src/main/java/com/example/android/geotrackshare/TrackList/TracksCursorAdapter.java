@@ -109,7 +109,7 @@ public class TracksCursorAdapter extends CursorRecyclerAdapter<TracksCursorAdapt
         viewHolder.dateTextView.setText(mDate);
         viewHolder.hoursTextView.setText(mHours);
         viewHolder.speedTextView.setText(String.format(Locale.ENGLISH, "%s: %.1f",
-                "Average Speed km/h", itemAvgSpeed));
+                "Avg Speed km/h", itemAvgSpeed));
 //        viewHolder.altitude.setText(itemAltitude);
         viewHolder.timeCounter.setText(String.format(Locale.ENGLISH, "%s: %s",
                 "Total Time", mmElapsedTime));

@@ -22,7 +22,6 @@ import android.os.Bundle;
 import android.os.Looper;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
-import android.provider.Settings.Secure;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
@@ -122,18 +121,19 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
     /**
      * The desired interval for location updates. Inexact. Updates may be more or less frequent.
      */
-    private static long UPDATE_INTERVAL_IN_MILLISECONDS = 10000; // 10 sec
+    public static long UPDATE_INTERVAL_IN_MILLISECONDS = 13000; // 10 sec
     /**
      * The fastest rate for active location updates. Exact. Updates will never be more frequent
      * than this value.
      */
     private static final long FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS =
             UPDATE_INTERVAL_IN_MILLISECONDS / 5;
+    public static String UPDATE_INTERVAL_IN_MILLISECONDS_STRING;
+    public static SharedPreferences sharedPrefs;
     private static int DISPLACEMENT = 5; // 10 meters
     private final double NOISEd = 0.07;
     private final double NOISEc = 0.02;
-    private final int DELETE_LAST_ROWS = 25;
-    private final int GET_GEOLOCATION_LAST_ROWS = 10;
+    private final int GET_GEOLOCATION_LAST_ROWS = 5;
     public String tmDevice, tmSerial, androidId, deviceId;
     public TelephonyManager tm;
     /**
@@ -143,6 +143,8 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
     public String mElapsedTime;
     long startTime = 0;
     UUID deviceUuid;
+    private int DELETE_LAST_ROWS = 15;
+    private String DELETE_LAST_ROWS_STRING = "";
     /**
      * Provides access to the Fused Location Provider API.
      */
@@ -187,6 +189,8 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
     private TextView mTotalDistanceTextView;
     private TextView mRunNumber;
     private TextView mAddressOutputTextView;
+    private TextView mIntervalTextView;
+    private TextView mDeleteTextView;
     private View mLocation;
     // Labels.
     private String mLatitudeLabel;
@@ -205,6 +209,8 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
     private String mCurrentRunLabel;
     private String mDistanceLabel;
     private String mAndroid_idLabel;
+    private String mIntervalLabel;
+    private String mDeleteLabel;
     private String mAndroid_id;
     private String mAddressOutput;
     private String mCurrentAddress = "";
@@ -228,7 +234,6 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
     private boolean mInitialized = false;
     private boolean mNoMoveDistance = false;
     private boolean mNoMoveClose = false;
-    private SharedPreferences sharedPrefs;
     private String defValue;
 
     public RealTimeFragment() {
@@ -249,8 +254,6 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
         defValue = getString(R.string.update_interval_by_default_ultimate);
         String key = getString(R.string.update_interval_by_key);
         //Long defValue = Long.parseLong(R.string.update_interval_by_default_ultimate);
-        Log.i("key", key);
-
 
 //        UPDATE_INTERVAL_IN_MILLISECONDS = sharedPrefs.getLong(
 //                MY_PREFERENCE_KEY,
@@ -271,7 +274,8 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
 
         mPrevLatitudeTextView = v.findViewById(R.id.prev_latitude_text);
         mPrevLongitudeTextView = v.findViewById(R.id.prev_longitude_text);
-        mDevIDTextView = v.findViewById(R.id.device_id);
+        mIntervalTextView = v.findViewById(R.id.interval);
+        mDeleteTextView = v.findViewById(R.id.delete_loops);
 
         mAltitudeTextView = v.findViewById(R.id.altitude_text);
         mSpeedTextView = v.findViewById(R.id.speed_text);
@@ -300,7 +304,9 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
         mElapsedTimeLabel = "Elapsed Time";
         mDistanceLabel = "Total distance";
         mAndroid_idLabel = "Android ID";
-        mAndroid_id = Secure.getString(getContext().getContentResolver(), Secure.ANDROID_ID);
+        mIntervalLabel = "Interval";
+        mDeleteLabel = "Delete loops";
+//        mAndroid_id = Secure.getString(getContext().getContentResolver(), Secure.ANDROID_ID);
 
         mRequestingLocationUpdates = false;
         mLastUpdateTime = "";
@@ -328,8 +334,8 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
 
 //        WifiManager wm = (WifiManager)Ctxt.getSystemService(Context.WIFI_SERVICE);
 //        return wm.getConnectionInfo().getMacAddress();
-        mDevIDTextView.setText(String.format(Locale.ENGLISH, "%s: %s", mAndroid_idLabel,
-                mAndroid_id));
+//        mDevIDTextView.setText(String.format(Locale.ENGLISH, "%s: %s", mAndroid_idLabel,
+//                mAndroid_id));
         mRunNumber.setText(String.format(Locale.ENGLISH, "%s: %s",
                 mLastRunLabel, queryMaxId()));
         mSensorManager = (SensorManager) mContext.getSystemService(SENSOR_SERVICE);
@@ -347,18 +353,23 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
         mStartUpdatesButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                stopUpdatesButtonHandler();
                 startUpdatesButtonHandler();
                 mCurrentId = queryMaxId() + 1;
                 startTime = System.currentTimeMillis();
                 mRunNumber.setText(String.format(Locale.ENGLISH, "%s: %s",
                         mCurrentRunLabel, mCurrentId));
 
-                String UPDATE_INTERVAL_IN_MILLISECONDS_STRING = sharedPrefs.getString(
-                        getString(R.string.update_interval_by_key),
-                        getString(R.string.update_interval_by_default_ultimate)
-                );
+                long mIntervall = UPDATE_INTERVAL_IN_MILLISECONDS / 1000;
+                String mIntervalll = String.valueOf(mIntervall) + " s";
+                mIntervalTextView.setText(String.format(Locale.ENGLISH, "%s: %s", mIntervalLabel,
+                        mIntervalll));
 
-                UPDATE_INTERVAL_IN_MILLISECONDS = Long.parseLong(UPDATE_INTERVAL_IN_MILLISECONDS_STRING);
+                int mDeleteLoop = DELETE_LAST_ROWS;
+                String mDeleteloopp = String.valueOf(mDeleteLoop);
+                mDeleteTextView.setText(String.format(Locale.ENGLISH, "%s: %s", mDeleteLabel,
+                        mDeleteloopp));
+
             }
         });
 
@@ -440,6 +451,11 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
      * updates.
      */
     private void createLocationRequest() {
+        UPDATE_INTERVAL_IN_MILLISECONDS_STRING = sharedPrefs.getString(
+                getString(R.string.update_interval_by_key),
+                getString(R.string.update_interval_by_default_ultimate)
+        );
+        UPDATE_INTERVAL_IN_MILLISECONDS = Long.parseLong(UPDATE_INTERVAL_IN_MILLISECONDS_STRING);
         mLocationRequest = new LocationRequest();
 
         // Sets the desired interval for active location updates. This interval is
@@ -447,6 +463,7 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
         // you may receive them slower than requested. You may also receive updates faster than
         // requested if other applications are requesting location at a faster interval.
         mLocationRequest.setInterval(UPDATE_INTERVAL_IN_MILLISECONDS);
+        Log.i("update interval", String.valueOf(UPDATE_INTERVAL_IN_MILLISECONDS));
 
         // Sets the fastest rate for active location updates. This interval is exact, and your
         // application will never receive updates faster than this value.
@@ -530,6 +547,20 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
      * runtime permission has been granted.
      */
     private void startLocationUpdates() {
+        UPDATE_INTERVAL_IN_MILLISECONDS_STRING = sharedPrefs.getString(
+                getString(R.string.update_interval_by_key),
+                getString(R.string.update_interval_by_default_ultimate)
+        );
+
+        UPDATE_INTERVAL_IN_MILLISECONDS = Long.parseLong(UPDATE_INTERVAL_IN_MILLISECONDS_STRING);
+
+        DELETE_LAST_ROWS_STRING = sharedPrefs.getString(
+                getString(R.string.delete_loops_by_key),
+                getString(R.string.delete_loops_by_default_ultimate)
+        );
+        DELETE_LAST_ROWS = Integer.parseInt((DELETE_LAST_ROWS_STRING));
+
+
         // Begin by checking if the device has the necessary location settings.
         mSettingsClient.checkLocationSettings(mLocationSettingsRequest)
                 .addOnSuccessListener((Activity) mContext, new OnSuccessListener<LocationSettingsResponse>() {
@@ -1051,7 +1082,8 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
         int sum = 0;
         int size = 0;
         boolean mNoMove = false;
-//        TODO (2): Compare saved times after changing them to miiliseconds to timeInPast. At this moment
+
+        //        TODO (2): Compare saved times after changing them to miiliseconds to timeInPast. At this moment
 //        TODO (2): At this moment we leave last ten records no matter what time in past last record was
 //        long currentTime = System.currentTimeMillis();
 //        long timeInPast = currentTime - CHECK_NO_MOVE_TIME_IN_MILLISECONDS;
@@ -1092,11 +1124,16 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
     }
 
     void deletelastNoMoveRows() {
-        for (int i = 0; i < (DELETE_LAST_ROWS - GET_GEOLOCATION_LAST_ROWS - 2); i++) {
-            int last_ID = queryLast_ID();
-            String lastRow = TrackContract.TrackingEntry._ID + "=" + last_ID;
-            getActivity().getContentResolver().delete(CONTENT_URI, lastRow, null);
-            Toast.makeText(getActivity(), (DELETE_LAST_ROWS - GET_GEOLOCATION_LAST_ROWS) + " " + getString(R.string.delete_one_item), Toast.LENGTH_SHORT).show();
+        // method does not work "in background", when user gets out of an app without stopping location
+
+        if (isAdded() && mContext != null) {
+            Log.i("deletelastNoMoveRows", "isAdded()&& mContext != null)");
+            for (int i = 0; i < (DELETE_LAST_ROWS - GET_GEOLOCATION_LAST_ROWS - 2); i++) {
+                int last_ID = queryLast_ID();
+                String lastRow = TrackContract.TrackingEntry._ID + "=" + last_ID;
+                mContext.getContentResolver().delete(CONTENT_URI, lastRow, null);
+                Toast.makeText(mContext, (DELETE_LAST_ROWS - GET_GEOLOCATION_LAST_ROWS) + " " + getString(R.string.delete_one_item), Toast.LENGTH_SHORT).show();
+            }
         }
     }
 
@@ -1132,7 +1169,7 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
     /**
      * Removes location updates from the FusedLocationApi.
      */
-    private void stopLocationUpdates() {
+    public void stopLocationUpdates() {
         if (!mRequestingLocationUpdates) {
             Log.d(TAG, "stopLocationUpdates: updates never requested, no-op.");
             return;
