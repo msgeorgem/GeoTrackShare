@@ -19,6 +19,7 @@ import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.DefaultItemAnimator;
+import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -118,8 +119,8 @@ public class RunListFragment extends Fragment implements LoaderManager.LoaderCal
         // Set the adapter on the {@link ListView}
         // so the list can be populated in the user interface
         tracksRecyclerView.setAdapter(mTracksAdapter);
-//        tracksRecyclerView.addItemDecoration(new DividerItemDecoration(getActivity(), DividerItemDecoration.VERTICAL_LIST));
-//        tracksRecyclerView.addItemDecoration(new DividerItemDecoration(getActivity(), DividerItemDecoration.HORIZONTAL_LIST));
+        tracksRecyclerView.addItemDecoration(new DividerItemDecoration(getActivity(), DividerItemDecoration.VERTICAL));
+        tracksRecyclerView.addItemDecoration(new DividerItemDecoration(getActivity(), DividerItemDecoration.HORIZONTAL));
         tracksRecyclerView.setItemAnimator(new DefaultItemAnimator());
 
         mEmptyStateTextView = view.findViewById(R.id.empty_view_runs);
