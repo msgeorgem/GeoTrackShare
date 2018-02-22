@@ -100,6 +100,7 @@
             android:authorities="com.example.android.geotrackshare"
             android:exported="false" />
 
+        <service android:name="com.example.android.geotrackshare.ForegroundService.ForegroundService"></service>
     </application>
 
 </manifest>

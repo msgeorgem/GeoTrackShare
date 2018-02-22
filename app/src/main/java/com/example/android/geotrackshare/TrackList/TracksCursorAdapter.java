@@ -114,7 +114,7 @@ public class TracksCursorAdapter extends CursorRecyclerAdapter<TracksCursorAdapt
         viewHolder.timeCounter.setText(String.format(Locale.ENGLISH, "%s: %s",
                 "Total Time", mmElapsedTime));
         viewHolder.totalDistance.setText(String.format(Locale.ENGLISH, "%s: %.3f",
-                "Total Distance km", itemDistance));
+                "Total Dist. km", itemDistance));
 //        viewHolder.maxAltitude.setText(itemMaxAlt);
 //        viewHolder.minAltitude.setText(itemMinAlt);
 //        viewHolder.maxSpeedTextView.setText(itemMaxSpeed);

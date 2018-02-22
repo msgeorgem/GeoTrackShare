@@ -18,6 +18,7 @@ import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Looper;
 import android.preference.PreferenceManager;
@@ -36,6 +37,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.android.geotrackshare.Data.TrackContract;
+import com.example.android.geotrackshare.ForegroundService.Constants;
+import com.example.android.geotrackshare.ForegroundService.ForegroundService;
 import com.example.android.geotrackshare.Utils.DistanceCalculator;
 import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.common.api.ResolvableApiException;
@@ -370,6 +373,10 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
                 mDeleteTextView.setText(String.format(Locale.ENGLISH, "%s: %s", mDeleteLabel,
                         mDeleteloopp));
 
+                Intent startIntent = new Intent(mContext, ForegroundService.class);
+                startIntent.setAction(Constants.ACTION.STARTFOREGROUND_ACTION);
+                mContext.startService(startIntent);
+
             }
         });
 
@@ -379,6 +386,10 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
                 stopUpdatesButtonHandler();
                 mRunNumber.setText(String.format(Locale.ENGLISH, "%s: %s",
                         mLastRunLabel, mCurrentId));
+
+                Intent stopIntent = new Intent(mContext, ForegroundService.class);
+                stopIntent.setAction(Constants.ACTION.STOPFOREGROUND_ACTION);
+                mContext.startService(stopIntent);
 
             }
         });
@@ -708,6 +719,7 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
             }
         }
     }
+
 
     @SuppressLint("DefaultLocale")
     private void getElapsedTime() {
@@ -1137,33 +1149,43 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
         }
     }
 
-    private void saveItem(int runId, long currentTime, double currentLatitude, double currentLongitude,
-                          double currentAltitude, double currentMaxAlt, double currentMinAlt,
-                          double currentSpeed, double currentMaxSpeed, double currentAvrSpeed,
-                          long currentElapsedTime, double currentDistance, double currentTotalDistance,
-                          double currentMoveDistance, double currentMoveClose, String currentAddress) throws IOException {
+    private void saveItem(final int runId, final long currentTime, final double currentLatitude, final double currentLongitude,
+                          final double currentAltitude, final double currentMaxAlt, final double currentMinAlt,
+                          final double currentSpeed, final double currentMaxSpeed, final double currentAvrSpeed,
+                          final long currentElapsedTime, final double currentDistance, final double currentTotalDistance,
+                          final double currentMoveDistance, final double currentMoveClose, final String currentAddress) throws IOException {
 
-        ContentValues values = new ContentValues();
-        values.put(COLUMN_RUN_ID, runId);
-        values.put(COLUMN_TIME, currentTime);
-        values.put(COLUMN_LATITUDE, currentLatitude);
-        values.put(COLUMN_LONGITUDE, currentLongitude);
-        values.put(COLUMN_ALTITUDE, currentAltitude);
-        values.put(COLUMN_MAX_ALT, currentMaxAlt);
-        values.put(COLUMN_MIN_ALT, currentMinAlt);
-        values.put(COLUMN_SPEED, currentSpeed);
-        values.put(COLUMN_MAX_SPEED, currentMaxSpeed);
-        values.put(COLUMN_AVR_SPEED, currentAvrSpeed);
-        values.put(COLUMN_TIME_COUNTER, currentElapsedTime);
-        values.put(COLUMN_DISTANCE, currentDistance);
-        values.put(COLUMN_TOTAL_DISTANCE, currentTotalDistance);
-        values.put(COLUMN_MOVE_DISTANCE, currentMoveDistance);
-        values.put(COLUMN_MOVE_CLOSE, currentMoveClose);
-        values.put(COLUMN_ADDRESS, currentAddress);
+        // Database operations should not be done on the main thread
+        AsyncTask<Void, Void, Void> insertItem = new AsyncTask<Void, Void, Void>() {
 
-        // This is a NEW item, so insert a new item into the provider,
-        // returning the content URI for the item item.
-        mContext.getContentResolver().insert(CONTENT_URI, values);
+            @Override
+            protected Void doInBackground(Void... voids) {
+                ContentValues values = new ContentValues();
+                values.put(COLUMN_RUN_ID, runId);
+                values.put(COLUMN_TIME, currentTime);
+                values.put(COLUMN_LATITUDE, currentLatitude);
+                values.put(COLUMN_LONGITUDE, currentLongitude);
+                values.put(COLUMN_ALTITUDE, currentAltitude);
+                values.put(COLUMN_MAX_ALT, currentMaxAlt);
+                values.put(COLUMN_MIN_ALT, currentMinAlt);
+                values.put(COLUMN_SPEED, currentSpeed);
+                values.put(COLUMN_MAX_SPEED, currentMaxSpeed);
+                values.put(COLUMN_AVR_SPEED, currentAvrSpeed);
+                values.put(COLUMN_TIME_COUNTER, currentElapsedTime);
+                values.put(COLUMN_DISTANCE, currentDistance);
+                values.put(COLUMN_TOTAL_DISTANCE, currentTotalDistance);
+                values.put(COLUMN_MOVE_DISTANCE, currentMoveDistance);
+                values.put(COLUMN_MOVE_CLOSE, currentMoveClose);
+                values.put(COLUMN_ADDRESS, currentAddress);
+
+                // This is a NEW item, so insert a new item into the provider,
+                // returning the content URI for the item item.
+                mContext.getContentResolver().insert(CONTENT_URI, values);
+
+                return null;
+            }
+        };
+        insertItem.execute();
     }
 
     /**
