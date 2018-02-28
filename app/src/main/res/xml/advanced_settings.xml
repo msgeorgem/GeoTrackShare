@@ -17,10 +17,13 @@
         android:key="@string/delete_loops_by_key"
         android:title="@string/delete_loops_by_label" />
 
+
     <CheckBoxPreference
-        android:id="@+id/dark"
         android:defaultValue="false"
-        android:key="applicationUpdates"
-        android:summary="Check this box if you want to switch to dark theme"
-        android:title="Dark Mode" />
+        android:key="theme"
+        android:summaryOff="        Light"
+        android:summaryOn="         Dark"
+        android:title="Get Dark" />
+
+
 </PreferenceScreen>

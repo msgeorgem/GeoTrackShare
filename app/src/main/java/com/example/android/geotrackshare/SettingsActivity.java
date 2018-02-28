@@ -23,7 +23,7 @@ public class SettingsActivity extends AppCompatActivity {
 
     }
 
-    public static class MoviesPreferenceFragment extends PreferenceFragment implements Preference.OnPreferenceChangeListener {
+    public static class TrackSharePreferenceFragment extends PreferenceFragment implements Preference.OnPreferenceChangeListener {
 
         @Override
         public void onCreate(Bundle savedInstanceState) {

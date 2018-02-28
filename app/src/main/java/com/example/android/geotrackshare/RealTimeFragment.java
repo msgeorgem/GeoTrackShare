@@ -133,6 +133,8 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
             UPDATE_INTERVAL_IN_MILLISECONDS / 5;
     public static String UPDATE_INTERVAL_IN_MILLISECONDS_STRING;
     public static SharedPreferences sharedPrefs;
+    public static int DELETE_LAST_ROWS = 15;
+    public static String DELETE_LAST_ROWS_STRING = "";
     private static int DISPLACEMENT = 5; // 10 meters
     private final double NOISEd = 0.07;
     private final double NOISEc = 0.02;
@@ -146,8 +148,6 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
     public String mElapsedTime;
     long startTime = 0;
     UUID deviceUuid;
-    private int DELETE_LAST_ROWS = 15;
-    private String DELETE_LAST_ROWS_STRING = "";
     /**
      * Provides access to the Fused Location Provider API.
      */

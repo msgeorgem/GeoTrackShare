@@ -8,7 +8,9 @@ import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
+import android.widget.Toast;
 
+import static com.example.android.geotrackshare.RealTimeFragment.DELETE_LAST_ROWS_STRING;
 import static com.example.android.geotrackshare.RealTimeFragment.UPDATE_INTERVAL_IN_MILLISECONDS_STRING;
 
 /**
@@ -18,6 +20,7 @@ import static com.example.android.geotrackshare.RealTimeFragment.UPDATE_INTERVAL
 public class AdvancedSettingsActivity extends AppCompatActivity {
 
 
+    static boolean preferenceBooleanTheme;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,6 +44,14 @@ public class AdvancedSettingsActivity extends AppCompatActivity {
                 getString(R.string.update_interval_by_default_ultimate)
         );
         RealTimeFragment.UPDATE_INTERVAL_IN_MILLISECONDS = Long.parseLong(UPDATE_INTERVAL_IN_MILLISECONDS_STRING);
+
+        DELETE_LAST_ROWS_STRING = RealTimeFragment.sharedPrefs.getString(
+                getString(R.string.delete_loops_by_key),
+                getString(R.string.delete_loops_by_default_ultimate)
+        );
+        RealTimeFragment.DELETE_LAST_ROWS = Integer.parseInt((DELETE_LAST_ROWS_STRING));
+
+
     }
 
 
@@ -58,10 +69,14 @@ public class AdvancedSettingsActivity extends AppCompatActivity {
             Preference deleteloopBy = findPreference(getString(R.string.delete_loops_by_key));
             bindPreferenceSummaryToValue2(deleteloopBy);
 
+            Preference themePreference = findPreference("theme");
+            bindPreferenceSummaryToValue3(themePreference);
+
         }
 
         @Override
         public boolean onPreferenceChange(Preference preference, Object value) {
+
             String stringValue = value.toString();
             if (preference instanceof ListPreference) {
                 ListPreference listPreference = (ListPreference) preference;
@@ -72,6 +87,14 @@ public class AdvancedSettingsActivity extends AppCompatActivity {
                 }
             } else {
                 preference.setSummary(stringValue);
+            }
+
+            if (value instanceof Boolean) {
+                if (!preferenceBooleanTheme) {
+                    Toast.makeText(getActivity(), "false", Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(getActivity(), "true", Toast.LENGTH_SHORT).show();
+                }
             }
             return true;
         }
@@ -89,6 +112,16 @@ public class AdvancedSettingsActivity extends AppCompatActivity {
             String preferenceString = preferences.getString(preference.getKey(), "");
             onPreferenceChange(preference, preferenceString);
         }
+
+        private void bindPreferenceSummaryToValue3(Preference preference) {
+            preference.setOnPreferenceChangeListener(this);
+            SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(preference.getContext());
+            preferenceBooleanTheme = preferences.getBoolean(preference.getKey(), false);
+            onPreferenceChange(preference, preferenceBooleanTheme);
+
+        }
+
+
     }
 
 }
