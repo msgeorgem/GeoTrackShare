@@ -131,6 +131,9 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
      */
     private static final long FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS =
             UPDATE_INTERVAL_IN_MILLISECONDS / 5;
+    public static int THEME;
+    public static int THEME_LIGHT = 1;
+    public static int THEME_DARK = 2;
     public static String UPDATE_INTERVAL_IN_MILLISECONDS_STRING;
     public static SharedPreferences sharedPrefs;
     public static int DELETE_LAST_ROWS = 15;
@@ -249,6 +252,7 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
                              Bundle savedInstanceState) {
         mContext = getActivity();
         sharedPrefs = PreferenceManager.getDefaultSharedPreferences(mContext);
+
 
         Integer i = R.string.update_interval_by_default_ultimate;
         String numberAsString = "1234";
@@ -1090,10 +1094,11 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
     }
 
 
-    private boolean checkMoveClose(int id) {
+    private boolean checkMoveClose(final int id) {
+        boolean mNoMove = false;
+
         int sum = 0;
         int size = 0;
-        boolean mNoMove = false;
 
         //        TODO (2): Compare saved times after changing them to miiliseconds to timeInPast. At this moment
 //        TODO (2): At this moment we leave last ten records no matter what time in past last record was
@@ -1132,6 +1137,8 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
         } catch (Exception e) {
             Log.e("Path Error", e.toString());
         }
+
+
         return mNoMove;
     }
 
@@ -1243,7 +1250,7 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
         //stopLocationUpdates();
 //        mSensorManager.unregisterListener((SensorEventListener) mContext);
     }
-
+//        TODO (44): check mate what it is, it is suspicious to me
     /**
      * Stores activity data in the Bundle.
      */
@@ -1257,7 +1264,7 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
         savedInstanceState.putDouble(KEY_LAST_UPDATED_TDISTANCE, mTotalDistance);
         super.onSaveInstanceState(savedInstanceState);
     }
-
+//        TODO (44): check mate what it is, it is suspicious to me
     /**
      * Shows a {@link Snackbar}.
      *
@@ -1391,39 +1398,49 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
     }
 
     @Override
-    public void onSensorChanged(SensorEvent sensorEvent) {
-        if (sensorEvent.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
-            ax = sensorEvent.values[0];
-            ay = sensorEvent.values[1];
-            az = sensorEvent.values[2];
+    public void onSensorChanged(final SensorEvent sensorEvent) {
 
-            if (!mInitialized) {
-                mLastX = ax;
-                mLastY = ay;
-                mLastZ = az;
-                mInitialized = true;
-            } else {
-                deltaXD = Math.abs(mLastX - ax);
-                deltaYD = Math.abs(mLastY - ay);
-                deltaZD = Math.abs(mLastZ - az);
-                if (deltaXD < NOISEd) deltaXD = 0.0;
-                if (deltaYD < NOISEd) deltaYD = 0.0;
-                if (deltaZD < NOISEd) deltaZD = 0.0;
-                deltaXC = Math.abs(mLastX - ax);
-                deltaYC = Math.abs(mLastY - ay);
-                deltaZC = Math.abs(mLastZ - az);
-                if (deltaXC < NOISEc) deltaXC = 0.0;
-                if (deltaYC < NOISEc) deltaYC = 0.0;
-                if (deltaZC < NOISEc) deltaZC = 0.0;
+        final AsyncTask<Void, Void, Void> sensor = new AsyncTask<Void, Void, Void>() {
 
-                mLastX = ax;
-                mLastY = ay;
-                mLastZ = az;
+            @Override
+            protected Void doInBackground(Void... voids) {
+
+                if (sensorEvent.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
+                    ax = sensorEvent.values[0];
+                    ay = sensorEvent.values[1];
+                    az = sensorEvent.values[2];
+
+                    if (!mInitialized) {
+                        mLastX = ax;
+                        mLastY = ay;
+                        mLastZ = az;
+                        mInitialized = true;
+                    } else {
+                        deltaXD = Math.abs(mLastX - ax);
+                        deltaYD = Math.abs(mLastY - ay);
+                        deltaZD = Math.abs(mLastZ - az);
+                        if (deltaXD < NOISEd) deltaXD = 0.0;
+                        if (deltaYD < NOISEd) deltaYD = 0.0;
+                        if (deltaZD < NOISEd) deltaZD = 0.0;
+                        deltaXC = Math.abs(mLastX - ax);
+                        deltaYC = Math.abs(mLastY - ay);
+                        deltaZC = Math.abs(mLastZ - az);
+                        if (deltaXC < NOISEc) deltaXC = 0.0;
+                        if (deltaYC < NOISEc) deltaYC = 0.0;
+                        if (deltaZC < NOISEc) deltaZC = 0.0;
+
+                        mLastX = ax;
+                        mLastY = ay;
+                        mLastZ = az;
 //                Log.i("Print deltaXD", String.valueOf(deltaXD));
 //                Log.i("Print deltaYD", String.valueOf(deltaYD));
-//                Log.i("Print deltaZD", String.valueOf(deltaZD));
+//                Log.i("Print deltaZD", String.valueOf(deltaZD))
+                    }
+                }
+                return null;
             }
-        }
+        };
+        sensor.execute();
     }
 
     @Override

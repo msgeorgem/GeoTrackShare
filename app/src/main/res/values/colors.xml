@@ -4,6 +4,11 @@
     <color name="colorPrimaryDark">#00695C</color>
     <color name="colorAccent">#FF4081</color>
 
+    <color name="colorPrimaryDarkTheme">#263238</color>
+    <color name="colorPrimaryDarkDarkTheme">#000a12</color>
+    <color name="colorAccentDarkTheme">#FF4081</color>
+
+
     <color name="view_bg">#B2DFDB</color>
     <color name="white">#ffffff</color>
     <color name="btn_bg">#3e4a56</color>

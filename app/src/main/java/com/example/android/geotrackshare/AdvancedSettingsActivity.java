@@ -19,8 +19,9 @@ import static com.example.android.geotrackshare.RealTimeFragment.UPDATE_INTERVAL
 
 public class AdvancedSettingsActivity extends AppCompatActivity {
 
-
+    static String TEMP_THEME_STRING;
     static boolean preferenceBooleanTheme;
+    static boolean TEMP_BOOLEAN;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -31,7 +32,8 @@ public class AdvancedSettingsActivity extends AppCompatActivity {
 
         if (actionBar != null) {
             actionBar.setDisplayHomeAsUpEnabled(true);
-//            actionBar.setDisplayShowHomeEnabled(true);
+            actionBar.setDisplayShowHomeEnabled(true);
+            actionBar.setDisplayShowTitleEnabled(true);
         }
 
     }
@@ -51,16 +53,18 @@ public class AdvancedSettingsActivity extends AppCompatActivity {
         );
         RealTimeFragment.DELETE_LAST_ROWS = Integer.parseInt((DELETE_LAST_ROWS_STRING));
 
-
+//        MainActivity.THEME_BOOLEAN = RealTimeFragment.sharedPrefs.getBoolean("theme",TEMP_BOOLEAN);
+//        RealTimeFragment.THEME = Integer.parseInt((tempString));
     }
 
-
     public static class TracksPreferenceFragment extends PreferenceFragment implements Preference.OnPreferenceChangeListener {
+
 
         @Override
         public void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
             addPreferencesFromResource(R.xml.advanced_settings);
+
 
 
             Preference intervalBy = findPreference(getString(R.string.update_interval_by_key));
@@ -69,10 +73,11 @@ public class AdvancedSettingsActivity extends AppCompatActivity {
             Preference deleteloopBy = findPreference(getString(R.string.delete_loops_by_key));
             bindPreferenceSummaryToValue2(deleteloopBy);
 
-            Preference themePreference = findPreference("theme");
+            Preference themePreference = findPreference("theme_switch");
             bindPreferenceSummaryToValue3(themePreference);
 
         }
+
 
         @Override
         public boolean onPreferenceChange(Preference preference, Object value) {
@@ -90,10 +95,12 @@ public class AdvancedSettingsActivity extends AppCompatActivity {
             }
 
             if (value instanceof Boolean) {
-                if (!preferenceBooleanTheme) {
-                    Toast.makeText(getActivity(), "false", Toast.LENGTH_SHORT).show();
+                if (preferenceBooleanTheme) {
+                    MainActivity.THEME_BOOLEAN = false;
+                    Toast.makeText(getActivity(), "Restart app to apply changes", Toast.LENGTH_SHORT).show();
                 } else {
-                    Toast.makeText(getActivity(), "true", Toast.LENGTH_SHORT).show();
+                    MainActivity.THEME_BOOLEAN = true;
+                    Toast.makeText(getActivity(), "Restart app to apply changes", Toast.LENGTH_SHORT).show();
                 }
             }
             return true;
@@ -118,9 +125,7 @@ public class AdvancedSettingsActivity extends AppCompatActivity {
             SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(preference.getContext());
             preferenceBooleanTheme = preferences.getBoolean(preference.getKey(), false);
             onPreferenceChange(preference, preferenceBooleanTheme);
-
         }
-
 
     }
 

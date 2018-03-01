@@ -19,11 +19,11 @@
 
 
     <CheckBoxPreference
+        android:id="@+id/theme"
         android:defaultValue="false"
-        android:key="theme"
+        android:key="theme_switch"
         android:summaryOff="        Light"
         android:summaryOn="         Dark"
         android:title="Get Dark" />
-
 
 </PreferenceScreen>

@@ -17,18 +17,30 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.WindowManager;
+import android.widget.Toast;
 
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
     public static final String LOG_TAG = MainActivity.class.getName();
     public static ConnectivityManager cm;
+    public static boolean THEME_BOOLEAN;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        if (!THEME_BOOLEAN) {
+            setTheme(R.style.AppTheme);
+            Toast.makeText(this, "change to light", Toast.LENGTH_SHORT).show();
+        } else {
+            setTheme(R.style.AppThemeDarkTheme);
+            Toast.makeText(this, "change to darkness", Toast.LENGTH_SHORT).show();
+
+        }
         setContentView(R.layout.activity_main);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+
 
         // Find the view pager that will allow the user to swipe between fragments
         final ViewPager viewPager = findViewById(R.id.viewpager);
