@@ -10,19 +10,33 @@
         android:key="@string/update_interval_by_key"
         android:title="@string/update_interval_by_label" />
 
+    <CheckBoxPreference
+        android:id="@+id/disable_auto_stop"
+        android:key="@string/disable_auto_stop_switch_key"
+        android:summaryOff="Off"
+        android:summaryOn="On"
+        android:title="@string/disable_auto_stop_switch_label" />
+
     <ListPreference
+        android:id="@+id/auto_stop"
         android:defaultValue="@string/delete_loops_by_default_ultimate"
         android:entries="@array/delete_loops_by_labels"
         android:entryValues="@array/delete_loops_by_values"
         android:key="@string/delete_loops_by_key"
         android:title="@string/delete_loops_by_label" />
 
-
     <CheckBoxPreference
         android:id="@+id/theme"
-        android:key="theme_switch"
-        android:summaryOff="        Light"
-        android:summaryOn="         Dark"
-        android:title="Get Dark" />
+        android:key="@string/theme_switch_key"
+        android:summaryOff="Off"
+        android:summaryOn="On"
+        android:title="@string/theme_switch_label" />
+
+    <CheckBoxPreference
+        android:id="@+id/screen_on"
+        android:key="@string/screen_on_switch_key"
+        android:summaryOff="Off"
+        android:summaryOn="On"
+        android:title="@string/screen_on_switch_label" />
 
 </PreferenceScreen>

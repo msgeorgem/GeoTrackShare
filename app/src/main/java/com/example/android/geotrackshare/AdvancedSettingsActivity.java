@@ -15,9 +15,9 @@ import android.support.v7.app.AppCompatActivity;
 
 public class AdvancedSettingsActivity extends AppCompatActivity {
 
-    static String TEMP_THEME_STRING;
-    static boolean preferenceBooleanTheme;
-    static boolean TEMP_BOOLEAN;
+    public static boolean preferenceBooleanDisableAutoStop;
+    public static boolean preferenceBooleanTheme;
+    public static boolean preferenceBooleanScreenOn;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,11 +56,18 @@ public class AdvancedSettingsActivity extends AppCompatActivity {
             Preference intervalBy = findPreference(getString(R.string.update_interval_by_key));
             bindPreferenceSummaryToValue1(intervalBy);
 
-            Preference deleteloopBy = findPreference(getString(R.string.delete_loops_by_key));
-            bindPreferenceSummaryToValue2(deleteloopBy);
+            Preference disableAutoStopPreference = findPreference(getString(R.string.disable_auto_stop_switch_key));
+            bindPreferenceSummaryToValue2(disableAutoStopPreference);
 
-            Preference themePreference = findPreference("theme_switch");
-            bindPreferenceSummaryToValue3(themePreference);
+            Preference deleteloopBy = findPreference(getString(R.string.delete_loops_by_key));
+            bindPreferenceSummaryToValue3(deleteloopBy);
+
+            Preference themePreference = findPreference(getString(R.string.theme_switch_key));
+            bindPreferenceSummaryToValue4(themePreference);
+
+            Preference screenOnPreference = findPreference(getString(R.string.screen_on_switch_key));
+            bindPreferenceSummaryToValue5(screenOnPreference);
+
 
         }
 
@@ -94,15 +101,29 @@ public class AdvancedSettingsActivity extends AppCompatActivity {
         private void bindPreferenceSummaryToValue2(Preference preference) {
             preference.setOnPreferenceChangeListener(this);
             SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
-            String preferenceString = preferences.getString(preference.getKey(), "");
-            onPreferenceChange(preference, preferenceString);
+            preferenceBooleanDisableAutoStop = preferences.getBoolean(preference.getKey(), true);
+            onPreferenceChange(preference, preferenceBooleanDisableAutoStop);
         }
 
         private void bindPreferenceSummaryToValue3(Preference preference) {
             preference.setOnPreferenceChangeListener(this);
             SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
+            String preferenceString = preferences.getString(preference.getKey(), "");
+            onPreferenceChange(preference, preferenceString);
+        }
+
+        private void bindPreferenceSummaryToValue4(Preference preference) {
+            preference.setOnPreferenceChangeListener(this);
+            SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
             preferenceBooleanTheme = preferences.getBoolean(preference.getKey(), true);
             onPreferenceChange(preference, preferenceBooleanTheme);
+        }
+
+        private void bindPreferenceSummaryToValue5(Preference preference) {
+            preference.setOnPreferenceChangeListener(this);
+            SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
+            preferenceBooleanScreenOn = preferences.getBoolean(preference.getKey(), true);
+            onPreferenceChange(preference, preferenceBooleanScreenOn);
         }
 
     }

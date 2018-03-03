@@ -66,6 +66,7 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import static android.content.Context.SENSOR_SERVICE;
+import static com.example.android.geotrackshare.AdvancedSettingsActivity.preferenceBooleanDisableAutoStop;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_ADDRESS;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_ALTITUDE;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_AVR_SPEED;
@@ -84,7 +85,6 @@ import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_TOTAL_DISTANCE;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.CONTENT_URI;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry._ID;
-
 
 
 /**
@@ -136,6 +136,7 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
     public static int THEME_DARK = 2;
     public static String UPDATE_INTERVAL_IN_MILLISECONDS_STRING;
     public static int DELETE_LAST_ROWS = 15;
+    public static boolean DISABLE_AUTO_CLOSE;
     public static String DELETE_LAST_ROWS_STRING = "";
     public static Context mContext;
     private static int DISPLACEMENT = 5; // 10 meters
@@ -254,6 +255,7 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
 
         mContext = getActivity();
         sharedPrefs = PreferenceManager.getDefaultSharedPreferences(mContext);
+        DISABLE_AUTO_CLOSE = switchDisableAutoStop();
 
         Integer i = R.string.update_interval_by_default_ultimate;
         String numberAsString = "1234";
@@ -703,8 +705,7 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
 
             mNoMoveDistance = checkMoveDistance(mCurrentId);
             mNoMoveClose = checkMoveClose(mCurrentId);
-            stopLocationNoMovement(mCurrentId);
-
+            autoStopLocationNoMovement();
 
             if (mRequestingLocationUpdates) {
                 getElapsedTime();
@@ -1220,14 +1221,25 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
                 });
     }
 
-    private void stopLocationNoMovement(int id) {
 
-        if (mNoMoveClose) {
-            stopLocationUpdates();
-            deletelastNoMoveRows();
+    private void autoStopLocationNoMovement() {
+        if (DISABLE_AUTO_CLOSE) {
+            Log.d(TAG, "DISABLE AUTO CLOSE IS ON");
+
+        } else {
+            Log.d(TAG, "DISABLE AUTO CLOSE IS OFF");
+            if (mNoMoveClose) {
+                stopLocationUpdates();
+                deletelastNoMoveRows();
+            }
         }
     }
 
+    public boolean switchDisableAutoStop() {
+
+        return sharedPrefs.getBoolean
+                (getString(R.string.disable_auto_stop_switch_key), preferenceBooleanDisableAutoStop);
+    }
 
     @Override
     public void onResume() {
@@ -1254,6 +1266,7 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
 //        mSensorManager.unregisterListener((SensorEventListener) mContext);
     }
 //        TODO (44): check mate what it is, it is suspicious to me
+
     /**
      * Stores activity data in the Bundle.
      */
@@ -1268,6 +1281,7 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
         super.onSaveInstanceState(savedInstanceState);
     }
 //        TODO (44): check mate what it is, it is suspicious to me
+
     /**
      * Shows a {@link Snackbar}.
      *

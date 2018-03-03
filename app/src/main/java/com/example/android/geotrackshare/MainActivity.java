@@ -20,6 +20,7 @@ import android.view.MenuItem;
 import android.view.WindowManager;
 import android.widget.Toast;
 
+import static com.example.android.geotrackshare.AdvancedSettingsActivity.preferenceBooleanScreenOn;
 import static com.example.android.geotrackshare.AdvancedSettingsActivity.preferenceBooleanTheme;
 
 
@@ -34,12 +35,9 @@ public class MainActivity extends AppCompatActivity
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         switchTheme();
-
         setContentView(R.layout.activity_main);
-        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-
+        switchScreenOn();
 
         // Find the view pager that will allow the user to swipe between fragments
         final ViewPager viewPager = findViewById(R.id.viewpager);
@@ -96,6 +94,14 @@ public class MainActivity extends AppCompatActivity
         } else {
             this.setTheme(R.style.AppThemeDarkTheme);
             Toast.makeText(this, "Darkness mode", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    public void switchScreenOn() {
+        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
+        boolean screenOnBoolean = sharedPrefs.getBoolean("screen_on_switch", preferenceBooleanScreenOn);
+        if (screenOnBoolean) {
+            getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         }
     }
     @Override

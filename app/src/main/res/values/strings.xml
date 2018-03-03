@@ -145,6 +145,14 @@
     <string name="delete_loops_by_key">deleteloop</string>
     <string name="delete_loops_by_label">Auto delete rule</string>
 
+    <string name="disable_auto_stop_switch_key">auto_stop_switch</string>
+    <string name="disable_auto_stop_switch_label">Disable Auto Stop</string>
+    <string name="theme_switch_key">theme_switch</string>
+    <string name="theme_switch_label">Dark Mode</string>
+    <string name="screen_on_switch_key">screen_on_switch</string>
+    <string name="screen_on_switch_label">Screen Always On</string>
+
+
     <string name="delete">Delete</string>
     <string name="cancel">Cancel</string>
     <string name="delete_oneitem_dialog_msg">Are you sure to remove this run from favourites?</string>

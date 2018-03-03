@@ -6,7 +6,7 @@
 
     <color name="colorPrimaryDarkTheme">#263238</color>
     <color name="colorPrimaryDarkDarkTheme">#000a12</color>
-    <color name="colorAccentDarkTheme">#FF4081</color>
+    <color name="colorAccentDarkTheme">#ff4081</color>
 
 
     <color name="view_bg">#B2DFDB</color>
@@ -33,6 +33,7 @@
     <color name="view_bg_dark">#424242</color>
 
     <color name="btn_bg_dark">#6d6d6d</color>
+    <color name="colorBackground">#7d7d7d</color>
 
 </resources>
 
