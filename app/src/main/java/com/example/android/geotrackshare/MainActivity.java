@@ -3,8 +3,10 @@ package com.example.android.geotrackshare;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.TabLayout;
@@ -14,30 +16,27 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.view.Menu;
 import android.view.MenuItem;
 import android.view.WindowManager;
 import android.widget.Toast;
+
+import static com.example.android.geotrackshare.AdvancedSettingsActivity.TEMP_BOOLEAN;
 
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
     public static final String LOG_TAG = MainActivity.class.getName();
     public static ConnectivityManager cm;
-    public static boolean THEME_BOOLEAN;
 
+
+    SharedPreferences sharedPrefs;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (!THEME_BOOLEAN) {
-            setTheme(R.style.AppTheme);
-            Toast.makeText(this, "change to light", Toast.LENGTH_SHORT).show();
-        } else {
-            setTheme(R.style.AppThemeDarkTheme);
-            Toast.makeText(this, "change to darkness", Toast.LENGTH_SHORT).show();
 
-        }
+        switchTheme();
+
         setContentView(R.layout.activity_main);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
@@ -73,6 +72,7 @@ public class MainActivity extends AppCompatActivity
         // Make sure the toolbar exists in the activity and is not null
         setSupportActionBar(toolbar);
 
+
         cm = (ConnectivityManager)
                 getSystemService(Context.CONNECTIVITY_SERVICE);
 
@@ -87,6 +87,17 @@ public class MainActivity extends AppCompatActivity
         navigationView.setNavigationItemSelectedListener(this);
     }
 
+    public void switchTheme() {
+        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
+        boolean themeBoolean = sharedPrefs.getBoolean("theme_switch", TEMP_BOOLEAN);
+        if (!themeBoolean) {
+            this.setTheme(R.style.AppTheme);
+            Toast.makeText(this, "Light mode", Toast.LENGTH_SHORT).show();
+        } else {
+            this.setTheme(R.style.AppThemeDarkTheme);
+            Toast.makeText(this, "Darkness mode", Toast.LENGTH_SHORT).show();
+        }
+    }
     @Override
     public void onBackPressed() {
         DrawerLayout drawer = findViewById(R.id.drawer_layout);
@@ -95,11 +106,6 @@ public class MainActivity extends AppCompatActivity
         } else {
             super.onBackPressed();
         }
-    }
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.main, menu);
-        return true;
     }
 
     @Override

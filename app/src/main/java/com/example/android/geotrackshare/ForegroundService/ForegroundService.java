@@ -14,8 +14,6 @@ import android.util.Log;
 import com.example.android.geotrackshare.MainActivity;
 import com.example.android.geotrackshare.R;
 
-import static com.example.android.geotrackshare.RealTimeFragment.mContext;
-
 /**
  * Created by Marcin on 2018-02-04.
  */
@@ -83,9 +81,9 @@ public class ForegroundService extends Service {
         } else if (intent.getAction().equals(Constants.ACTION.STOP_ACTION)) {
             Log.i(LOG_TAG, "Clicked Stop");
 
-            Intent stopIntent = new Intent(mContext, ForegroundService.class);
+            Intent stopIntent = new Intent(this, ForegroundService.class);
             stopIntent.setAction(Constants.ACTION.STOPFOREGROUND_ACTION);
-            mContext.startService(stopIntent);
+            this.startService(stopIntent);
 
 
         } else if (intent.getAction().equals(

@@ -12,6 +12,18 @@
 
     </style>
 
+    <!-- Base application theme. -->
+    <style name="AppThemeSettings" parent="Theme.AppCompat.Light.DarkActionBar">
+        <!-- Customize your theme here. -->
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorAccent">@color/colorAccent</item>
+        <item name="windowActionBar">true</item>
+        <item name="windowNoTitle">false</item>
+        <!--item name="windowActionBar">true</item>-->
+
+    </style>
+
     <style name="AppThemeDarkTheme" parent="Theme.AppCompat.Light.DarkActionBar">
         <!-- Customize your theme here. -->
         <item name="colorPrimary">@color/colorPrimaryDarkTheme</item>
@@ -19,6 +31,17 @@
         <item name="colorAccent">@color/colorAccentDarkTheme</item>
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
+        <!--item name="windowActionBar">true</item>-->
+
+    </style>
+
+    <style name="AppThemeSettingsDarkTheme" parent="Theme.AppCompat.Light.DarkActionBar">
+        <!-- Customize your theme here. -->
+        <item name="colorPrimary">@color/colorPrimaryDarkTheme</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDarkDarkTheme</item>
+        <item name="colorAccent">@color/colorAccentDarkTheme</item>
+        <item name="windowActionBar">true</item>
+        <item name="windowNoTitle">false</item>
         <!--item name="windowActionBar">true</item>-->
 
     </style>
@@ -41,4 +64,5 @@
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
     </style>
+
 </resources>

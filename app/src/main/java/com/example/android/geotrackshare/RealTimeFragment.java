@@ -86,6 +86,7 @@ import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry._ID;
 
 
+
 /**
  * A simple {@link Fragment} subclass.
  * Activities that contain this fragment must implement the
@@ -120,7 +121,6 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
     private final static String KEY_LAST_UPDATED_TIME = "last-updated-time-string";
     private final static String KEY_LAST_UPDATED_ETIME = "last-updated-elapsedtime-string";
     private final static String KEY_LAST_UPDATED_TDISTANCE = "last-updated-total-distance";
-    public static Context mContext;
     /**
      * The desired interval for location updates. Inexact. Updates may be more or less frequent.
      */
@@ -135,9 +135,9 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
     public static int THEME_LIGHT = 1;
     public static int THEME_DARK = 2;
     public static String UPDATE_INTERVAL_IN_MILLISECONDS_STRING;
-    public static SharedPreferences sharedPrefs;
     public static int DELETE_LAST_ROWS = 15;
     public static String DELETE_LAST_ROWS_STRING = "";
+    public static Context mContext;
     private static int DISPLACEMENT = 5; // 10 meters
     private final double NOISEd = 0.07;
     private final double NOISEc = 0.02;
@@ -151,6 +151,7 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
     public String mElapsedTime;
     long startTime = 0;
     UUID deviceUuid;
+    SharedPreferences sharedPrefs;
     /**
      * Provides access to the Fused Location Provider API.
      */
@@ -250,9 +251,9 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+
         mContext = getActivity();
         sharedPrefs = PreferenceManager.getDefaultSharedPreferences(mContext);
-
 
         Integer i = R.string.update_interval_by_default_ultimate;
         String numberAsString = "1234";
@@ -562,18 +563,20 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
      * runtime permission has been granted.
      */
     private void startLocationUpdates() {
-        UPDATE_INTERVAL_IN_MILLISECONDS_STRING = sharedPrefs.getString(
-                getString(R.string.update_interval_by_key),
-                getString(R.string.update_interval_by_default_ultimate)
-        );
-
-        UPDATE_INTERVAL_IN_MILLISECONDS = Long.parseLong(UPDATE_INTERVAL_IN_MILLISECONDS_STRING);
+//        UPDATE_INTERVAL_IN_MILLISECONDS_STRING = sharedPrefs.getString(
+//                getString(R.string.update_interval_by_key),
+//                getString(R.string.update_interval_by_default_ultimate)
+//        );
+//
+//        UPDATE_INTERVAL_IN_MILLISECONDS = Long.parseLong(UPDATE_INTERVAL_IN_MILLISECONDS_STRING);
 
         DELETE_LAST_ROWS_STRING = sharedPrefs.getString(
                 getString(R.string.delete_loops_by_key),
                 getString(R.string.delete_loops_by_default_ultimate)
         );
         DELETE_LAST_ROWS = Integer.parseInt((DELETE_LAST_ROWS_STRING));
+
+        Log.i("delete rows", String.valueOf(DELETE_LAST_ROWS));
 
 
         // Begin by checking if the device has the necessary location settings.
