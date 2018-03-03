@@ -42,7 +42,7 @@ import com.google.android.gms.maps.model.PolylineOptions;
 import java.io.IOException;
 import java.util.ArrayList;
 
-import static com.example.android.geotrackshare.AdvancedSettingsActivity.TEMP_BOOLEAN;
+import static com.example.android.geotrackshare.AdvancedSettingsActivity.preferenceBooleanTheme;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_ALTITUDE;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_LATITUDE;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_LONGITUDE;
@@ -185,13 +185,11 @@ public class DetailActivity extends AppCompatActivity implements OnMapReadyCallb
 
     private void switchThemeD() {
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
-        boolean themeBoolean = sharedPrefs.getBoolean("theme_switch", TEMP_BOOLEAN);
+        boolean themeBoolean = sharedPrefs.getBoolean("theme_switch", preferenceBooleanTheme);
         if (!themeBoolean) {
             setTheme(R.style.AppTheme);
-            Toast.makeText(this, "Light mode", Toast.LENGTH_SHORT).show();
         } else {
             setTheme(R.style.AppThemeDarkTheme);
-            Toast.makeText(this, "Darkness mode", Toast.LENGTH_SHORT).show();
         }
     }
     private boolean checkIfInFavorites() {

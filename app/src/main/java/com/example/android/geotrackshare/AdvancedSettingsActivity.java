@@ -8,7 +8,6 @@ import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
-import android.widget.Toast;
 
 /**
  * Created by Marcin on 2017-09-12.
@@ -33,19 +32,16 @@ public class AdvancedSettingsActivity extends AppCompatActivity {
             actionBar.setDisplayShowHomeEnabled(true);
             actionBar.setDisplayShowTitleEnabled(true);
         }
-
     }
 
     private void switchThemeS() {
 
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
-        boolean themeBoolean = sharedPrefs.getBoolean("theme_switch", TEMP_BOOLEAN);
+        boolean themeBoolean = sharedPrefs.getBoolean("theme_switch", preferenceBooleanTheme);
         if (!themeBoolean) {
             this.setTheme(R.style.AppThemeSettings);
-            Toast.makeText(this, "Light mode", Toast.LENGTH_SHORT).show();
         } else {
             this.setTheme(R.style.AppThemeSettingsDarkTheme);
-            Toast.makeText(this, "Darkness mode", Toast.LENGTH_SHORT).show();
     }
     }
     public static class TracksPreferenceFragment extends PreferenceFragment implements Preference.OnPreferenceChangeListener {
@@ -84,9 +80,6 @@ public class AdvancedSettingsActivity extends AppCompatActivity {
                 preference.setSummary(stringValue);
             }
 
-            if (value instanceof Boolean) {
-                TEMP_BOOLEAN = preferenceBooleanTheme;
-            }
             return true;
 
         }

@@ -20,7 +20,7 @@ import android.view.MenuItem;
 import android.view.WindowManager;
 import android.widget.Toast;
 
-import static com.example.android.geotrackshare.AdvancedSettingsActivity.TEMP_BOOLEAN;
+import static com.example.android.geotrackshare.AdvancedSettingsActivity.preferenceBooleanTheme;
 
 
 public class MainActivity extends AppCompatActivity
@@ -89,7 +89,7 @@ public class MainActivity extends AppCompatActivity
 
     public void switchTheme() {
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
-        boolean themeBoolean = sharedPrefs.getBoolean("theme_switch", TEMP_BOOLEAN);
+        boolean themeBoolean = sharedPrefs.getBoolean("theme_switch", preferenceBooleanTheme);
         if (!themeBoolean) {
             this.setTheme(R.style.AppTheme);
             Toast.makeText(this, "Light mode", Toast.LENGTH_SHORT).show();
