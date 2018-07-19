@@ -58,7 +58,6 @@ import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 
-import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -742,21 +741,17 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
 
             if (mRequestingLocationUpdates) {
                 getElapsedTime();
-                try {
-                    if (mNoMoveDistance) {
-                        mCurrentAddress = getCompleteAddressString(mCurrentLatitude, mCurrentLongitude);
-                        mAddressOutputTextView.setText(mCurrentAddress);
-                    } else {
-                        mAddressOutputTextView.setText(R.string.in_motion);
-                        mCurrentAddress = "";
-                    }
-                    saveItem(mCurrentId, mLastUpdateTimeMillis, mCurrentLatitude, mCurrentLongitude,
-                            mCurrentAltitude, mMaxAltitude, mMinAltitude, mCurrentSpeed, mMaxSpeed,
-                            mAverageSpeed, mElapsedTimeMillis, mDistance, mTotalDistance, mMoveDistance,
-                            mMoveClose, mCurrentAddress);
-                } catch (IOException e) {
-                    e.printStackTrace();
+                if (mNoMoveDistance) {
+                    mCurrentAddress = getCompleteAddressString(mCurrentLatitude, mCurrentLongitude);
+                    mAddressOutputTextView.setText(mCurrentAddress);
+                } else {
+                    mAddressOutputTextView.setText(R.string.in_motion);
+                    mCurrentAddress = "";
                 }
+                saveItem(mCurrentId, mLastUpdateTimeMillis, mCurrentLatitude, mCurrentLongitude,
+                        mCurrentAltitude, mMaxAltitude, mMinAltitude, mCurrentSpeed, mMaxSpeed,
+                        mAverageSpeed, mElapsedTimeMillis, mDistance, mTotalDistance, mMoveDistance,
+                        mMoveClose, mCurrentAddress);
             }
         }
     }

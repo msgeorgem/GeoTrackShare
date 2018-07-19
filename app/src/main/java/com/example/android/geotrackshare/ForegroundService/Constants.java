@@ -10,6 +10,7 @@ public class Constants {
     public interface ACTION {
         String MAIN_ACTION = "com.example.android.geotrackshare.action.main";
         String PLAY_ACTION = "com.example.android.geotrackshare.action.start";
+        String PAUSE_ACTION = "com.example.android.geotrackshare.action.pause";
         String STOP_ACTION = "com.example.android.geotrackshare.action.stop";
         String STARTFOREGROUND_ACTION = "com.example.android.geotrackshare.action.startforeground";
         String STOPFOREGROUND_ACTION = "com.example.android.geotrackshare.action.stopforeground";
