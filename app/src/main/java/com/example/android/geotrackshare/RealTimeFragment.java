@@ -24,6 +24,7 @@ import android.os.Looper;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
@@ -43,6 +44,7 @@ import com.example.android.geotrackshare.Utils.DistanceCalculator;
 import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.common.api.ResolvableApiException;
 import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationAvailability;
 import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
@@ -243,6 +245,7 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
     private boolean mNoMoveDistance = false;
     private boolean mNoMoveClose = false;
     private String defValue;
+    View mView;
 
     public RealTimeFragment() {
         // Required empty public constructor
@@ -270,32 +273,39 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
 //                number
 //        );
         // Inflate the layout for this fragment
-        View v = inflater.inflate(R.layout.fragment_real_time, container, false);
+        try {
+            if (mView == null) {
+                mView = inflater.inflate(R.layout.fragment_real_time, container, false);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         // Locate the UI widgets.
-        mRunNumber = v.findViewById(R.id.run_number);
-        mLocation = v.findViewById(R.id.locate_on_map);
-        mStartUpdatesButton = v.findViewById(R.id.start_updates_button);
-        mStopUpdatesButton = v.findViewById(R.id.stop_updates_button);
+        mRunNumber = mView.findViewById(R.id.run_number);
+        mLocation = mView.findViewById(R.id.locate_on_map);
+        mStartUpdatesButton = mView.findViewById(R.id.start_updates_button);
+        mStopUpdatesButton = mView.findViewById(R.id.stop_updates_button);
 
-        mAddressOutputTextView = v.findViewById(R.id.address_text);
+        mAddressOutputTextView = mView.findViewById(R.id.address_text);
 
-        mLatitudeTextView = v.findViewById(R.id.latitude_text);
-        mLongitudeTextView = v.findViewById(R.id.longitude_text);
+        mLatitudeTextView = mView.findViewById(R.id.latitude_text);
+        mLongitudeTextView = mView.findViewById(R.id.longitude_text);
 
-        mPrevLatitudeTextView = v.findViewById(R.id.prev_latitude_text);
-        mPrevLongitudeTextView = v.findViewById(R.id.prev_longitude_text);
-        mIntervalTextView = v.findViewById(R.id.interval);
-        mDeleteTextView = v.findViewById(R.id.delete_loops);
+        mPrevLatitudeTextView = mView.findViewById(R.id.prev_latitude_text);
+        mPrevLongitudeTextView = mView.findViewById(R.id.prev_longitude_text);
+        mIntervalTextView = mView.findViewById(R.id.interval);
+        mDeleteTextView = mView.findViewById(R.id.delete_loops);
 
-        mAltitudeTextView = v.findViewById(R.id.altitude_text);
-        mSpeedTextView = v.findViewById(R.id.speed_text);
-        mLastUpdateTimeTextView = v.findViewById(R.id.last_update_time_text);
-        mMaxSpeedTextView = v.findViewById(R.id.max_speed);
-        mAvgSpeedTextView = v.findViewById(R.id.avg_speed);
-        mMinAltitudeTextView = v.findViewById(R.id.min_alt);
-        mMaxAltitudeTextView = v.findViewById(R.id.max_alt);
-        mElapsedTimeTextView = v.findViewById(R.id.total_time);
-        mTotalDistanceTextView = v.findViewById(R.id.total_distance);
+        mAltitudeTextView = mView.findViewById(R.id.altitude_text);
+        mSpeedTextView = mView.findViewById(R.id.speed_text);
+        mLastUpdateTimeTextView = mView.findViewById(R.id.last_update_time_text);
+        mMaxSpeedTextView = mView.findViewById(R.id.max_speed);
+        mAvgSpeedTextView = mView.findViewById(R.id.avg_speed);
+        mMinAltitudeTextView = mView.findViewById(R.id.min_alt);
+        mMaxAltitudeTextView = mView.findViewById(R.id.max_alt);
+        mElapsedTimeTextView = mView.findViewById(R.id.total_time);
+        mTotalDistanceTextView = mView.findViewById(R.id.total_distance);
 
         // Set labels.
         mCurrentRunLabel = "Current Run Number";
@@ -325,8 +335,12 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
         // Update values using data stored in the Bundle.
         updateValuesFromBundle(savedInstanceState);
 
+
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(mContext);
         mSettingsClient = LocationServices.getSettingsClient(mContext);
+
+        final Double mSelectedLatitude = createNewLocation()[0];
+        final Double mSelectedLongitude = createNewLocation()[1];
 
         // Kick off the process of building the LocationCallback, LocationRequest, and
         // LocationSettingsRequest objects.
@@ -354,7 +368,7 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
 
             @Override
             public void onClick(View view) {
-                String uri = String.format(Locale.ENGLISH, "geo:%f,%f", mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude());
+                String uri = String.format(Locale.ENGLISH, "geo:%f,%f", mSelectedLatitude, mSelectedLongitude);
                 Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(uri));
                 startActivity(intent);
             }
@@ -401,9 +415,19 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
             }
         });
 
-        return v;
+        return mView;
     }
 
+    private double[] createNewLocation() {
+        Location location = new Location("dummyprovider");
+        double mLatitude = location.getLatitude();
+        double mLongitude = location.getLongitude();
+
+        double[] mLocation = new double[2];
+        mLocation[0] = mLatitude;
+        mLocation[1] = mLongitude;
+        return mLocation;
+    }
     /**
      * Updates fields based on data stored in the bundle.
      *
@@ -506,6 +530,7 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
             }
         };
     }
+
 
     /**
      * Uses a {@link com.google.android.gms.location.LocationSettingsRequest.Builder} to build
@@ -650,6 +675,37 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
         }
     }
 
+    private void onlyUIupdate() {
+
+
+        mLatitudeTextView.setText(String.format(Locale.ENGLISH, "%s: %f", mLatitudeLabel,
+                mCurrentLocation.getLatitude()));
+        mLongitudeTextView.setText(String.format(Locale.ENGLISH, "%s: %f", mLongitudeLabel,
+                mCurrentLocation.getLongitude()));
+        mAltitudeTextView.setText(String.format(Locale.ENGLISH, "%s: %f", mAltitudeLabel,
+                mCurrentLocation.getAltitude()));
+        mSpeedTextView.setText(String.format(Locale.ENGLISH, "%s: %.1f", mSpeedLabel,
+                ((mCurrentLocation.getSpeed()) * 3.6)));
+
+        mAvgSpeedTextView.setText(String.format(Locale.ENGLISH, "%s: %.1f",
+                mAvgSpeedLabel, calculateAverageSpeed(mCurrentId)));
+        mMaxSpeedTextView.setText(String.format(Locale.ENGLISH, "%s: %.1f",
+                mMaxSpeedLabel, queryMaxSpeed(mCurrentId)));
+        mMaxAltitudeTextView.setText(String.format(Locale.ENGLISH, "%s: %f",
+                mMaxAltitudeLabel, queryMaxAlt(mCurrentId)));
+        mMinAltitudeTextView.setText(String.format(Locale.ENGLISH, "%s: %f",
+                mMinAltitudeLabel, queryMinAlt(mCurrentId)));
+        mTotalDistanceTextView.setText(String.format(Locale.ENGLISH, "%s: %.3f",
+                mDistanceLabel, calculateTotalDistance(mCurrentId)));
+
+        mPrevLatitudeTextView.setText(String.format(Locale.ENGLISH, "%s: %f", mPrevLatitudeLabel,
+                queryPreviousLocation(mCurrentId)[0]));
+        mPrevLongitudeTextView.setText(String.format(Locale.ENGLISH, "%s: %f", mPrevLongitudeLabel,
+                queryPreviousLocation(mCurrentId)[1]));
+
+
+    }
+
     /**
      * Sets the value of the UI fields for the location latitude, longitude and last update time.
      */
@@ -657,30 +713,7 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
 
         if (mCurrentLocation != null) {
 
-            mLatitudeTextView.setText(String.format(Locale.ENGLISH, "%s: %f", mLatitudeLabel,
-                    mCurrentLocation.getLatitude()));
-            mLongitudeTextView.setText(String.format(Locale.ENGLISH, "%s: %f", mLongitudeLabel,
-                    mCurrentLocation.getLongitude()));
-            mAltitudeTextView.setText(String.format(Locale.ENGLISH, "%s: %f", mAltitudeLabel,
-                    mCurrentLocation.getAltitude()));
-            mSpeedTextView.setText(String.format(Locale.ENGLISH, "%s: %.1f", mSpeedLabel,
-                    ((mCurrentLocation.getSpeed()) * 3.6)));
-
-            mAvgSpeedTextView.setText(String.format(Locale.ENGLISH, "%s: %.1f",
-                    mAvgSpeedLabel, calculateAverageSpeed(mCurrentId)));
-            mMaxSpeedTextView.setText(String.format(Locale.ENGLISH, "%s: %.1f",
-                    mMaxSpeedLabel, queryMaxSpeed(mCurrentId)));
-            mMaxAltitudeTextView.setText(String.format(Locale.ENGLISH, "%s: %f",
-                    mMaxAltitudeLabel, queryMaxAlt(mCurrentId)));
-            mMinAltitudeTextView.setText(String.format(Locale.ENGLISH, "%s: %f",
-                    mMinAltitudeLabel, queryMinAlt(mCurrentId)));
-            mTotalDistanceTextView.setText(String.format(Locale.ENGLISH, "%s: %.3f",
-                    mDistanceLabel, calculateTotalDistance(mCurrentId)));
-
-            mPrevLatitudeTextView.setText(String.format(Locale.ENGLISH, "%s: %f", mPrevLatitudeLabel,
-                    queryPreviousLocation(mCurrentId)[0]));
-            mPrevLongitudeTextView.setText(String.format(Locale.ENGLISH, "%s: %f", mPrevLongitudeLabel,
-                    queryPreviousLocation(mCurrentId)[1]));
+            onlyUIupdate();
 
             mCurrentLatitude = mCurrentLocation.getLatitude();
             mCurrentLongitude = mCurrentLocation.getLongitude();
@@ -1164,7 +1197,7 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
                           final double currentAltitude, final double currentMaxAlt, final double currentMinAlt,
                           final double currentSpeed, final double currentMaxSpeed, final double currentAvrSpeed,
                           final long currentElapsedTime, final double currentDistance, final double currentTotalDistance,
-                          final double currentMoveDistance, final double currentMoveClose, final String currentAddress) throws IOException {
+                          final double currentMoveDistance, final double currentMoveClose, final String currentAddress) {
 
         // Database operations should not be done on the main thread
         AsyncTask<Void, Void, Void> insertItem = new AsyncTask<Void, Void, Void>() {
@@ -1221,7 +1254,6 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
                 });
     }
 
-
     private void autoStopLocationNoMovement() {
         if (DISABLE_AUTO_CLOSE) {
             Log.d(TAG, "DISABLE AUTO CLOSE IS ON");
@@ -1241,46 +1273,151 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
                 (getString(R.string.disable_auto_stop_switch_key), preferenceBooleanDisableAutoStop);
     }
 
+
     @Override
     public void onResume() {
         super.onResume();
-        // Within {@code onPause()}, we remove location updates. Here, we resume receiving
-        // location updates if the user has requested them.
-        if (mRequestingLocationUpdates && checkPermissionsFineLocation()) {
-            startLocationUpdates();
-        } else if (!checkPermissionsFineLocation()) {
-            requestPermissions();
-        }
-//        readPhoneState();
-//        mSensorManager.registerListener((SensorEventListener) mContext, mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER), SensorManager.SENSOR_DELAY_NORMAL);
+        Log.d(TAG, "onResume");
+//        if (mFusedLocationClient != null){
+//
+//        }
+//        // Within {@code onPause()}, we remove location updates. Here, we resume receiving
+//        // location updates if the user has requested them.
+//        Log.d(TAG, "onResume()");
+//        if (ActivityCompat.checkSelfPermission
+//                (mContext, Manifest.permission.ACCESS_FINE_LOCATION)
+//                != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission
+//                (mContext, Manifest.permission.ACCESS_COARSE_LOCATION)
+//                != PackageManager.PERMISSION_GRANTED) {
+//            // TODO: Consider calling
+//            //    ActivityCompat#requestPermissions
+//            // here to request the missing permissions, and then overriding
+//            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+//            //                                          int[] grantResults)
+//            // to handle the case where the user grants the permission. See the documentation
+//            // for ActivityCompat#requestPermissions for more details.
+//            return;
+//        }
+//        Log.d(TAG, "onResume, getLocationAvailability()");
+//
+//        mFusedLocationClient.getLocationAvailability()
+//                .addOnCompleteListener((Activity) mContext, new OnCompleteListener<LocationAvailability>() {
+//                    @Override
+//                    public void onComplete(@NonNull Task<LocationAvailability> task) {
+//                        mRequestingLocationUpdates = LocationAvailability.hasLocationAvailability();
+//
+//                        setButtonsEnabledState();
+//                    }
+//                });
+//    }
 
-        updateUI();
+    }
+
+    private void createLocationCallback1() {
+        mLocationCallback = new LocationCallback() {
+            @Override
+            public void onLocationResult(LocationResult locationResult) {
+                super.onLocationResult(locationResult);
+
+
+                mCurrentLocation = locationResult.getLastLocation();
+//                mLastUpdateTime = DateFormat.getTimeInstance().format(new Date());
+                onlyUIupdate();
+            }
+
+            @Override
+            public void onLocationAvailability(LocationAvailability locationAvailability) {
+                mRequestingLocationUpdates = locationAvailability.isLocationAvailable();
+                Log.d(TAG, "mRequestingLocationUpdates = locationAvailability.isLocationAvailable();");
+
+                setButtonsEnabledState();
+            }
+        };
+    }
+
+    // This callback is called only when there is a saved instance previously saved using
+// onSaveInstanceState(). We restore some state in onCreate() while we can optionally restore
+// other state here, possibly usable after onStart() has completed.
+// The savedInstanceState Bundle is same as the one used in onCreate().
+
+//    @Override
+//    public void onActivityCreated(Bundle savedInstanceState) {
+//        super.onActivityCreated(savedInstanceState);
+//
+//        if (savedInstanceState != null) {
+//            //probably orientation change
+//            savedInstanceState.getBoolean(KEY_REQUESTING_LOCATION_UPDATES, mRequestingLocationUpdates);
+//                onlyUIupdate();
+//                setButtonsEnabledState();
+//                Log.d(TAG, "onActivityCreated savedInstanceState != null");
+//
+//        } else {
+//            if (mFusedLocationClient != null) {
+//                Log.d(TAG, "onActivityCreated mFusedLocationClient != null");
+//                mRequestingLocationUpdates = true;
+////                onlyUIupdate();
+//
+//                //returning from backstack, data is fine, do nothing
+//
+//            } else {
+//                //newly created, compute data
+//
+//            }
+//        }
+//    }
+
+    @Override
+    public void onViewStateRestored(@Nullable Bundle savedInstanceState) {
+        super.onViewStateRestored(savedInstanceState);
+        if (savedInstanceState != null) {
+            if (savedInstanceState.getBoolean(KEY_REQUESTING_LOCATION_UPDATES, mRequestingLocationUpdates)) {
+//                onlyUIupdate();
+//                setButtonsEnabledState();
+                {
+                    Log.d(TAG, "mRequestingLocationUpdates is TRUE");
+                }
+            }
+        } else {
+            Log.d(TAG, "onViewStateRestored savedInstanceState = null");
+        }
+    }
+
+    // invoked when the activity may be temporarily destroyed, save the instance state here
+    @Override
+    public void onSaveInstanceState(Bundle savedInstanceState) {
+        super.onSaveInstanceState(savedInstanceState);
+        savedInstanceState.putBoolean(KEY_REQUESTING_LOCATION_UPDATES, mRequestingLocationUpdates);
+        savedInstanceState.putParcelable(KEY_LOCATION, mCurrentLocation);
+        savedInstanceState.putParcelable(KEY_ALTITUDE, mCurrentLocation);
+        savedInstanceState.putParcelable(KEY_SPEED, mCurrentLocation);
+
+        // call superclass to save any view hierarchy
+
+        Log.d(TAG, "onSaveInstanceState(Bundle savedInstanceState)");
+    }
+
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        Log.d(TAG, "onStop()");
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        Log.d(TAG, "onStart()");
     }
 
     @Override
     public void onPause() {
         super.onPause();
-
+        Log.d(TAG, "onPause()");
         // Remove location updates to save battery.
         //stopLocationUpdates();
 //        mSensorManager.unregisterListener((SensorEventListener) mContext);
     }
-//        TODO (44): check mate what it is, it is suspicious to me
 
-    /**
-     * Stores activity data in the Bundle.
-     */
-    public void onSaveInstanceState(Bundle savedInstanceState) {
-        savedInstanceState.putBoolean(KEY_REQUESTING_LOCATION_UPDATES, mRequestingLocationUpdates);
-        savedInstanceState.putParcelable(KEY_LOCATION, mCurrentLocation);
-        savedInstanceState.putParcelable(KEY_ALTITUDE, mCurrentLocation);
-        savedInstanceState.putParcelable(KEY_SPEED, mCurrentLocation);
-        savedInstanceState.putString(KEY_LAST_UPDATED_TIME, mLastUpdateTime);
-        savedInstanceState.putString(KEY_LAST_UPDATED_ETIME, mElapsedTime);
-        savedInstanceState.putDouble(KEY_LAST_UPDATED_TDISTANCE, mTotalDistance);
-        super.onSaveInstanceState(savedInstanceState);
-    }
-//        TODO (44): check mate what it is, it is suspicious to me
 
     /**
      * Shows a {@link Snackbar}.

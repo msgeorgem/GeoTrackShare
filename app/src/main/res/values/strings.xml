@@ -120,7 +120,7 @@
     <string name="update_interval_by_default_foot" translatable="false">4000</string>
     <string name="update_interval_by_default_ultimate" translatable="false">20000</string>
     <string name="update_interval_by_key">milliseconds</string>
-    <string name="update_interval_by_label">Update Interval</string>
+    <string name="update_interval_by_label">Interval Length</string>
 
     <string name="delete_loops_by_5_label">5 intervals</string>
     <string name="delete_loops_by_10_label">10 intervals</string>
@@ -143,7 +143,7 @@
     <string name="delete_loops_by_default_foot" translatable="false">20</string>
     <string name="delete_loops_by_default_ultimate" translatable="false">20</string>
     <string name="delete_loops_by_key">deleteloop</string>
-    <string name="delete_loops_by_label">Auto delete rule</string>
+    <string name="delete_loops_by_label">Intervals to Auto Stop</string>
 
     <string name="disable_auto_stop_switch_key">auto_stop_switch</string>
     <string name="disable_auto_stop_switch_label">Disable Auto Stop</string>

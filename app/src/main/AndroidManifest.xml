@@ -57,6 +57,7 @@
         <activity
             android:name=".MainActivity"
             android:configChanges="orientation|screenSize"
+            android:noHistory="false"
             android:theme="@style/AppTheme.NoActionBar">
 
             <intent-filter>
