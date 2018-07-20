@@ -1,4 +1,4 @@
-package com.example.android.geotrackshare.ForegroundService;
+package com.example.android.geotrackshare.Utils;
 
 /**
  * Created by Marcin on 2018-02-04.
@@ -11,7 +11,7 @@ public class Constants {
         String MAIN_ACTION = "com.example.android.geotrackshare.action.main";
         String PLAY_ACTION = "com.example.android.geotrackshare.action.start";
         String PAUSE_ACTION = "com.example.android.geotrackshare.action.pause";
-        String STOP_ACTION = "com.example.android.geotrackshare.action.stop";
+        String STOP_ACTION = "com.example.android.geotrackshare.action.ic_stop";
         String STARTFOREGROUND_ACTION = "com.example.android.geotrackshare.action.startforeground";
         String STOPFOREGROUND_ACTION = "com.example.android.geotrackshare.action.stopforeground";
     }

@@ -38,8 +38,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.android.geotrackshare.Data.TrackContract;
-import com.example.android.geotrackshare.ForegroundService.Constants;
-import com.example.android.geotrackshare.ForegroundService.ForegroundService;
+import com.example.android.geotrackshare.Utils.Constants;
 import com.example.android.geotrackshare.Utils.DistanceCalculator;
 import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.common.api.ResolvableApiException;
@@ -393,9 +392,10 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
                 mDeleteTextView.setText(String.format(Locale.ENGLISH, "%s: %s", mDeleteLabel,
                         mDeleteloopp));
 
-                Intent startIntent = new Intent(mContext, ForegroundService.class);
+                Intent startIntent = new Intent(mContext, TrackerBroadcastReceiver.class);
                 startIntent.setAction(Constants.ACTION.STARTFOREGROUND_ACTION);
-                mContext.startService(startIntent);
+                mContext.sendBroadcast(startIntent);
+
 
             }
         });
@@ -407,9 +407,9 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
                 mRunNumber.setText(String.format(Locale.ENGLISH, "%s: %s",
                         mLastRunLabel, mCurrentId));
 
-                Intent stopIntent = new Intent(mContext, ForegroundService.class);
-                stopIntent.setAction(Constants.ACTION.STOPFOREGROUND_ACTION);
-                mContext.startService(stopIntent);
+//                Intent stopIntent = new Intent();
+//                stopIntent.setAction(Constants.ACTION.STOPFOREGROUND_ACTION);
+//                mContext.startService(stopIntent);
 
             }
         });
@@ -595,6 +595,8 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
 //        );
 //
 //        UPDATE_INTERVAL_IN_MILLISECONDS = Long.parseLong(UPDATE_INTERVAL_IN_MILLISECONDS_STRING);
+
+
 
         DELETE_LAST_ROWS_STRING = sharedPrefs.getString(
                 getString(R.string.delete_loops_by_key),
