@@ -132,6 +132,8 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
     private static final long FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS =
             UPDATE_INTERVAL_IN_MILLISECONDS / 5;
     public static int THEME;
+    public static String START_TIME;
+    public static String CURRENT_RUN;
     public static int THEME_LIGHT = 1;
     public static int THEME_DARK = 2;
     public static String UPDATE_INTERVAL_IN_MILLISECONDS_STRING;
@@ -394,6 +396,8 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
 
                 Intent startIntent = new Intent(mContext, TrackerBroadcastReceiver.class);
                 startIntent.setAction(Constants.ACTION.STARTFOREGROUND_ACTION);
+                startIntent.putExtra(START_TIME,startTime);
+                startIntent.putExtra(CURRENT_RUN,mCurrentId);
                 mContext.sendBroadcast(startIntent);
 
 

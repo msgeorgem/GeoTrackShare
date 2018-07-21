@@ -41,8 +41,10 @@ public class TrackerBroadcastReceiver extends BroadcastReceiver {
     private String CHANNEL_ID = "02";
     private String CHANNEL_NAME = "GeoTracker Channel";
     private String DESCRIPTION = "GeoTracking";
+    private long startTime;
+    private int currentRun;
     private Notification notification;
-    NotificationManager mNotificationManager;
+    private NotificationManager mNotificationManager;
 
     /***
      * Handles the Broadcast message sent when the Tracker is triggered
@@ -78,10 +80,13 @@ public class TrackerBroadcastReceiver extends BroadcastReceiver {
 //            return;
 //        }
         String action = intent.getAction();
+        startTime = intent.getLongExtra(RealTimeFragment.START_TIME,0);
+        currentRun = intent.getIntExtra(RealTimeFragment.CURRENT_RUN,0);
         if (action.equals(Constants.ACTION.STARTFOREGROUND_ACTION)) {
             // Send the notification
-            sendNotification(context);
+            sendNotification(context,startTime,currentRun);
         }
+
 
     }
 
@@ -92,12 +97,10 @@ public class TrackerBroadcastReceiver extends BroadcastReceiver {
      * If the user clicks the notification, control goes to the MainActivity
      *
      * @param context The calling context for building a task stack
-     * @param The     geofence transition type, can be Geofence.GEOFENCE_TRANSITION_ENTER
-     *                or Geofence.GEOFENCE_TRANSITION_EXIT
      */
 
 
-    private void sendNotification(Context context) {
+    private void sendNotification(Context context,Long startTime, int currentRun) {
         // Get an instance of the Notification manager
         mNotificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
 
@@ -133,17 +136,17 @@ public class TrackerBroadcastReceiver extends BroadcastReceiver {
 //        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0,
 //                notificationIntent, 0);
 
-        Intent previousIntent = new Intent();
+        Intent previousIntent = new Intent(context,RealTimeFragment.class);
         previousIntent.setAction(Constants.ACTION.MAIN_ACTION);
         PendingIntent ppreviousIntent = PendingIntent.getService(context, 0,
                 previousIntent, 0);
 
-        Intent pauseIntent = new Intent();
+        Intent pauseIntent = new Intent(context,RealTimeFragment.class);
         pauseIntent.setAction(Constants.ACTION.PAUSE_ACTION);
         PendingIntent pPauseIntent = PendingIntent.getService(context, 0,
                 pauseIntent, 0);
 
-        Intent stopIntent = new Intent();
+        Intent stopIntent = new Intent(context,RealTimeFragment.class);
         stopIntent.setAction(Constants.ACTION.STOP_ACTION);
         PendingIntent pStopIntent = PendingIntent.getService(context, 0,
                 stopIntent, 0);
@@ -153,7 +156,9 @@ public class TrackerBroadcastReceiver extends BroadcastReceiver {
         notification = new NotificationCompat.Builder(context,CHANNEL_ID)
                 .setContentTitle("Ultimate Tracker")
                 .setTicker("Ultimate Tracker")
-                .setContentText("Current Run")
+                .setContentText("Current Run: " + currentRun)
+                .setWhen(startTime)  // the time stamp, you will probably use System.currentTimeMillis() for most scenarios
+                .setUsesChronometer(true)
                 .setSmallIcon(R.drawable.ic_launcher_foreground)
                 .setLargeIcon(
                         Bitmap.createScaledBitmap(icon, 128, 128, false))
@@ -165,6 +170,7 @@ public class TrackerBroadcastReceiver extends BroadcastReceiver {
                         pPauseIntent)
                 .addAction(R.drawable.ic_stop, "Stop",
                         pStopIntent)
+                .setAutoCancel(true)
                 .build();
 //        } else if (intent.getAction().equals(Constants.ACTION.MAIN_ACTION)) {
 //            Log.i(TAG, "Clicked Change Mode");
