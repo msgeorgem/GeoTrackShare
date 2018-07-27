@@ -52,7 +52,8 @@ import android.widget.Toast;
 import com.example.android.geotrackshare.Data.TrackContract;
 import com.example.android.geotrackshare.R;
 import com.example.android.geotrackshare.RealTimeFragment;
-import com.example.android.geotrackshare.RealTimeFragmentService;
+import com.example.android.geotrackshare.TrackerBroadcastReceiver;
+import com.example.android.geotrackshare.Utils.Constants;
 import com.example.android.geotrackshare.Utils.DistanceCalculator;
 import com.example.android.geotrackshare.Utils.ServiceConstants;
 import com.google.android.gms.location.FusedLocationProviderClient;
@@ -84,10 +85,10 @@ import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_TOTAL_DISTANCE;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.CONTENT_URI;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry._ID;
-import static com.example.android.geotrackshare.RealTimeFragmentService.DELETE_LAST_ROWS;
-import static com.example.android.geotrackshare.RealTimeFragmentService.DISABLE_AUTO_CLOSE;
-import static com.example.android.geotrackshare.RealTimeFragmentService.NOISEc;
-import static com.example.android.geotrackshare.RealTimeFragmentService.NOISEd;
+import static com.example.android.geotrackshare.RealTimeFragment.DELETE_LAST_ROWS;
+import static com.example.android.geotrackshare.RealTimeFragment.DISABLE_AUTO_CLOSE;
+import static com.example.android.geotrackshare.RealTimeFragment.NOISEc;
+import static com.example.android.geotrackshare.RealTimeFragment.NOISEd;
 import static com.example.android.geotrackshare.Utils.ServiceConstants.requestingLocationUpdates;
 import static com.example.android.geotrackshare.Utils.ServiceConstants.setRequestingLocationUpdates;
 
@@ -437,7 +438,7 @@ public class LocationUpdatesService extends Service implements SensorEventListen
 //                                    // Show the dialog by calling startResolutionForResult(), and check the
 //                                    // result in onActivityResult().
 //                                    ResolvableApiException rae = (ResolvableApiException) e;
-//                                    rae.startResolutionForResult((Activity) RealTimeFragmentService.mContext, REQUEST_CHECK_SETTINGS);
+//                                    rae.startResolutionForResult((Activity) RealTimeFragment.mContext, REQUEST_CHECK_SETTINGS);
 //                                } catch (IntentSender.SendIntentException sie) {
 //                                    Log.i(TAG, "PendingIntent unable to execute request.");
 //                                }
@@ -446,7 +447,7 @@ public class LocationUpdatesService extends Service implements SensorEventListen
 //                                String errorMessage = "Location settings are inadequate, and cannot be " +
 //                                        "fixed here. Fix in Settings.";
 //                                Log.e(TAG, errorMessage);
-//                                Toast.makeText(RealTimeFragmentService.mContext, errorMessage, Toast.LENGTH_LONG).show();
+//                                Toast.makeText(RealTimeFragment.mContext, errorMessage, Toast.LENGTH_LONG).show();
 //                                setRequestingLocationUpdates(getApplicationContext(),false);
 //                        }
 //                        setRequestingLocationUpdates(getApplicationContext(),true);
@@ -558,6 +559,15 @@ public class LocationUpdatesService extends Service implements SensorEventListen
 
         LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(intent);
 
+        Intent startNotificationIntent = new Intent(this, TrackerBroadcastReceiver.class);
+        startNotificationIntent.setAction(Constants.ACTION.STARTFOREGROUND_ACTION);
+        startNotificationIntent.putExtra(EXTRA_TOTAL_TIME, mElapsedTimeMillis);
+        startNotificationIntent.putExtra(EXTRA_CURRENT_ID, mCurrentId);
+        startNotificationIntent.putExtra(EXTRA_TOTAL_DISTANCE, mTotalDistance);
+
+        sendBroadcast(startNotificationIntent);
+
+
         // Update notification content if running as a foreground service.
         if (serviceIsRunningInForeground(this)) {
             mNotificationManager.notify(NOTIFICATION_ID, getNotification());
@@ -630,7 +640,7 @@ public class LocationUpdatesService extends Service implements SensorEventListen
      * updates.
      */
     private void createLocationRequest() {
-        UPDATE_INTERVAL_IN_MILLISECONDS_STRING = RealTimeFragmentService.sharedPrefs.getString(
+        UPDATE_INTERVAL_IN_MILLISECONDS_STRING = RealTimeFragment.sharedPrefs.getString(
                 getString(R.string.update_interval_by_key),
                 getString(R.string.update_interval_by_default_ultimate)
         );
@@ -1125,7 +1135,7 @@ public class LocationUpdatesService extends Service implements SensorEventListen
         return mNoMove;
     }
 
-    void deletelastNoMoveRows() {
+    private void deletelastNoMoveRows() {
         // method does not work "in background", when user gets out of an app without stopping location
 
         if (getApplicationContext() != null) {
@@ -1134,7 +1144,7 @@ public class LocationUpdatesService extends Service implements SensorEventListen
                 int last_ID = queryLast_ID();
                 String lastRow = TrackContract.TrackingEntry._ID + "=" + last_ID;
                 getContentResolver().delete(CONTENT_URI, lastRow, null);
-                Toast.makeText(RealTimeFragmentService.mContext, (DELETE_LAST_ROWS - GET_GEOLOCATION_LAST_ROWS) + " " + getString(R.string.delete_one_item), Toast.LENGTH_SHORT).show();
+                Toast.makeText(RealTimeFragment.mContext, (DELETE_LAST_ROWS - GET_GEOLOCATION_LAST_ROWS) + " " + getString(R.string.delete_one_item), Toast.LENGTH_SHORT).show();
             }
         }
     }

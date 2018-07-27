@@ -16,7 +16,7 @@ package com.example.android.geotrackshare;
  * limitations under the License.
  */
 
-import android.annotation.TargetApi;
+import android.annotation.SuppressLint;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -26,13 +26,19 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.icu.util.TimeZone;
 import android.os.Build;
 import android.support.annotation.RequiresApi;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.TaskStackBuilder;
 import android.widget.Toast;
 
+import com.example.android.geotrackshare.LocationService.LocationUpdatesService;
 import com.example.android.geotrackshare.Utils.Constants;
+
+import java.util.concurrent.TimeUnit;
+
+import static com.example.android.geotrackshare.LocationService.LocationUpdatesService.EXTRA_CURRENT_ID;
 
 
 public class TrackerBroadcastReceiver extends BroadcastReceiver {
@@ -46,6 +52,13 @@ public class TrackerBroadcastReceiver extends BroadcastReceiver {
     private Notification notification;
     private NotificationManager mNotificationManager;
 
+    @SuppressLint("NewApi")
+    public static final String getDateFromMillis(long d) {
+        android.icu.text.SimpleDateFormat df = new android.icu.text.SimpleDateFormat("HH:mm:ss");
+        df.setTimeZone(TimeZone.getTimeZone("GMT"));
+        return df.format(d);
+    }
+
     /***
      * Handles the Broadcast message sent when the Tracker is triggered
      * Careful here though, this is running on the main thread so make sure you start an AsyncTask for
@@ -58,8 +71,8 @@ public class TrackerBroadcastReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
         // Get the Geofence Event from the Intent sent through
-        Toast.makeText(context, "Don't panik but your time is up!!!!.",
-                Toast.LENGTH_LONG).show();
+        Toast.makeText(context, "GeoTracker is running.",
+                Toast.LENGTH_SHORT).show();
 //        GeofencingEvent geofencingEvent = GeofencingEvent.fromIntent(intent);
 //        if (geofencingEvent.hasError()) {
 //            Log.e(TAG, String.format("Error code : %d", geofencingEvent.getErrorCode()));
@@ -79,17 +92,24 @@ public class TrackerBroadcastReceiver extends BroadcastReceiver {
 //            // No need to do anything else
 //            return;
 //        }
+        String mCurrentAddress = intent.getStringExtra(LocationUpdatesService.EXTRA_ADDRESS);
+        String startTimeString = intent.getStringExtra(RealTimeFragment.START_TIME);
+        Double mTotalDistance = intent.getDoubleExtra(LocationUpdatesService.EXTRA_TOTAL_DISTANCE, 0);
+
         String action = intent.getAction();
-        startTime = intent.getLongExtra(RealTimeFragment.START_TIME,0);
+        currentRun = intent.getIntExtra(EXTRA_CURRENT_ID, 0);
+        Long mElapsedTimeMillis = intent.getLongExtra(LocationUpdatesService.EXTRA_TOTAL_TIME, 0);
+        String mElapsedTime = String.format("%02d:%02d:%02d", TimeUnit.MILLISECONDS.toHours(mElapsedTimeMillis),
+                TimeUnit.MILLISECONDS.toMinutes(mElapsedTimeMillis) % TimeUnit.HOURS.toMinutes(1),
+                TimeUnit.MILLISECONDS.toSeconds(mElapsedTimeMillis) % TimeUnit.MINUTES.toSeconds(1));
+        String mElapsedTime1 = getDateFromMillis(mElapsedTimeMillis);
+
         currentRun = intent.getIntExtra(RealTimeFragment.CURRENT_RUN,0);
         if (action.equals(Constants.ACTION.STARTFOREGROUND_ACTION)) {
             // Send the notification
-            sendNotification(context,startTime,currentRun);
+            sendNotification(context, mElapsedTime1, currentRun);
         }
-
-
     }
-
 
     /**
      * Posts a notification in the notification bar when a transition is detected
@@ -100,7 +120,7 @@ public class TrackerBroadcastReceiver extends BroadcastReceiver {
      */
 
 
-    private void sendNotification(Context context,Long startTime, int currentRun) {
+    private void sendNotification(Context context, String elapsedTime, int currentRun) {
         // Get an instance of the Notification manager
         mNotificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
 
@@ -156,21 +176,21 @@ public class TrackerBroadcastReceiver extends BroadcastReceiver {
         notification = new NotificationCompat.Builder(context,CHANNEL_ID)
                 .setContentTitle("Ultimate Tracker")
                 .setTicker("Ultimate Tracker")
-                .setContentText("Current Run: " + currentRun)
-                .setWhen(startTime)  // the time stamp, you will probably use System.currentTimeMillis() for most scenarios
-                .setUsesChronometer(true)
+                .setContentText("Current Run: " + currentRun + "lasting: " + elapsedTime)
+//                .setWhen(System.currentTimeMillis())  // the time stamp, you will probably use System.currentTimeMillis() for most scenarios
+//                .setUsesChronometer(true)
                 .setSmallIcon(R.drawable.ic_launcher_foreground)
                 .setLargeIcon(
                         Bitmap.createScaledBitmap(icon, 128, 128, false))
                 .setContentIntent(notificationPendingIntent)
                 .setOngoing(true)
-                .addAction(android.R.drawable.ic_input_add,
-                        "Change Mode", ppreviousIntent)
-                .addAction(android.R.drawable.ic_media_pause, "Pause",
-                        pPauseIntent)
-                .addAction(R.drawable.ic_stop, "Stop",
+//                .addAction(android.R.drawable.ic_input_add,
+//                        "Change Mode", ppreviousIntent)
+//                .addAction(android.R.drawable.ic_media_pause, "Pause",
+//                        pPauseIntent)
+                .addAction(R.drawable.ic_stop, "Stop Tracing Your Activity",
                         pStopIntent)
-                .setAutoCancel(true)
+                .setAutoCancel(false)
                 .build();
 //        } else if (intent.getAction().equals(Constants.ACTION.MAIN_ACTION)) {
 //            Log.i(TAG, "Clicked Change Mode");

@@ -3,24 +3,18 @@ package com.example.android.geotrackshare;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
-import android.content.ContentValues;
+import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentSender;
+import android.content.IntentFilter;
+import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.database.Cursor;
-import android.hardware.Sensor;
-import android.hardware.SensorEvent;
-import android.hardware.SensorEventListener;
-import android.hardware.SensorManager;
-import android.location.Address;
-import android.location.Geocoder;
 import android.location.Location;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Looper;
+import android.os.IBinder;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
@@ -28,6 +22,7 @@ import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
+import android.support.v4.content.LocalBroadcastManager;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -35,56 +30,22 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
-import android.widget.Toast;
 
-import com.example.android.geotrackshare.Data.TrackContract;
-import com.example.android.geotrackshare.Utils.Constants;
-import com.example.android.geotrackshare.Utils.DistanceCalculator;
-import com.google.android.gms.common.api.ApiException;
-import com.google.android.gms.common.api.ResolvableApiException;
+import com.example.android.geotrackshare.LocationService.LocationUpdatesService;
+import com.example.android.geotrackshare.Utils.ServiceConstants;
 import com.google.android.gms.location.FusedLocationProviderClient;
-import com.google.android.gms.location.LocationAvailability;
 import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
-import com.google.android.gms.location.LocationResult;
-import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.location.LocationSettingsRequest;
-import com.google.android.gms.location.LocationSettingsResponse;
-import com.google.android.gms.location.LocationSettingsStatusCodes;
-import com.google.android.gms.location.SettingsClient;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.android.gms.tasks.Task;
 
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
-import static android.content.Context.SENSOR_SERVICE;
 import static com.example.android.geotrackshare.AdvancedSettingsActivity.preferenceBooleanDisableAutoStop;
-import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_ADDRESS;
-import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_ALTITUDE;
-import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_AVR_SPEED;
-import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_DISTANCE;
-import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_LATITUDE;
-import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_LONGITUDE;
-import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_MAX_ALT;
-import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_MAX_SPEED;
-import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_MIN_ALT;
-import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_MOVE_CLOSE;
-import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_MOVE_DISTANCE;
-import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_RUN_ID;
-import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_SPEED;
-import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_TIME;
-import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_TIME_COUNTER;
-import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_TOTAL_DISTANCE;
-import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.CONTENT_URI;
-import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry._ID;
+import static com.example.android.geotrackshare.LocationService.LocationUpdatesService.REQUEST_CHECK_SETTINGS;
+import static com.example.android.geotrackshare.Utils.ServiceConstants.requestingLocationUpdates;
 
 
 /**
@@ -95,20 +56,19 @@ import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry
  * Use the {@link RealTimeFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class RealTimeFragment extends Fragment implements SensorEventListener {
+public class RealTimeFragment extends Fragment implements
+        SharedPreferences.OnSharedPreferenceChangeListener {
 
 
     public static final String MY_PREFERENCE_KEY = "mili";
+    //    leaving these constants here in case of shared prefs need
+    public static final double NOISEd = 0.07;
+    public static final double NOISEc = 0.02;
     private static final String TAG = MainActivity.class.getSimpleName();
     /**
      * Code used in requesting runtime permissions.
      */
     private static final int REQUEST_PERMISSIONS_REQUEST_CODE = 34;
-
-    /**
-     * Constant used in the location settings dialog.
-     */
-    private static final int REQUEST_CHECK_SETTINGS = 0x1;
     /**
      * Time without move.
      */
@@ -118,6 +78,7 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
     private final static String KEY_LOCATION = "location";
     private final static String KEY_ALTITUDE = "altitude";
     private final static String KEY_SPEED = "speed";
+    private final static String KEY_LAST_RUN = "KEY_LAST_RUN";
     private final static String KEY_LAST_UPDATED_TIME = "last-updated-time-string";
     private final static String KEY_LAST_UPDATED_ETIME = "last-updated-elapsedtime-string";
     private final static String KEY_LAST_UPDATED_TDISTANCE = "last-updated-total-distance";
@@ -131,20 +92,17 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
      */
     private static final long FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS =
             UPDATE_INTERVAL_IN_MILLISECONDS / 5;
+    public static String UPDATE_INTERVAL_IN_MILLISECONDS_STRING = "";
     public static int THEME;
     public static String START_TIME;
     public static String CURRENT_RUN;
+    public static String DELETE_LAST_ROWS_STRING = "";
+    public static int DELETE_LAST_ROWS = 15;
     public static int THEME_LIGHT = 1;
     public static int THEME_DARK = 2;
-    public static String UPDATE_INTERVAL_IN_MILLISECONDS_STRING;
-    public static int DELETE_LAST_ROWS = 15;
     public static boolean DISABLE_AUTO_CLOSE;
-    public static String DELETE_LAST_ROWS_STRING = "";
     public static Context mContext;
-    private static int DISPLACEMENT = 5; // 10 meters
-    private final double NOISEd = 0.07;
-    private final double NOISEc = 0.02;
-    private final int GET_GEOLOCATION_LAST_ROWS = 5;
+    public static SharedPreferences sharedPrefs;
     public String tmDevice, tmSerial, androidId, deviceId;
     public TelephonyManager tm;
     /**
@@ -154,35 +112,24 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
     public String mElapsedTime;
     long startTime = 0;
     UUID deviceUuid;
-    SharedPreferences sharedPrefs;
+    View mView;
+    // The BroadcastReceiver used to listen from broadcasts from the service.
+    private MyReceiver myReceiver;
     /**
      * Provides access to the Fused Location Provider API.
      */
     private FusedLocationProviderClient mFusedLocationClient;
     /**
-     * Provides access to the Location Settings API.
-     */
-    private SettingsClient mSettingsClient;
-    /**
      * Stores parameters for requests to the FusedLocationProviderApi.
      */
     private LocationRequest mLocationRequest;
     /**
-     * Stores the types of location services the client is interested in using. Used for checking
-     * settings to determine if the device has optimal location settings.
-     */
-    private LocationSettingsRequest mLocationSettingsRequest;
-    /**
      * Callback for Location events.
      */
     private LocationCallback mLocationCallback;
-    /**
-     * Represents a geographical location.
-     */
-    private Location mCurrentLocation;
     // UI Widgets.
-    private Button mStartUpdatesButton;
-    private Button mStopUpdatesButton;
+    private Button mRequestLocationUpdatesButton;
+    private Button mRemoveLocationUpdatesButton;
     private TextView mLastUpdateTimeTextView;
     private TextView mLatitudeTextView;
     private TextView mLongitudeTextView;
@@ -222,30 +169,39 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
     private String mIntervalLabel;
     private String mDeleteLabel;
     private String mAndroid_id;
-    private String mAddressOutput;
     private String mCurrentAddress = "";
+    private String mStartTimeString;
     private int mMaxId, mCurrentId, mLast_ID;
     private long mLastUpdateTimeMillis, mElapsedTimeMillis;
     private double mCurrentLatitude, mCurrentLongitude, mCurrentAltitude, mCurrentSpeed, mMaxSpeed,
             mAverageSpeed, mMaxAltitude, mMinAltitude, mTotalTime, mDistance, mTotalDistance,
             mPreviousLatitude, mPreviousLongitude, mRoundedDistance;
-    private Cursor cur;
-    private SensorManager mSensorManager;
-    private double ax, ay, az;   // these are the acceleration in x,y and z axis
-    private double mLastX, mLastY, mLastZ;
-    private double deltaXD, deltaYD, deltaZD, deltaXC, deltaYC, deltaZC;
-    private double checkXD, checkYD, checkZD, mMoveDistance;
-    private double checkXC, checkYC, checkZC, mMoveClose;
+    private Location mCurrentLocation;
     /**
      * Tracks the status of the location updates request. Value changes when the user presses the
      * Start Updates and Stop Updates buttons.
      */
     private Boolean mRequestingLocationUpdates;
-    private boolean mInitialized = false;
-    private boolean mNoMoveDistance = false;
-    private boolean mNoMoveClose = false;
-    private String defValue;
-    View mView;
+    // A reference to the service used to get location updates.
+    private LocationUpdatesService mService = null;
+    // Tracks the bound state of the service.
+    private boolean mBound = false;
+    // Monitors the state of the connection to the service.
+    private final ServiceConnection mServiceConnection = new ServiceConnection() {
+
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            LocationUpdatesService.LocalBinder binder = (LocationUpdatesService.LocalBinder) service;
+            mService = binder.getService();
+            mBound = true;
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            mService = null;
+            mBound = false;
+        }
+    };
 
     public RealTimeFragment() {
         // Required empty public constructor
@@ -259,14 +215,37 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
         mContext = getActivity();
         sharedPrefs = PreferenceManager.getDefaultSharedPreferences(mContext);
         DISABLE_AUTO_CLOSE = switchDisableAutoStop();
+        myReceiver = new MyReceiver();
+        // Check that the user hasn't revoked permissions by going to Settings.
+        if (requestingLocationUpdates(mContext)) {
+            if (!checkPermissions()) {
+                requestPermissions();
+            }
+        }
 
-        Integer i = R.string.update_interval_by_default_ultimate;
-        String numberAsString = "1234";
+        DELETE_LAST_ROWS_STRING = sharedPrefs.getString(
+                getString(R.string.delete_loops_by_key),
+                getString(R.string.delete_loops_by_default_ultimate)
+        );
+        DELETE_LAST_ROWS = Integer.parseInt((DELETE_LAST_ROWS_STRING));
 
-        long number = Long.parseLong(getResources().getString(R.string.update_interval_by_default_ultimate));
-        defValue = getString(R.string.update_interval_by_default_ultimate);
-        String key = getString(R.string.update_interval_by_key);
-        //Long defValue = Long.parseLong(R.string.update_interval_by_default_ultimate);
+        Log.i("delete rows", String.valueOf(DELETE_LAST_ROWS));
+
+        UPDATE_INTERVAL_IN_MILLISECONDS_STRING = sharedPrefs.getString(
+                getString(R.string.update_interval_by_key),
+                getString(R.string.update_interval_by_default_ultimate)
+        );
+
+        UPDATE_INTERVAL_IN_MILLISECONDS = Long.parseLong(UPDATE_INTERVAL_IN_MILLISECONDS_STRING);
+        Log.i("update interval", String.valueOf(UPDATE_INTERVAL_IN_MILLISECONDS));
+
+//        Integer i = R.string.update_interval_by_default_ultimate;
+//        String numberAsString = "1234";
+//
+//        long number = Long.parseLong(getResources().getString(R.string.update_interval_by_default_ultimate));
+//
+//        String key = getString(R.string.update_interval_by_key);
+
 
 //        UPDATE_INTERVAL_IN_MILLISECONDS = sharedPrefs.getLong(
 //                MY_PREFERENCE_KEY,
@@ -275,7 +254,7 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
         // Inflate the layout for this fragment
         try {
             if (mView == null) {
-                mView = inflater.inflate(R.layout.fragment_real_time, container, false);
+                mView = inflater.inflate(R.layout.fragment_real_time_service, container, false);
             }
 
         } catch (Exception e) {
@@ -284,8 +263,8 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
         // Locate the UI widgets.
         mRunNumber = mView.findViewById(R.id.run_number);
         mLocation = mView.findViewById(R.id.locate_on_map);
-        mStartUpdatesButton = mView.findViewById(R.id.start_updates_button);
-        mStopUpdatesButton = mView.findViewById(R.id.stop_updates_button);
+        mRequestLocationUpdatesButton = mView.findViewById(R.id.start_updates_button);
+        mRemoveLocationUpdatesButton = mView.findViewById(R.id.stop_updates_button);
 
         mAddressOutputTextView = mView.findViewById(R.id.address_text);
 
@@ -328,31 +307,24 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
         mDeleteLabel = "Delete loops";
 //        mAndroid_id = Secure.getString(getContext().getContentResolver(), Secure.ANDROID_ID);
 
-        mRequestingLocationUpdates = false;
+        mRequestingLocationUpdates = ServiceConstants.requestingLocationUpdates(mContext);
+
         mLastUpdateTime = "";
         mElapsedTime = "";
+        mStartTimeString = "";
 
         // Update values using data stored in the Bundle.
         updateValuesFromBundle(savedInstanceState);
 
 
-        mFusedLocationClient = LocationServices.getFusedLocationProviderClient(mContext);
-        mSettingsClient = LocationServices.getSettingsClient(mContext);
-
         final Double mSelectedLatitude = createNewLocation()[0];
         final Double mSelectedLongitude = createNewLocation()[1];
-
-        // Kick off the process of building the LocationCallback, LocationRequest, and
-        // LocationSettingsRequest objects.
-        createLocationCallback();
-        createLocationRequest();
-        buildLocationSettingsRequest();
 
         // Permission checked below
 //        readPhoneState();
 
         tm = (TelephonyManager) getContext().getSystemService(Context.TELEPHONY_SERVICE);
-        androidId = "" + android.provider.Settings.Secure.getString(mContext.getContentResolver(), android.provider.Settings.Secure.ANDROID_ID);
+        androidId = "" + Settings.Secure.getString(mContext.getContentResolver(), Settings.Secure.ANDROID_ID);
 //        deviceUuid = new UUID(androidId.hashCode(), ((long)tmDevice.hashCode() << 32) | tmSerial.hashCode());
 //        deviceId = deviceUuid.toString();
 
@@ -361,9 +333,18 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
 //        mDevIDTextView.setText(String.format(Locale.ENGLISH, "%s: %s", mAndroid_idLabel,
 //                mAndroid_id));
         mRunNumber.setText(String.format(Locale.ENGLISH, "%s: %s",
-                mLastRunLabel, queryMaxId()));
-        mSensorManager = (SensorManager) mContext.getSystemService(SENSOR_SERVICE);
-        mSensorManager.registerListener(this, mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER), SensorManager.SENSOR_DELAY_NORMAL);
+                mLastRunLabel, mLast_ID));
+
+        long mIntervall = UPDATE_INTERVAL_IN_MILLISECONDS / 1000;
+        String mIntervalll = String.valueOf(mIntervall) + " s";
+        mIntervalTextView.setText(String.format(Locale.ENGLISH, "%s: %s", mIntervalLabel,
+                mIntervalll));
+
+        int mDeleteLoop = DELETE_LAST_ROWS;
+        String mDeleteloopp = String.valueOf(mDeleteLoop);
+        mDeleteTextView.setText(String.format(Locale.ENGLISH, "%s: %s", mDeleteLabel,
+                mDeleteloopp));
+
         mLocation.setOnClickListener(new View.OnClickListener() {
 
             @Override
@@ -374,15 +355,18 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
             }
         });
 
-        mStartUpdatesButton.setOnClickListener(new View.OnClickListener() {
+        mRequestLocationUpdatesButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                stopUpdatesButtonHandler();
-                startUpdatesButtonHandler();
-                mCurrentId = queryMaxId() + 1;
-                startTime = System.currentTimeMillis();
-                mRunNumber.setText(String.format(Locale.ENGLISH, "%s: %s",
-                        mCurrentRunLabel, mCurrentId));
+                if (!checkPermissions()) {
+                    requestPermissions();
+                } else {
+                    mService.startUpdatesButtonHandler();
+                }
+//                mStartTimeString = getDateFromMillis(System.currentTimeMillis());
+//                stopUpdatesButtonHandler();
+//                startUpdatesButtonHandler();
+
 
                 long mIntervall = UPDATE_INTERVAL_IN_MILLISECONDS / 1000;
                 String mIntervalll = String.valueOf(mIntervall) + " s";
@@ -394,20 +378,16 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
                 mDeleteTextView.setText(String.format(Locale.ENGLISH, "%s: %s", mDeleteLabel,
                         mDeleteloopp));
 
-                Intent startIntent = new Intent(mContext, TrackerBroadcastReceiver.class);
-                startIntent.setAction(Constants.ACTION.STARTFOREGROUND_ACTION);
-                startIntent.putExtra(START_TIME,startTime);
-                startIntent.putExtra(CURRENT_RUN,mCurrentId);
-                mContext.sendBroadcast(startIntent);
 
 
             }
         });
 
-        mStopUpdatesButton.setOnClickListener(new View.OnClickListener() {
+        mRemoveLocationUpdatesButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                stopUpdatesButtonHandler();
+                mService.stopLocationUpdates();
+//                stopUpdatesButtonHandler();
                 mRunNumber.setText(String.format(Locale.ENGLISH, "%s: %s",
                         mLastRunLabel, mCurrentId));
 
@@ -417,7 +397,13 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
 
             }
         });
+        // Restore the state of the buttons when the activity (re)launches.
+        setButtonsEnabledState(mRequestingLocationUpdates);
 
+        // Bind to the service. If the service is in foreground mode, this signals to the service
+        // that since this activity is in the foreground, the service can exit foreground mode.
+        mContext.getApplicationContext().bindService(new Intent(mContext, LocationUpdatesService.class), mServiceConnection,
+                Context.BIND_AUTO_CREATE);
         return mView;
     }
 
@@ -431,6 +417,7 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
         mLocation[1] = mLongitude;
         return mLocation;
     }
+
     /**
      * Updates fields based on data stored in the bundle.
      *
@@ -440,111 +427,56 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
         if (savedInstanceState != null) {
             // Update the value of mRequestingLocationUpdates from the Bundle, and make sure that
             // the Start Updates and Stop Updates buttons are correctly enabled or disabled.
-            if (savedInstanceState.keySet().contains(KEY_REQUESTING_LOCATION_UPDATES)) {
-                mRequestingLocationUpdates = savedInstanceState.getBoolean(
-                        KEY_REQUESTING_LOCATION_UPDATES);
-            }
-
-            // Update the value of mCurrentLocation from the Bundle and update the UI to show the
-            // correct latitude and longitude.
-            if (savedInstanceState.keySet().contains(KEY_LOCATION)) {
-                // Since KEY_LOCATION was found in the Bundle, we can be sure that mCurrentLocation
-                // is not null.
-                mCurrentLocation = savedInstanceState.getParcelable(KEY_LOCATION);
-            }
-            // Update the value of mCurrentLocation from the Bundle and update the UI to show the
-            // correct latitude and longitude.
-            if (savedInstanceState.keySet().contains(KEY_ALTITUDE)) {
-                // Since KEY_ALTITUDE was found in the Bundle, we can be sure that mCurrentLocation
-                // is not null.
-                mCurrentLocation = savedInstanceState.getParcelable(KEY_ALTITUDE);
-            }
-            if (savedInstanceState.keySet().contains(KEY_SPEED)) {
-                // Since KEY_SPEED was found in the Bundle, we can be sure that mCurrentLocation
-                // is not null.
-                mCurrentLocation = savedInstanceState.getParcelable(KEY_SPEED);
-            }
-
-            // Update the value of mLastUpdateTime from the Bundle and update the UI.
-            if (savedInstanceState.keySet().contains(KEY_LAST_UPDATED_TIME)) {
-                mLastUpdateTime = savedInstanceState.getString(KEY_LAST_UPDATED_TIME);
-            }
-            // Update the value of mElapsedTime from the Bundle and update the UI.
-            if (savedInstanceState.keySet().contains(KEY_LAST_UPDATED_ETIME)) {
-                mElapsedTime = savedInstanceState.getString(KEY_LAST_UPDATED_ETIME);
-            }
+//            if (savedInstanceState.keySet().contains(KEY_REQUESTING_LOCATION_UPDATES)) {
+//                mRequestingLocationUpdates = savedInstanceState.getBoolean(
+//                        KEY_REQUESTING_LOCATION_UPDATES);
+//            }
+//
+//            // Update the value of mCurrentLocation from the Bundle and update the UI to show the
+//            // correct latitude and longitude.
+//            if (savedInstanceState.keySet().contains(KEY_LOCATION)) {
+//                // Since KEY_LOCATION was found in the Bundle, we can be sure that mCurrentLocation
+//                // is not null.
+//                mCurrentLocation = savedInstanceState.getParcelable(KEY_LOCATION);
+//            }
+//            // Update the value of mCurrentLocation from the Bundle and update the UI to show the
+//            // correct latitude and longitude.
+//            if (savedInstanceState.keySet().contains(KEY_ALTITUDE)) {
+//                // Since KEY_ALTITUDE was found in the Bundle, we can be sure that mCurrentLocation
+//                // is not null.
+//                mCurrentLocation = savedInstanceState.getParcelable(KEY_ALTITUDE);
+//            }
+//            if (savedInstanceState.keySet().contains(KEY_SPEED)) {
+//                // Since KEY_SPEED was found in the Bundle, we can be sure that mCurrentLocation
+//                // is not null.
+//                mCurrentLocation = savedInstanceState.getParcelable(KEY_SPEED);
+//            }
+//
+//            // Update the value of mLastUpdateTime from the Bundle and update the UI.
+//            if (savedInstanceState.keySet().contains(KEY_LAST_UPDATED_TIME)) {
+//                mLastUpdateTime = savedInstanceState.getString(KEY_LAST_UPDATED_TIME);
+//            }
+//            // Update the value of mElapsedTime from the Bundle and update the UI.
+//            if (savedInstanceState.keySet().contains(KEY_LAST_UPDATED_ETIME)) {
+//                mElapsedTime = savedInstanceState.getString(KEY_LAST_UPDATED_ETIME);
+//            }
+//
+//            // Update the value of mTotalDistance from the Bundle and update the UI.
+//            if (savedInstanceState.keySet().contains(KEY_LAST_UPDATED_TDISTANCE)) {
+//                mTotalDistance = savedInstanceState.getDouble(KEY_LAST_UPDATED_TDISTANCE);
+//            }
 
             // Update the value of mTotalDistance from the Bundle and update the UI.
-            if (savedInstanceState.keySet().contains(KEY_LAST_UPDATED_TDISTANCE)) {
-                mTotalDistance = savedInstanceState.getDouble(KEY_LAST_UPDATED_TDISTANCE);
+            if (savedInstanceState.keySet().contains(KEY_LAST_RUN)) {
+                mLast_ID = savedInstanceState.getInt(KEY_LAST_RUN);
             }
-            updateUI();
+
+            mRunNumber.setText(String.format(Locale.ENGLISH, "%s: %s",
+                    mCurrentRunLabel, mLast_ID));
+
         }
     }
 
-    /**
-     * Sets up the location request. Android has two location request settings:
-     * {@code ACCESS_COARSE_LOCATION} and {@code ACCESS_FINE_LOCATION}. These settings control
-     * the accuracy of the current location. This sample uses ACCESS_FINE_LOCATION, as defined in
-     * the AndroidManifest.xml.
-     * <p/>
-     * When the ACCESS_FINE_LOCATION setting is specified, combined with a fast update
-     * interval (5 seconds), the Fused Location Provider API returns location updates that are
-     * accurate to within a few feet.
-     * <p/>
-     * These settings are appropriate for mapping applications that show real-time location
-     * updates.
-     */
-    private void createLocationRequest() {
-        UPDATE_INTERVAL_IN_MILLISECONDS_STRING = sharedPrefs.getString(
-                getString(R.string.update_interval_by_key),
-                getString(R.string.update_interval_by_default_ultimate)
-        );
-        UPDATE_INTERVAL_IN_MILLISECONDS = Long.parseLong(UPDATE_INTERVAL_IN_MILLISECONDS_STRING);
-        mLocationRequest = new LocationRequest();
-
-        // Sets the desired interval for active location updates. This interval is
-        // inexact. You may not receive updates at all if no location sources are available, or
-        // you may receive them slower than requested. You may also receive updates faster than
-        // requested if other applications are requesting location at a faster interval.
-        mLocationRequest.setInterval(UPDATE_INTERVAL_IN_MILLISECONDS);
-        Log.i("update interval", String.valueOf(UPDATE_INTERVAL_IN_MILLISECONDS));
-
-        // Sets the fastest rate for active location updates. This interval is exact, and your
-        // application will never receive updates faster than this value.
-        mLocationRequest.setFastestInterval(FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS);
-
-        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-//        mLocationRequest.setSmallestDisplacement(DISPLACEMENT);
-    }
-
-    /**
-     * Creates a callback for receiving location events.
-     */
-    private void createLocationCallback() {
-        mLocationCallback = new LocationCallback() {
-            @Override
-            public void onLocationResult(LocationResult locationResult) {
-                super.onLocationResult(locationResult);
-
-                mCurrentLocation = locationResult.getLastLocation();
-//                mLastUpdateTime = DateFormat.getTimeInstance().format(new Date());
-                updateLocationUI();
-            }
-        };
-    }
-
-
-    /**
-     * Uses a {@link com.google.android.gms.location.LocationSettingsRequest.Builder} to build
-     * a {@link com.google.android.gms.location.LocationSettingsRequest} that is used for checking
-     * if a device has the needed location settings.
-     */
-    private void buildLocationSettingsRequest() {
-        LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder();
-        builder.addLocationRequest(mLocationRequest);
-        mLocationSettingsRequest = builder.build();
-    }
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -567,101 +499,10 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
     }
 
     /**
-     * Handles the Start Updates button and requests start of location updates. Does nothing if
-     * updates have already been requested.
-     */
-    public void startUpdatesButtonHandler() {
-        if (!mRequestingLocationUpdates) {
-            mRequestingLocationUpdates = true;
-            setButtonsEnabledState();
-            startLocationUpdates();
-        }
-    }
-
-    /**
-     * Handles the Stop Updates button, and requests removal of location updates.
-     */
-    public void stopUpdatesButtonHandler() {
-        // It is a good practice to remove location requests when the activity is in a paused or
-        // stopped state. Doing so helps battery performance and is especially
-        // recommended in applications that request frequent location updates.
-        stopLocationUpdates();
-    }
-
-    /**
-     * Requests location updates from the FusedLocationApi. Note: we don't call this unless location
-     * runtime permission has been granted.
-     */
-    private void startLocationUpdates() {
-//        UPDATE_INTERVAL_IN_MILLISECONDS_STRING = sharedPrefs.getString(
-//                getString(R.string.update_interval_by_key),
-//                getString(R.string.update_interval_by_default_ultimate)
-//        );
-//
-//        UPDATE_INTERVAL_IN_MILLISECONDS = Long.parseLong(UPDATE_INTERVAL_IN_MILLISECONDS_STRING);
-
-
-
-        DELETE_LAST_ROWS_STRING = sharedPrefs.getString(
-                getString(R.string.delete_loops_by_key),
-                getString(R.string.delete_loops_by_default_ultimate)
-        );
-        DELETE_LAST_ROWS = Integer.parseInt((DELETE_LAST_ROWS_STRING));
-
-        Log.i("delete rows", String.valueOf(DELETE_LAST_ROWS));
-
-
-        // Begin by checking if the device has the necessary location settings.
-        mSettingsClient.checkLocationSettings(mLocationSettingsRequest)
-                .addOnSuccessListener((Activity) mContext, new OnSuccessListener<LocationSettingsResponse>() {
-                    @SuppressLint("MissingPermission")
-                    @Override
-                    public void onSuccess(LocationSettingsResponse locationSettingsResponse) {
-                        Log.i(TAG, "All location settings are satisfied.");
-
-
-                        mFusedLocationClient.requestLocationUpdates(mLocationRequest,
-                                mLocationCallback, Looper.myLooper());
-
-                        updateUI();
-                    }
-                })
-                .addOnFailureListener((Activity) mContext, new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        int statusCode = ((ApiException) e).getStatusCode();
-                        switch (statusCode) {
-                            case LocationSettingsStatusCodes.RESOLUTION_REQUIRED:
-                                Log.i(TAG, "Location settings are not satisfied. Attempting to upgrade " +
-                                        "location settings ");
-                                try {
-                                    // Show the dialog by calling startResolutionForResult(), and check the
-                                    // result in onActivityResult().
-                                    ResolvableApiException rae = (ResolvableApiException) e;
-                                    rae.startResolutionForResult((Activity) mContext, REQUEST_CHECK_SETTINGS);
-                                } catch (IntentSender.SendIntentException sie) {
-                                    Log.i(TAG, "PendingIntent unable to execute request.");
-                                }
-                                break;
-                            case LocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE:
-                                String errorMessage = "Location settings are inadequate, and cannot be " +
-                                        "fixed here. Fix in Settings.";
-                                Log.e(TAG, errorMessage);
-                                Toast.makeText(mContext, errorMessage, Toast.LENGTH_LONG).show();
-                                mRequestingLocationUpdates = false;
-                        }
-
-                        updateUI();
-                    }
-                });
-    }
-
-    /**
      * Updates all UI fields.
      */
     private void updateUI() {
-        setButtonsEnabledState();
-        updateLocationUI();
+        setButtonsEnabledState(mRequestingLocationUpdates);
     }
 
     /**
@@ -670,603 +511,16 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
      * enabled if the user is not requesting location updates. The Stop Updates button is enabled
      * if the user is requesting location updates.
      */
-    private void setButtonsEnabledState() {
-        if (mRequestingLocationUpdates) {
-            mStartUpdatesButton.setEnabled(false);
-            mStopUpdatesButton.setEnabled(true);
+    public void setButtonsEnabledState(Boolean requestingLocationUpdates) {
+        if (requestingLocationUpdates) {
+            mRequestLocationUpdatesButton.setEnabled(false);
+            mRemoveLocationUpdatesButton.setEnabled(true);
         } else {
-            mStartUpdatesButton.setEnabled(true);
-            mStopUpdatesButton.setEnabled(false);
+            mRequestLocationUpdatesButton.setEnabled(true);
+            mRemoveLocationUpdatesButton.setEnabled(false);
         }
     }
 
-    private void onlyUIupdate() {
-
-
-        mLatitudeTextView.setText(String.format(Locale.ENGLISH, "%s: %f", mLatitudeLabel,
-                mCurrentLocation.getLatitude()));
-        mLongitudeTextView.setText(String.format(Locale.ENGLISH, "%s: %f", mLongitudeLabel,
-                mCurrentLocation.getLongitude()));
-        mAltitudeTextView.setText(String.format(Locale.ENGLISH, "%s: %f", mAltitudeLabel,
-                mCurrentLocation.getAltitude()));
-        mSpeedTextView.setText(String.format(Locale.ENGLISH, "%s: %.1f", mSpeedLabel,
-                ((mCurrentLocation.getSpeed()) * 3.6)));
-
-        mAvgSpeedTextView.setText(String.format(Locale.ENGLISH, "%s: %.1f",
-                mAvgSpeedLabel, calculateAverageSpeed(mCurrentId)));
-        mMaxSpeedTextView.setText(String.format(Locale.ENGLISH, "%s: %.1f",
-                mMaxSpeedLabel, queryMaxSpeed(mCurrentId)));
-        mMaxAltitudeTextView.setText(String.format(Locale.ENGLISH, "%s: %f",
-                mMaxAltitudeLabel, queryMaxAlt(mCurrentId)));
-        mMinAltitudeTextView.setText(String.format(Locale.ENGLISH, "%s: %f",
-                mMinAltitudeLabel, queryMinAlt(mCurrentId)));
-        mTotalDistanceTextView.setText(String.format(Locale.ENGLISH, "%s: %.3f",
-                mDistanceLabel, calculateTotalDistance(mCurrentId)));
-
-        mPrevLatitudeTextView.setText(String.format(Locale.ENGLISH, "%s: %f", mPrevLatitudeLabel,
-                queryPreviousLocation(mCurrentId)[0]));
-        mPrevLongitudeTextView.setText(String.format(Locale.ENGLISH, "%s: %f", mPrevLongitudeLabel,
-                queryPreviousLocation(mCurrentId)[1]));
-
-
-    }
-
-    /**
-     * Sets the value of the UI fields for the location latitude, longitude and last update time.
-     */
-    private void updateLocationUI() {
-
-        if (mCurrentLocation != null) {
-
-            onlyUIupdate();
-
-            mCurrentLatitude = mCurrentLocation.getLatitude();
-            mCurrentLongitude = mCurrentLocation.getLongitude();
-            mCurrentAltitude = mCurrentLocation.getAltitude();
-            mCurrentSpeed = ((mCurrentLocation.getSpeed()) * 3.6);
-            mMaxSpeed = queryMaxSpeed(mCurrentId);
-            mMaxAltitude = queryMaxAlt(mCurrentId);
-            mMinAltitude = queryMinAlt(mCurrentId);
-            mAverageSpeed = calculateAverageSpeed(mCurrentId);
-            mDistance = calculateDistance(mCurrentId);
-            mTotalDistance = calculateTotalDistance(mCurrentId);
-
-            checkXD = deltaXD;
-            checkYD = deltaYD;
-            checkZD = deltaZD;
-            mMoveDistance = (checkXD + checkYD + checkZD) / 3;
-
-            checkXC = deltaXC;
-            checkYC = deltaYC;
-            checkZC = deltaZC;
-            mMoveClose = (checkXC + checkYC + checkZC) / 3;
-
-            mNoMoveDistance = checkMoveDistance(mCurrentId);
-            mNoMoveClose = checkMoveClose(mCurrentId);
-            autoStopLocationNoMovement();
-
-            if (mRequestingLocationUpdates) {
-                getElapsedTime();
-                if (mNoMoveDistance) {
-                    mCurrentAddress = getCompleteAddressString(mCurrentLatitude, mCurrentLongitude);
-                    mAddressOutputTextView.setText(mCurrentAddress);
-                } else {
-                    mAddressOutputTextView.setText(R.string.in_motion);
-                    mCurrentAddress = "";
-                }
-                saveItem(mCurrentId, mLastUpdateTimeMillis, mCurrentLatitude, mCurrentLongitude,
-                        mCurrentAltitude, mMaxAltitude, mMinAltitude, mCurrentSpeed, mMaxSpeed,
-                        mAverageSpeed, mElapsedTimeMillis, mDistance, mTotalDistance, mMoveDistance,
-                        mMoveClose, mCurrentAddress);
-            }
-        }
-    }
-
-
-    @SuppressLint("DefaultLocale")
-    private void getElapsedTime() {
-
-        mLastUpdateTimeMillis = System.currentTimeMillis();
-        // Get elapsed time in milliseconds
-        mElapsedTimeMillis = mLastUpdateTimeMillis - startTime;
-        if (mElapsedTimeMillis < 0) {
-            mElapsedTimeMillis = 0;
-        }
-
-        mElapsedTime = String.format("%02d:%02d:%02d", TimeUnit.MILLISECONDS.toHours(mElapsedTimeMillis),
-                TimeUnit.MILLISECONDS.toMinutes(mElapsedTimeMillis) % TimeUnit.HOURS.toMinutes(1),
-                TimeUnit.MILLISECONDS.toSeconds(mElapsedTimeMillis) % TimeUnit.MINUTES.toSeconds(1));
-
-        mElapsedTimeTextView.setText(String.format(Locale.ENGLISH, "%s: %s",
-                mElapsedTimeLabel, mElapsedTime));
-
-        String mHours = new SimpleDateFormat("HH:mm:ss").format(new Date(mLastUpdateTimeMillis));
-        mLastUpdateTimeTextView.setText(String.format(Locale.ENGLISH, "%s: %s",
-                mLastUpdateTimeLabel, mHours));
-    }
-
-    private double calculateTotalDistance(int id) {
-        double totalDistance = 0;
-        String specificID = String.valueOf(id);
-        String mSelectionClause = TrackContract.TrackingEntry.COLUMN_RUN_ID;
-        String SELECTION = mSelectionClause + " = '" + specificID + "'";
-        String[] PROJECTION = {TrackContract.TrackingEntry.COLUMN_DISTANCE};
-        try {
-            cur = mContext.getContentResolver()
-                    .query(CONTENT_URI, PROJECTION, SELECTION, null, null);
-
-            ArrayList<Double> distanceTempList = new ArrayList<>();
-            if (cur != null && cur.moveToFirst()) {
-                while (cur.moveToNext()) {
-                    Double i = cur.getDouble(cur.getColumnIndex(COLUMN_DISTANCE));
-                    distanceTempList.add(i);
-                }
-            }
-//            Log.i("Print list", speedTempList.toString());
-
-            for (int i = 0; i < distanceTempList.size(); i++) {
-                totalDistance += distanceTempList.get(i);
-            }
-
-            if (cur != null) {
-                cur.close();
-            }
-
-        } catch (Exception e) {
-            Log.e("Path Error", e.toString());
-        }
-        return totalDistance;
-    }
-
-
-    private double calculateDistance(int id) {
-
-        double mRoundedPreviousLatitude = Math.round((queryPreviousLocation(id)[0]) * 1000000) / 1000000.0d;
-        double mRoundedPreviousLongitude = Math.round((queryPreviousLocation(id)[1]) * 1000000) / 1000000.0d;
-//        mPreviousLatitude = 34.2000001;
-//        mPreviousLongitude = -86.8000002;
-
-        double mRoundedCurrentLatitude = Math.round((mCurrentLocation.getLatitude()) * 1000000) / 1000000.0d;
-        double mRoundedCurrentLongitude = Math.round((mCurrentLocation.getLongitude()) * 1000000) / 1000000.0d;
-
-        double mXYZDelta = (deltaXD + deltaYD + deltaZD);
-        if (mPreviousLatitude != 0.0 && mPreviousLongitude != 0.0 &&
-                (mXYZDelta != 0.0)) {
-            mDistance = DistanceCalculator.greatCircleInKilometers(mRoundedPreviousLatitude,
-                    mRoundedPreviousLongitude, mRoundedCurrentLatitude, mRoundedCurrentLongitude);
-            Log.i("Print PreviousLatitude", String.valueOf(mRoundedPreviousLatitude));
-            Log.i("Print PreviousLongitude", String.valueOf(mRoundedPreviousLongitude));
-            Log.i("Print CurrentLatitude", String.valueOf(mRoundedCurrentLatitude));
-            Log.i("Print CurrentLongitude", String.valueOf(mRoundedCurrentLongitude));
-            Log.i("Print Distance", String.valueOf(mDistance));
-        } else {
-            mDistance = 0.0;
-        }
-
-        return mDistance;
-    }
-
-
-    private double[] queryPreviousLocation(int id) {
-        String specificID = String.valueOf(id);
-        String mSelectionClause = TrackContract.TrackingEntry.COLUMN_RUN_ID;
-        String SELECTION = mSelectionClause + " = '" + specificID + "'";
-        String ORDER = " " + _ID + " DESC LIMIT 1";
-
-        try {
-            cur = mContext.getContentResolver()
-                    .query(CONTENT_URI, null, SELECTION, null, ORDER);
-
-            if (cur != null && cur.moveToFirst()) {
-                do {
-                    int latitudeColumnIndex = cur.getColumnIndex(COLUMN_LATITUDE);
-                    int longitudeColumnIndex = cur.getColumnIndex(COLUMN_LONGITUDE);
-                    mPreviousLatitude = cur.getDouble(latitudeColumnIndex);
-                    mPreviousLongitude = cur.getDouble(longitudeColumnIndex);
-
-                } while (cur.moveToNext());
-            }
-            if (cur != null) {
-                cur.close();
-            }
-
-        } catch (Exception e) {
-            Log.e("Path Error", e.toString());
-        }
-
-        double[] mPreviousLocation = new double[2];
-        mPreviousLocation[0] = mPreviousLatitude;
-        mPreviousLocation[1] = mPreviousLongitude;
-        return mPreviousLocation;
-    }
-
-
-    private int queryMaxId() {
-
-        String ORDER = " " + COLUMN_RUN_ID + " DESC LIMIT 1";
-        try {
-            cur = mContext.getContentResolver()
-                    .query(CONTENT_URI, null, null, null, ORDER);
-
-            if (cur != null && cur.moveToFirst()) {
-                do {
-                    int idColumnIndex = cur.getColumnIndex(COLUMN_RUN_ID);
-                    mMaxId = cur.getInt(idColumnIndex);
-
-                } while (cur.moveToNext());
-            }
-            if (cur != null) {
-                cur.close();
-            }
-
-        } catch (Exception e) {
-            Log.e("Path Error", e.toString());
-        }
-        return mMaxId;
-    }
-
-    private int queryLast_ID() {
-
-        String ORDER = " " + _ID + " DESC LIMIT 1";
-        try {
-            cur = mContext.getContentResolver()
-                    .query(CONTENT_URI, null, null, null, ORDER);
-
-            if (cur != null && cur.moveToFirst()) {
-                do {
-                    int idColumnIndex = cur.getColumnIndex(_ID);
-                    mLast_ID = cur.getInt(idColumnIndex);
-
-                } while (cur.moveToNext());
-            }
-            if (cur != null) {
-                cur.close();
-            }
-
-        } catch (Exception e) {
-            Log.e("Path Error", e.toString());
-        }
-        return mLast_ID;
-    }
-//    private void indentifyLastId(int runId) {
-//
-//        String specificID = String.valueOf(runId);
-//        String mSelectionClause = TrackContract.TrackingEntry.COLUMN_RUN_ID;
-//        String SELECTION = mSelectionClause + " = '" + specificID + "'";
-//        String ORDER = " " + _ID + " DESC LIMIT 24";
-//
-//
-//        try {
-//            cur = mContext.getContentResolver()
-//                    .query(TrackContract.TrackingEntry.CONTENT_URI, null, SELECTION, null, ORDER);
-//
-//            ArrayList<String>mSelectionArgs = new ArrayList();
-//            if (cur != null && cur.moveToFirst()) {
-//                while (cur.moveToNext()) {
-//                    String i = String.valueOf(cur.getColumnIndex(COLUMN_MOVE));
-//                    mSelectionArgs.add(i);
-//                }
-//            }
-//
-//            String[] mSelectionArgsArray = new String[mSelectionArgs.size()];
-//            mSelectionArgsArray = mSelectionArgs.toArray(mSelectionArgsArray);
-//            ContentValues data = new ContentValues();
-//            data.put(COLUMN_MOVE, 99);
-//            mContext.getContentResolver().update(TrackContract.TrackingEntry.CONTENT_URI, data, SELECTION, mSelectionArgsArray);
-//
-//            if (cur != null) {
-//                cur.close();
-//            }
-//
-//        } catch (Exception e) {
-//            Log.e("Path Error", e.toString());
-//        }
-//    }
-
-
-    public double queryMaxSpeed(int id) {
-        String specificID = String.valueOf(id);
-        String mSelectionClause = TrackContract.TrackingEntry.COLUMN_RUN_ID;
-        String SELECTION = mSelectionClause + " = '" + specificID + "'";
-        String ORDER = " " + COLUMN_SPEED + " DESC LIMIT 1";
-
-        try {
-            cur = mContext.getContentResolver()
-                    .query(CONTENT_URI, null, SELECTION, null, ORDER);
-
-            if (cur != null && cur.moveToFirst()) {
-                do {
-                    int idColumnIndex = cur.getColumnIndex(COLUMN_SPEED);
-                    mMaxSpeed = cur.getDouble(idColumnIndex);
-
-                } while (cur.moveToNext());
-            }
-            if (cur != null) {
-                cur.close();
-            }
-
-        } catch (Exception e) {
-            Log.e("Path Error", e.toString());
-        }
-
-        return mMaxSpeed;
-    }
-
-    private double queryMaxAlt(int id) {
-        String specificID = String.valueOf(id);
-        String mSelectionClause = TrackContract.TrackingEntry.COLUMN_RUN_ID;
-        String SELECTION = mSelectionClause + " = '" + specificID + "'";
-        String ORDER = " " + COLUMN_ALTITUDE + " DESC LIMIT 1";
-
-        try {
-            cur = mContext.getContentResolver()
-                    .query(CONTENT_URI, null, SELECTION, null, ORDER);
-
-            if (cur != null && cur.moveToFirst()) {
-                do {
-                    int idColumnIndex = cur.getColumnIndex(COLUMN_ALTITUDE);
-                    mMaxAltitude = cur.getDouble(idColumnIndex);
-
-                } while (cur.moveToNext());
-            }
-            if (cur != null) {
-                cur.close();
-            }
-
-        } catch (Exception e) {
-            Log.e("Path Error", e.toString());
-        }
-        return mMaxAltitude;
-    }
-
-    private double queryMinAlt(int id) {
-        String specificID = String.valueOf(id);
-        String mSelectionClause = TrackContract.TrackingEntry.COLUMN_RUN_ID;
-        String SELECTION = mSelectionClause + " = '" + specificID + "'";
-        String ORDER = " " + COLUMN_ALTITUDE + " ASC LIMIT 1";
-//        String[] PROJECTION = {TrackContract.TrackingEntry.COLUMN_ALTITUDE};
-
-        try {
-            cur = mContext.getContentResolver()
-                    .query(CONTENT_URI, null, SELECTION, null, ORDER);
-
-            if (cur != null && cur.moveToFirst()) {
-                do {
-                    int idColumnIndex = cur.getColumnIndex(COLUMN_ALTITUDE);
-                    mMinAltitude = cur.getInt(idColumnIndex);
-
-                } while (cur.moveToNext());
-            }
-            if (cur != null) {
-                cur.close();
-            }
-
-        } catch (Exception e) {
-            Log.e("Path Error", e.toString());
-        }
-
-        return mMinAltitude;
-    }
-
-    private double calculateAverageSpeed(int id) {
-        double sum = 0;
-        double averageSpeed = 0;
-        int size;
-
-        String specificID = String.valueOf(id);
-        String mSelectionClause = TrackContract.TrackingEntry.COLUMN_RUN_ID;
-        String SELECTION = mSelectionClause + " = '" + specificID + "'";
-        String[] PROJECTION = {TrackContract.TrackingEntry.COLUMN_SPEED};
-        try {
-            cur = mContext.getContentResolver()
-                    .query(CONTENT_URI, PROJECTION, SELECTION, null, null);
-
-            ArrayList<Double> speedTempList = new ArrayList<>();
-            if (cur != null && cur.moveToFirst()) {
-                while (cur.moveToNext()) {
-                    Double i = cur.getDouble(cur.getColumnIndex(COLUMN_SPEED));
-                    speedTempList.add(i);
-                }
-            }
-//            Log.i("Print list", speedTempList.toString());
-
-            for (int i = 0; i < speedTempList.size(); i++) {
-                sum += speedTempList.get(i);
-                size = speedTempList.size();
-                averageSpeed = sum / size;
-            }
-
-            if (cur != null) {
-                cur.close();
-            }
-
-        } catch (Exception e) {
-            Log.e("Path Error", e.toString());
-        }
-        return averageSpeed;
-    }
-
-    private boolean checkMoveDistance(int id) {
-        int sum = 0;
-        int size = 0;
-        boolean mNoMove = false;
-//        TODO (2): Compare saved times after changing them to miiliseconds to timeInPast. At this moment
-//        TODO (2): At this moment we leave last ten records no matter what time in past last record was
-//        long currentTime = System.currentTimeMillis();
-//        long timeInPast = currentTime - CHECK_NO_MOVE_TIME_IN_MILLISECONDS;
-
-        String specificID = String.valueOf(id);
-        String mSelectionClause = TrackContract.TrackingEntry.COLUMN_RUN_ID;
-        String SELECTION = mSelectionClause + " = '" + specificID + "'";
-        String[] PROJECTION = {TrackContract.TrackingEntry.COLUMN_MOVE_DISTANCE};
-        String ORDER = " " + COLUMN_TIME_COUNTER + " DESC LIMIT " + GET_GEOLOCATION_LAST_ROWS;
-        try {
-            cur = mContext.getContentResolver()
-                    .query(CONTENT_URI, PROJECTION, SELECTION, null, ORDER);
-
-            ArrayList<Double> nomoveDistance = new ArrayList<>();
-            if (cur != null && cur.moveToFirst()) {
-                while (cur.moveToNext()) {
-                    Double i = cur.getDouble(cur.getColumnIndex(COLUMN_MOVE_DISTANCE));
-                    nomoveDistance.add(i);
-                    size = nomoveDistance.size();
-                    Log.i("nomoveDistance:", String.valueOf(size));
-                }
-            }
-//            Log.i("Print list", speedTempList.toString());
-
-            for (int i = 0; i < nomoveDistance.size(); i++) {
-                sum += nomoveDistance.get(i);
-            }
-            mNoMove = (sum == 0.0) && (size == (GET_GEOLOCATION_LAST_ROWS - 1));
-
-            Log.i("No Move:", String.valueOf(mNoMove));
-            if (cur != null) {
-                cur.close();
-            }
-
-        } catch (Exception e) {
-            Log.e("Path Error", e.toString());
-        }
-        return mNoMove;
-    }
-
-
-    private boolean checkMoveClose(final int id) {
-        boolean mNoMove = false;
-
-        int sum = 0;
-        int size = 0;
-
-        //        TODO (2): Compare saved times after changing them to miiliseconds to timeInPast. At this moment
-//        TODO (2): At this moment we leave last ten records no matter what time in past last record was
-//        long currentTime = System.currentTimeMillis();
-//        long timeInPast = currentTime - CHECK_NO_MOVE_TIME_IN_MILLISECONDS;
-        String specificID = String.valueOf(id);
-        String mSelectionClause = TrackContract.TrackingEntry.COLUMN_RUN_ID;
-        String SELECTION = mSelectionClause + " = '" + specificID + "'";
-        String[] PROJECTION = {TrackContract.TrackingEntry.COLUMN_MOVE_CLOSE};
-        String ORDER = " " + COLUMN_TIME_COUNTER + " DESC LIMIT " + DELETE_LAST_ROWS;
-        try {
-            cur = mContext.getContentResolver()
-                    .query(CONTENT_URI, PROJECTION, SELECTION, null, ORDER);
-
-            ArrayList<Double> moveCloseList = new ArrayList<>();
-            if (cur != null && cur.moveToFirst()) {
-                while (cur.moveToNext()) {
-                    Double i = cur.getDouble(cur.getColumnIndex(COLUMN_MOVE_CLOSE));
-                    moveCloseList.add(i);
-                    size = moveCloseList.size();
-                    Log.i("moveCloseList:", String.valueOf(size));
-                }
-            }
-            for (int i = 0; i < moveCloseList.size(); i++) {
-                sum += moveCloseList.get(i);
-            }
-            mNoMove = (sum == 0.0) && (size == (DELETE_LAST_ROWS - 1));
-            Log.i("No Move:", String.valueOf(mNoMove));
-            if (cur != null) {
-                cur.close();
-            }
-
-            //TODO (4)    automatically delete empty run
-            //TODO (4)handle geolocation, fences?
-
-        } catch (Exception e) {
-            Log.e("Path Error", e.toString());
-        }
-
-
-        return mNoMove;
-    }
-
-    void deletelastNoMoveRows() {
-        // method does not work "in background", when user gets out of an app without stopping location
-
-        if (isAdded() && mContext != null) {
-            Log.i("deletelastNoMoveRows", "isAdded()&& mContext != null)");
-            for (int i = 0; i < (DELETE_LAST_ROWS - GET_GEOLOCATION_LAST_ROWS - 2); i++) {
-                int last_ID = queryLast_ID();
-                String lastRow = TrackContract.TrackingEntry._ID + "=" + last_ID;
-                mContext.getContentResolver().delete(CONTENT_URI, lastRow, null);
-                Toast.makeText(mContext, (DELETE_LAST_ROWS - GET_GEOLOCATION_LAST_ROWS) + " " + getString(R.string.delete_one_item), Toast.LENGTH_SHORT).show();
-            }
-        }
-    }
-
-    private void saveItem(final int runId, final long currentTime, final double currentLatitude, final double currentLongitude,
-                          final double currentAltitude, final double currentMaxAlt, final double currentMinAlt,
-                          final double currentSpeed, final double currentMaxSpeed, final double currentAvrSpeed,
-                          final long currentElapsedTime, final double currentDistance, final double currentTotalDistance,
-                          final double currentMoveDistance, final double currentMoveClose, final String currentAddress) {
-
-        // Database operations should not be done on the main thread
-        AsyncTask<Void, Void, Void> insertItem = new AsyncTask<Void, Void, Void>() {
-
-            @Override
-            protected Void doInBackground(Void... voids) {
-                ContentValues values = new ContentValues();
-                values.put(COLUMN_RUN_ID, runId);
-                values.put(COLUMN_TIME, currentTime);
-                values.put(COLUMN_LATITUDE, currentLatitude);
-                values.put(COLUMN_LONGITUDE, currentLongitude);
-                values.put(COLUMN_ALTITUDE, currentAltitude);
-                values.put(COLUMN_MAX_ALT, currentMaxAlt);
-                values.put(COLUMN_MIN_ALT, currentMinAlt);
-                values.put(COLUMN_SPEED, currentSpeed);
-                values.put(COLUMN_MAX_SPEED, currentMaxSpeed);
-                values.put(COLUMN_AVR_SPEED, currentAvrSpeed);
-                values.put(COLUMN_TIME_COUNTER, currentElapsedTime);
-                values.put(COLUMN_DISTANCE, currentDistance);
-                values.put(COLUMN_TOTAL_DISTANCE, currentTotalDistance);
-                values.put(COLUMN_MOVE_DISTANCE, currentMoveDistance);
-                values.put(COLUMN_MOVE_CLOSE, currentMoveClose);
-                values.put(COLUMN_ADDRESS, currentAddress);
-
-                // This is a NEW item, so insert a new item into the provider,
-                // returning the content URI for the item item.
-                mContext.getContentResolver().insert(CONTENT_URI, values);
-
-                return null;
-            }
-        };
-        insertItem.execute();
-    }
-
-    /**
-     * Removes location updates from the FusedLocationApi.
-     */
-    public void stopLocationUpdates() {
-        if (!mRequestingLocationUpdates) {
-            Log.d(TAG, "stopLocationUpdates: updates never requested, no-op.");
-            return;
-        }
-
-        // It is a good practice to remove location requests when the activity is in a paused or
-        // stopped state. Doing so helps battery performance and is especially
-        // recommended in applications that request frequent location updates.
-        mFusedLocationClient.removeLocationUpdates(mLocationCallback)
-                .addOnCompleteListener((Activity) mContext, new OnCompleteListener<Void>() {
-                    @Override
-                    public void onComplete(@NonNull Task<Void> task) {
-                        mRequestingLocationUpdates = false;
-                        setButtonsEnabledState();
-                    }
-                });
-    }
-
-    private void autoStopLocationNoMovement() {
-        if (DISABLE_AUTO_CLOSE) {
-            Log.d(TAG, "DISABLE AUTO CLOSE IS ON");
-
-        } else {
-            Log.d(TAG, "DISABLE AUTO CLOSE IS OFF");
-            if (mNoMoveClose) {
-                stopLocationUpdates();
-                deletelastNoMoveRows();
-            }
-        }
-    }
 
     public boolean switchDisableAutoStop() {
 
@@ -1274,67 +528,6 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
                 (getString(R.string.disable_auto_stop_switch_key), preferenceBooleanDisableAutoStop);
     }
 
-
-    @Override
-    public void onResume() {
-        super.onResume();
-        Log.d(TAG, "onResume");
-//        if (mFusedLocationClient != null){
-//
-//        }
-//        // Within {@code onPause()}, we remove location updates. Here, we resume receiving
-//        // location updates if the user has requested them.
-//        Log.d(TAG, "onResume()");
-//        if (ActivityCompat.checkSelfPermission
-//                (mContext, Manifest.permission.ACCESS_FINE_LOCATION)
-//                != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission
-//                (mContext, Manifest.permission.ACCESS_COARSE_LOCATION)
-//                != PackageManager.PERMISSION_GRANTED) {
-//            // TODO: Consider calling
-//            //    ActivityCompat#requestPermissions
-//            // here to request the missing permissions, and then overriding
-//            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-//            //                                          int[] grantResults)
-//            // to handle the case where the user grants the permission. See the documentation
-//            // for ActivityCompat#requestPermissions for more details.
-//            return;
-//        }
-//        Log.d(TAG, "onResume, getLocationAvailability()");
-//
-//        mFusedLocationClient.getLocationAvailability()
-//                .addOnCompleteListener((Activity) mContext, new OnCompleteListener<LocationAvailability>() {
-//                    @Override
-//                    public void onComplete(@NonNull Task<LocationAvailability> task) {
-//                        mRequestingLocationUpdates = LocationAvailability.hasLocationAvailability();
-//
-//                        setButtonsEnabledState();
-//                    }
-//                });
-//    }
-
-    }
-
-    private void createLocationCallback1() {
-        mLocationCallback = new LocationCallback() {
-            @Override
-            public void onLocationResult(LocationResult locationResult) {
-                super.onLocationResult(locationResult);
-
-
-                mCurrentLocation = locationResult.getLastLocation();
-//                mLastUpdateTime = DateFormat.getTimeInstance().format(new Date());
-                onlyUIupdate();
-            }
-
-            @Override
-            public void onLocationAvailability(LocationAvailability locationAvailability) {
-                mRequestingLocationUpdates = locationAvailability.isLocationAvailable();
-                Log.d(TAG, "mRequestingLocationUpdates = locationAvailability.isLocationAvailable();");
-
-                setButtonsEnabledState();
-            }
-        };
-    }
 
     // This callback is called only when there is a saved instance previously saved using
 // onSaveInstanceState(). We restore some state in onCreate() while we can optionally restore
@@ -1388,10 +581,10 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
     public void onSaveInstanceState(Bundle savedInstanceState) {
         super.onSaveInstanceState(savedInstanceState);
         savedInstanceState.putBoolean(KEY_REQUESTING_LOCATION_UPDATES, mRequestingLocationUpdates);
-        savedInstanceState.putParcelable(KEY_LOCATION, mCurrentLocation);
-        savedInstanceState.putParcelable(KEY_ALTITUDE, mCurrentLocation);
-        savedInstanceState.putParcelable(KEY_SPEED, mCurrentLocation);
-
+//        savedInstanceState.putParcelable(KEY_LOCATION, mCurrentLocation);
+//        savedInstanceState.putParcelable(KEY_ALTITUDE, mCurrentLocation);
+//        savedInstanceState.putParcelable(KEY_SPEED, mCurrentLocation);
+        savedInstanceState.putInt(KEY_LAST_RUN, mLast_ID);
         // call superclass to save any view hierarchy
 
         Log.d(TAG, "onSaveInstanceState(Bundle savedInstanceState)");
@@ -1402,18 +595,71 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
     public void onStop() {
         super.onStop();
         Log.d(TAG, "onStop()");
+        if (mBound) {
+            // Unbind from the service. This signals to the service that this activity is no longer
+            // in the foreground, and the service can respond by promoting itself to a foreground
+            // service.
+            mContext.getApplicationContext().unbindService(mServiceConnection);
+            mBound = false;
+        }
+        PreferenceManager.getDefaultSharedPreferences(mContext)
+                .unregisterOnSharedPreferenceChangeListener(this);
     }
 
     @Override
     public void onStart() {
         super.onStart();
         Log.d(TAG, "onStart()");
+        PreferenceManager.getDefaultSharedPreferences(mContext)
+                .registerOnSharedPreferenceChangeListener(this);
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        Log.d(TAG, "onResume");
+        LocalBroadcastManager.getInstance(mContext).registerReceiver(myReceiver,
+                new IntentFilter(LocationUpdatesService.ACTION_BROADCAST));
+//        if (mFusedLocationClient != null){
+//
+//        }
+//        // Within {@code onPause()}, we remove location updates. Here, we resume receiving
+//        // location updates if the user has requested them.
+//        Log.d(TAG, "onResume()");
+//        if (ActivityCompat.checkSelfPermission
+//                (mContext, Manifest.permission.ACCESS_FINE_LOCATION)
+//                != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission
+//                (mContext, Manifest.permission.ACCESS_COARSE_LOCATION)
+//                != PackageManager.PERMISSION_GRANTED) {
+//            // TODO: Consider calling
+//            //    ActivityCompat#requestPermissions
+//            // here to request the missing permissions, and then overriding
+//            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+//            //                                          int[] grantResults)
+//            // to handle the case where the user grants the permission. See the documentation
+//            // for ActivityCompat#requestPermissions for more details.
+//            return;
+//        }
+//        Log.d(TAG, "onResume, getLocationAvailability()");
+//
+//        mFusedLocationClient.getLocationAvailability()
+//                .addOnCompleteListener((Activity) mContext, new OnCompleteListener<LocationAvailability>() {
+//                    @Override
+//                    public void onComplete(@NonNull Task<LocationAvailability> task) {
+//                        mRequestingLocationUpdates = LocationAvailability.hasLocationAvailability();
+//
+//                        setButtonsEnabledState();
+//                    }
+//                });
+//    }
+
     }
 
     @Override
     public void onPause() {
         super.onPause();
         Log.d(TAG, "onPause()");
+        LocalBroadcastManager.getInstance(mContext).unregisterReceiver(myReceiver);
         // Remove location updates to save battery.
         //stopLocationUpdates();
 //        mSensorManager.unregisterListener((SensorEventListener) mContext);
@@ -1519,11 +765,11 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
             } else if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 if (mRequestingLocationUpdates) {
                     Log.i(TAG, "Permission granted, updates requested, starting location updates");
-                    startLocationUpdates();
+                    mService.startUpdatesButtonHandler();
                 }
             } else {
                 // Permission denied.
-
+                setButtonsEnabledState(false);
                 // Notify the user via a SnackBar that they have rejected a core permission for the
                 // app, which makes the Activity useless. In a real app, core permissions would
                 // typically be best requested during a welcome-screen flow.
@@ -1552,81 +798,103 @@ public class RealTimeFragment extends Fragment implements SensorEventListener {
         }
     }
 
-    @Override
-    public void onSensorChanged(final SensorEvent sensorEvent) {
 
-        final AsyncTask<Void, Void, Void> sensor = new AsyncTask<Void, Void, Void>() {
-
-            @Override
-            protected Void doInBackground(Void... voids) {
-
-                if (sensorEvent.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
-                    ax = sensorEvent.values[0];
-                    ay = sensorEvent.values[1];
-                    az = sensorEvent.values[2];
-
-                    if (!mInitialized) {
-                        mLastX = ax;
-                        mLastY = ay;
-                        mLastZ = az;
-                        mInitialized = true;
-                    } else {
-                        deltaXD = Math.abs(mLastX - ax);
-                        deltaYD = Math.abs(mLastY - ay);
-                        deltaZD = Math.abs(mLastZ - az);
-                        if (deltaXD < NOISEd) deltaXD = 0.0;
-                        if (deltaYD < NOISEd) deltaYD = 0.0;
-                        if (deltaZD < NOISEd) deltaZD = 0.0;
-                        deltaXC = Math.abs(mLastX - ax);
-                        deltaYC = Math.abs(mLastY - ay);
-                        deltaZC = Math.abs(mLastZ - az);
-                        if (deltaXC < NOISEc) deltaXC = 0.0;
-                        if (deltaYC < NOISEc) deltaYC = 0.0;
-                        if (deltaZC < NOISEc) deltaZC = 0.0;
-
-                        mLastX = ax;
-                        mLastY = ay;
-                        mLastZ = az;
-//                Log.i("Print deltaXD", String.valueOf(deltaXD));
-//                Log.i("Print deltaYD", String.valueOf(deltaYD));
-//                Log.i("Print deltaZD", String.valueOf(deltaZD))
-                    }
-                }
-                return null;
-            }
-        };
-        sensor.execute();
+    /**
+     * Returns the current state of the permissions needed.
+     */
+    private boolean checkPermissions() {
+        return PackageManager.PERMISSION_GRANTED == ActivityCompat.checkSelfPermission(mContext,
+                Manifest.permission.ACCESS_FINE_LOCATION);
     }
 
     @Override
-    public void onAccuracyChanged(Sensor sensor, int i) {
-
-    }
-
-
-    private String getCompleteAddressString(double LATITUDE, double LONGITUDE) {
-
-        Geocoder geocoder = new Geocoder(mContext, Locale.getDefault());
-        try {
-            List<Address> addresses = geocoder.getFromLocation(LATITUDE, LONGITUDE, 1);
-            if (addresses != null) {
-                Address returnedAddress = addresses.get(0);
-                StringBuilder strReturnedAddress = new StringBuilder("");
-
-                for (int i = 0; i <= returnedAddress.getMaxAddressLineIndex(); i++) {
-                    strReturnedAddress.append(returnedAddress.getAddressLine(i)).append("\n");
-                }
-                mAddressOutput = strReturnedAddress.toString();
-                Log.w("My address", strReturnedAddress.toString());
-            } else {
-                Log.w("My address", "No Address returned!");
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            Log.w("Myloction address", "Canont get Address!");
+    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String s) {
+        // Update the buttons state depending on whether location updates are being requested.
+        if (s.equals(ServiceConstants.KEY_REQUESTING_LOCATION_UPDATES)) {
+            setButtonsEnabledState(sharedPreferences.getBoolean(ServiceConstants.KEY_REQUESTING_LOCATION_UPDATES,
+                    false));
         }
-        return mAddressOutput;
     }
 
+    private void onlyUIupdate(Intent intent) {
+
+        mCurrentLocation = intent.getParcelableExtra(LocationUpdatesService.EXTRA_LOCATION);
+        if (mCurrentLocation != null) {
+
+            mCurrentId = intent.getIntExtra(LocationUpdatesService.EXTRA_CURRENT_ID, 0);
+            mCurrentLatitude = intent.getDoubleExtra(LocationUpdatesService.EXTRA_LATITUDE, 0);
+            mCurrentLongitude = intent.getDoubleExtra(LocationUpdatesService.EXTRA_LONGITUDE, 0);
+            mCurrentAltitude = intent.getDoubleExtra(LocationUpdatesService.EXTRA_ALTITUDE, 0);
+            mCurrentSpeed = intent.getDoubleExtra(LocationUpdatesService.EXTRA_SPEED, 0);
+            mMaxSpeed = intent.getDoubleExtra(LocationUpdatesService.EXTRA_MAX_SPEED, 0);
+            mMaxAltitude = intent.getDoubleExtra(LocationUpdatesService.EXTRA_MAX_ALTITUDE, 0);
+            mMinAltitude = intent.getDoubleExtra(LocationUpdatesService.EXTRA_MIN_ALTITUDE, 0);
+            mAverageSpeed = intent.getDoubleExtra(LocationUpdatesService.EXTRA_AVG_SPEED, 0);
+            mTotalDistance = intent.getDoubleExtra(LocationUpdatesService.EXTRA_TOTAL_DISTANCE, 0);
+            mPreviousLatitude = intent.getDoubleExtra(LocationUpdatesService.EXTRA_PREV_LATITUDE, 0);
+            mPreviousLongitude = intent.getDoubleExtra(LocationUpdatesService.EXTRA_PREV_LATITUDE, 0);
+            mElapsedTimeMillis = intent.getLongExtra(LocationUpdatesService.EXTRA_TOTAL_TIME, 0);
+            mLastUpdateTimeMillis = intent.getLongExtra(LocationUpdatesService.EXTRA_LAST_TIME_UPDATE, 0);
+            mCurrentAddress = intent.getStringExtra(LocationUpdatesService.EXTRA_ADDRESS);
+
+            mLatitudeTextView.setText(String.format(Locale.ENGLISH, "%s: %f", mLatitudeLabel,
+                    mCurrentLatitude));
+            mLongitudeTextView.setText(String.format(Locale.ENGLISH, "%s: %f", mLongitudeLabel,
+                    mCurrentLongitude));
+            mAltitudeTextView.setText(String.format(Locale.ENGLISH, "%s: %f", mAltitudeLabel,
+                    mCurrentAltitude));
+            mSpeedTextView.setText(String.format(Locale.ENGLISH, "%s: %.1f", mSpeedLabel,
+                    mCurrentSpeed));
+
+            mAvgSpeedTextView.setText(String.format(Locale.ENGLISH, "%s: %.1f",
+                    mAvgSpeedLabel, mAverageSpeed));
+            mMaxSpeedTextView.setText(String.format(Locale.ENGLISH, "%s: %.1f",
+                    mMaxSpeedLabel, mMaxSpeed));
+            mMaxAltitudeTextView.setText(String.format(Locale.ENGLISH, "%s: %f",
+                    mMaxAltitudeLabel, mMaxAltitude));
+            mMinAltitudeTextView.setText(String.format(Locale.ENGLISH, "%s: %f",
+                    mMinAltitudeLabel, mMinAltitude));
+            mTotalDistanceTextView.setText(String.format(Locale.ENGLISH, "%s: %.3f",
+                    mDistanceLabel, mTotalDistance));
+
+            mPrevLatitudeTextView.setText(String.format(Locale.ENGLISH, "%s: %f", mPrevLatitudeLabel,
+                    mPreviousLatitude));
+            mPrevLongitudeTextView.setText(String.format(Locale.ENGLISH, "%s: %f", mPrevLongitudeLabel,
+                    mPreviousLongitude));
+
+            mElapsedTime = String.format("%02d:%02d:%02d", TimeUnit.MILLISECONDS.toHours(mElapsedTimeMillis),
+                    TimeUnit.MILLISECONDS.toMinutes(mElapsedTimeMillis) % TimeUnit.HOURS.toMinutes(1),
+                    TimeUnit.MILLISECONDS.toSeconds(mElapsedTimeMillis) % TimeUnit.MINUTES.toSeconds(1));
+
+            mElapsedTimeTextView.setText(String.format(Locale.ENGLISH, "%s: %s",
+                    mElapsedTimeLabel, mElapsedTime));
+
+            String mHours = new SimpleDateFormat("HH:mm:ss").format(new Date(mLastUpdateTimeMillis));
+            mLastUpdateTimeTextView.setText(String.format(Locale.ENGLISH, "%s: %s",
+                    mLastUpdateTimeLabel, mHours));
+
+            mRunNumber.setText(String.format(Locale.ENGLISH, "%s: %s",
+                    mCurrentRunLabel, mCurrentId));
+            mLast_ID = mCurrentId;
+
+            if (mCurrentAddress != "") {
+                mAddressOutputTextView.setText(mCurrentAddress);
+            } else {
+                mAddressOutputTextView.setText(R.string.in_motion);
+            }
+        }
+
+    }
+
+    /**
+     * Receiver for broadcasts sent by {@link LocationUpdatesService}.
+     */
+    private class MyReceiver extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            onlyUIupdate(intent);
+
+        }
+    }
 }
 
