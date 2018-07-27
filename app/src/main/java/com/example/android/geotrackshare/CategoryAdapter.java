@@ -38,7 +38,7 @@ public class CategoryAdapter extends FragmentPagerAdapter {
     public Fragment getItem(int position) {
         switch (position) {
             case 0:
-                return new RealTimeFragment();
+                return new RealTimeFragmentService();
             case 1:
                 return new RunListFragment();
             default:
