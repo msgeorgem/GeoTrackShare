@@ -21,6 +21,7 @@ import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
+import android.app.TaskStackBuilder;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -97,7 +98,7 @@ public class TrackerBroadcastReceiver extends BroadcastReceiver {
 //        }
         String mCurrentAddress = intent.getStringExtra(LocationUpdatesService.EXTRA_ADDRESS);
         String startTimeString = intent.getStringExtra(RealTimeFragment.START_TIME);
-        Double mTotalDistance = intent.getDoubleExtra(LocationUpdatesService.EXTRA_TOTAL_DISTANCE, 0) / 1000;
+        Double mTotalDistance = intent.getDoubleExtra(LocationUpdatesService.EXTRA_TOTAL_DISTANCE, 0);
 
         int precision = 1000; //keep 3 digits
         float mTotalDistanceFloat = (float) (Math.floor(mTotalDistance * precision + .5) / precision);
@@ -144,23 +145,23 @@ public class TrackerBroadcastReceiver extends BroadcastReceiver {
         }
 
 
-//        // Create an explicit content Intent that starts the main Activity.
-//        Intent notificationIntent = new Intent(context, MainActivity.class);
-//
-//        // Construct a task stack.
-//        TaskStackBuilder stackBuilder = TaskStackBuilder.create(context);
-//
-//        // Add the main Activity to the task stack as the parent.
-//        stackBuilder.addParentStack(MainActivity.class);
-//
-//        // Push the content Intent onto the stack.
-//        stackBuilder.addNextIntent(notificationIntent);
-//
-//        // Get a PendingIntent containing the entire back stack.
-//        PendingIntent notificationPendingIntent =
-//                stackBuilder.getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT);
-//        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0,
-//                notificationIntent, 0);
+        // Create an explicit content Intent that starts the main Activity.
+        Intent notificationIntent = new Intent(context, MainActivity.class);
+
+        // Construct a task stack.
+        TaskStackBuilder stackBuilder = TaskStackBuilder.create(context);
+
+        // Add the main Activity to the task stack as the parent.
+        stackBuilder.addParentStack(MainActivity.class);
+
+        // Push the content Intent onto the stack.
+        stackBuilder.addNextIntent(notificationIntent);
+
+//         Get a PendingIntent containing the entire back stack.
+        PendingIntent notificationPendingIntent =
+                stackBuilder.getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT);
+        PendingIntent pendingIntent = PendingIntent.getActivity(context, 0,
+                notificationIntent, 0);
 
         Intent previousIntent = new Intent(context, LocationUpdatesService.class);
         previousIntent.setAction(Constants.ACTION.MAIN_ACTION);
@@ -189,7 +190,7 @@ public class TrackerBroadcastReceiver extends BroadcastReceiver {
                 .setSmallIcon(R.drawable.ic_launcher_foreground)
                 .setLargeIcon(
                         Bitmap.createScaledBitmap(icon, 128, 128, false))
-//                .setContentIntent(notificationPendingIntent)
+                .setContentIntent(notificationPendingIntent)
                 .setOngoing(true)
 //                .addAction(android.R.drawable.ic_input_add,
 //                        "Change Mode", ppreviousIntent)

@@ -299,8 +299,9 @@ public class LocationUpdatesService extends Service implements SensorEventListen
 
         // We got here because the user decided to remove location updates from the notification.
         if (startedFromNotification) {
+            Log.i(TAG, "EXTRA_STARTED_FROM_NOTIFICATION_KILL");
             stopLocationUpdates();
-            stopSelf();
+//            stopSelf();
             TrackerBroadcastReceiver.mNotificationManager.cancel(NOTIFICATION_ID);
         }
         // Tells the system to not try to recreate the service after it has been killed.
