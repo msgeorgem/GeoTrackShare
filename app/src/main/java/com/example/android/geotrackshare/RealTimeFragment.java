@@ -363,10 +363,6 @@ public class RealTimeFragment extends Fragment implements
                 } else {
                     mService.startUpdatesButtonHandler();
                 }
-//                mStartTimeString = getDateFromMillis(System.currentTimeMillis());
-//                stopUpdatesButtonHandler();
-//                startUpdatesButtonHandler();
-
 
                 long mIntervall = UPDATE_INTERVAL_IN_MILLISECONDS / 1000;
                 String mIntervalll = String.valueOf(mIntervall) + " s";

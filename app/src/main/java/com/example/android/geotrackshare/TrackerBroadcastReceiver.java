@@ -30,15 +30,13 @@ import android.icu.util.TimeZone;
 import android.os.Build;
 import android.support.annotation.RequiresApi;
 import android.support.v4.app.NotificationCompat;
-import android.support.v4.app.TaskStackBuilder;
 import android.widget.Toast;
 
 import com.example.android.geotrackshare.LocationService.LocationUpdatesService;
 import com.example.android.geotrackshare.Utils.Constants;
 
-import java.util.concurrent.TimeUnit;
-
 import static com.example.android.geotrackshare.LocationService.LocationUpdatesService.EXTRA_CURRENT_ID;
+import static com.example.android.geotrackshare.LocationService.LocationUpdatesService.EXTRA_STARTED_FROM_NOTIFICATION;
 
 
 public class TrackerBroadcastReceiver extends BroadcastReceiver {
@@ -47,10 +45,15 @@ public class TrackerBroadcastReceiver extends BroadcastReceiver {
     private String CHANNEL_ID = "02";
     private String CHANNEL_NAME = "GeoTracker Channel";
     private String DESCRIPTION = "GeoTracking";
+    /**
+     * The identifier for the notification displayed for the foreground service.
+     */
+    public static final int NOTIFICATION_ID = 12345678;
     private long startTime;
     private int currentRun;
     private Notification notification;
-    private NotificationManager mNotificationManager;
+    public static NotificationManager mNotificationManager;
+    NotificationChannel mChannel;
 
     @SuppressLint("NewApi")
     public static final String getDateFromMillis(long d) {
@@ -94,20 +97,25 @@ public class TrackerBroadcastReceiver extends BroadcastReceiver {
 //        }
         String mCurrentAddress = intent.getStringExtra(LocationUpdatesService.EXTRA_ADDRESS);
         String startTimeString = intent.getStringExtra(RealTimeFragment.START_TIME);
-        Double mTotalDistance = intent.getDoubleExtra(LocationUpdatesService.EXTRA_TOTAL_DISTANCE, 0);
+        Double mTotalDistance = intent.getDoubleExtra(LocationUpdatesService.EXTRA_TOTAL_DISTANCE, 0) / 1000;
+
+        int precision = 1000; //keep 3 digits
+        float mTotalDistanceFloat = (float) (Math.floor(mTotalDistance * precision + .5) / precision);
+
+
+
 
         String action = intent.getAction();
         currentRun = intent.getIntExtra(EXTRA_CURRENT_ID, 0);
         Long mElapsedTimeMillis = intent.getLongExtra(LocationUpdatesService.EXTRA_TOTAL_TIME, 0);
-        String mElapsedTime = String.format("%02d:%02d:%02d", TimeUnit.MILLISECONDS.toHours(mElapsedTimeMillis),
-                TimeUnit.MILLISECONDS.toMinutes(mElapsedTimeMillis) % TimeUnit.HOURS.toMinutes(1),
-                TimeUnit.MILLISECONDS.toSeconds(mElapsedTimeMillis) % TimeUnit.MINUTES.toSeconds(1));
+//        String mElapsedTime = String.format("%02d:%02d:%02d", TimeUnit.MILLISECONDS.toHours(mElapsedTimeMillis),
+//                TimeUnit.MILLISECONDS.toMinutes(mElapsedTimeMillis) % TimeUnit.HOURS.toMinutes(1),
+//                TimeUnit.MILLISECONDS.toSeconds(mElapsedTimeMillis) % TimeUnit.MINUTES.toSeconds(1));
         String mElapsedTime1 = getDateFromMillis(mElapsedTimeMillis);
 
-        currentRun = intent.getIntExtra(RealTimeFragment.CURRENT_RUN,0);
         if (action.equals(Constants.ACTION.STARTFOREGROUND_ACTION)) {
             // Send the notification
-            sendNotification(context, mElapsedTime1, currentRun);
+            sendNotification(context, mElapsedTime1, currentRun, mTotalDistanceFloat);
         }
     }
 
@@ -120,7 +128,7 @@ public class TrackerBroadcastReceiver extends BroadcastReceiver {
      */
 
 
-    private void sendNotification(Context context, String elapsedTime, int currentRun) {
+    private void sendNotification(Context context, String elapsedTime, int currentRun, float totalDistance) {
         // Get an instance of the Notification manager
         mNotificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
 
@@ -136,53 +144,52 @@ public class TrackerBroadcastReceiver extends BroadcastReceiver {
         }
 
 
-
-
-        // Create an explicit content Intent that starts the main Activity.
-        Intent notificationIntent = new Intent(context, MainActivity.class);
-
-        // Construct a task stack.
-        TaskStackBuilder stackBuilder = TaskStackBuilder.create(context);
-
-        // Add the main Activity to the task stack as the parent.
-        stackBuilder.addParentStack(MainActivity.class);
-
-        // Push the content Intent onto the stack.
-        stackBuilder.addNextIntent(notificationIntent);
-
-        // Get a PendingIntent containing the entire back stack.
-        PendingIntent notificationPendingIntent =
-                stackBuilder.getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT);
+//        // Create an explicit content Intent that starts the main Activity.
+//        Intent notificationIntent = new Intent(context, MainActivity.class);
+//
+//        // Construct a task stack.
+//        TaskStackBuilder stackBuilder = TaskStackBuilder.create(context);
+//
+//        // Add the main Activity to the task stack as the parent.
+//        stackBuilder.addParentStack(MainActivity.class);
+//
+//        // Push the content Intent onto the stack.
+//        stackBuilder.addNextIntent(notificationIntent);
+//
+//        // Get a PendingIntent containing the entire back stack.
+//        PendingIntent notificationPendingIntent =
+//                stackBuilder.getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT);
 //        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0,
 //                notificationIntent, 0);
 
-        Intent previousIntent = new Intent(context,RealTimeFragment.class);
+        Intent previousIntent = new Intent(context, LocationUpdatesService.class);
         previousIntent.setAction(Constants.ACTION.MAIN_ACTION);
         PendingIntent ppreviousIntent = PendingIntent.getService(context, 0,
                 previousIntent, 0);
 
-        Intent pauseIntent = new Intent(context,RealTimeFragment.class);
+        Intent pauseIntent = new Intent(context, LocationUpdatesService.class);
         pauseIntent.setAction(Constants.ACTION.PAUSE_ACTION);
         PendingIntent pPauseIntent = PendingIntent.getService(context, 0,
                 pauseIntent, 0);
 
-        Intent stopIntent = new Intent(context,RealTimeFragment.class);
-        stopIntent.setAction(Constants.ACTION.STOP_ACTION);
+        Intent stopIntent = new Intent(context, LocationUpdatesService.class);
+        // Extra to help us figure out if we arrived in onStartCommand via the notification or not.
+        stopIntent.putExtra(EXTRA_STARTED_FROM_NOTIFICATION, true);
         PendingIntent pStopIntent = PendingIntent.getService(context, 0,
-                stopIntent, 0);
+                stopIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
         Bitmap icon = BitmapFactory.decodeResource(context.getResources(), R.drawable.ic_directions_walk_black_24dp);
 
         notification = new NotificationCompat.Builder(context,CHANNEL_ID)
-                .setContentTitle("Ultimate Tracker")
-                .setTicker("Ultimate Tracker")
-                .setContentText("Current Run: " + currentRun + "lasting: " + elapsedTime)
-//                .setWhen(System.currentTimeMillis())  // the time stamp, you will probably use System.currentTimeMillis() for most scenarios
+                .setContentTitle("Current Run:  " + currentRun)
+//                .setTicker("Ultimate Tracker")
+                .setContentText("Total Dist. " + totalDistance + " km" + " traveled in: " + elapsedTime)
+                .setWhen(System.currentTimeMillis())  // the time stamp, you will probably use System.currentTimeMillis() for most scenarios
 //                .setUsesChronometer(true)
                 .setSmallIcon(R.drawable.ic_launcher_foreground)
                 .setLargeIcon(
                         Bitmap.createScaledBitmap(icon, 128, 128, false))
-                .setContentIntent(notificationPendingIntent)
+//                .setContentIntent(notificationPendingIntent)
                 .setOngoing(true)
 //                .addAction(android.R.drawable.ic_input_add,
 //                        "Change Mode", ppreviousIntent)
@@ -233,7 +240,7 @@ public class TrackerBroadcastReceiver extends BroadcastReceiver {
 
         // Issue the notification
         assert mNotificationManager != null;
-        mNotificationManager.notify(0, notification);
+        mNotificationManager.notify(NOTIFICATION_ID, notification);
     }
 
     /**

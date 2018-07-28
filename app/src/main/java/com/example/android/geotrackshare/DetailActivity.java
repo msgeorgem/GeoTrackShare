@@ -39,7 +39,6 @@ import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PolylineOptions;
 
-import java.io.IOException;
 import java.util.ArrayList;
 
 import static com.example.android.geotrackshare.AdvancedSettingsActivity.preferenceBooleanTheme;
@@ -65,6 +64,7 @@ public class DetailActivity extends AppCompatActivity implements OnMapReadyCallb
     public static final String TEST_MDB_MOVIE_PATH = "https://api.themoviedb.org/3/movie/321612/videos?api_key=1157007d8e3f7d5e0af6d7e4165e2730";
     public static final String LOG_TAG = DetailActivity.class.getSimpleName();
     private static final String BUNDLE_RECYCLER_LAYOUT = "DetailActivity.clipsRecyclerView.activity_detail";
+    //    private static final String API_key = BuildConfig.API_KEY;
     private static final String[] PROJECTION01 = {
             TrackContract.TrackingEntry._ID,
             TrackContract.TrackingEntry.COLUMN_TIME,
@@ -416,7 +416,7 @@ public class DetailActivity extends AppCompatActivity implements OnMapReadyCallb
 //    };
 
     // Get user input from editor and save item into database.
-    private void saveItem() throws IOException {
+    private void saveItem() {
 
         ContentValues values = new ContentValues();
         values.put(COLUMN_RUN_ID, runId);
