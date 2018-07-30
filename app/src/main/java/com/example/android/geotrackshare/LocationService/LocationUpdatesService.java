@@ -51,6 +51,7 @@ import com.example.android.geotrackshare.Data.TrackContract;
 import com.example.android.geotrackshare.R;
 import com.example.android.geotrackshare.RealTimeFragment;
 import com.example.android.geotrackshare.TrackerBroadcastReceiver;
+import com.example.android.geotrackshare.TrackingWidget.TrackingWidgetProvider;
 import com.example.android.geotrackshare.Utils.Constants;
 import com.example.android.geotrackshare.Utils.DistanceCalculator;
 import com.google.android.gms.location.FusedLocationProviderClient;
@@ -87,6 +88,7 @@ import static com.example.android.geotrackshare.RealTimeFragment.DISABLE_AUTO_CL
 import static com.example.android.geotrackshare.RealTimeFragment.NOISEc;
 import static com.example.android.geotrackshare.RealTimeFragment.NOISEd;
 import static com.example.android.geotrackshare.TrackerBroadcastReceiver.NOTIFICATION_ID;
+import static com.example.android.geotrackshare.TrackingWidget.TrackingWidgetProvider.WIDGET_ELAPSED_TIME_TOTAL_DISTANCE;
 import static com.example.android.geotrackshare.Utils.ServiceConstants.requestingLocationUpdates;
 import static com.example.android.geotrackshare.Utils.ServiceConstants.setRequestingLocationUpdates;
 
@@ -136,6 +138,8 @@ public class LocationUpdatesService extends Service implements SensorEventListen
     private static final String TAG = LocationUpdatesService.class.getSimpleName();
     public static final String EXTRA_STARTED_FROM_NOTIFICATION = PACKAGE_NAME +
             ".started_from_notification";
+    public static final String EXTRA_START_FROM_WIDGET = "EXTRA_START_FROM_WIDGET";
+    public static final String EXTRA_STOP_FROM_WIDGET = "EXTRA_STOP_FROM_WIDGET";
 
     public static String UPDATE_INTERVAL_IN_MILLISECONDS_STRING;
     /**
@@ -297,13 +301,28 @@ public class LocationUpdatesService extends Service implements SensorEventListen
         boolean startedFromNotification = intent.getBooleanExtra(EXTRA_STARTED_FROM_NOTIFICATION,
                 false);
 
+        if (EXTRA_START_FROM_WIDGET.equals(intent.getAction())) {
+            Log.e(TAG, EXTRA_START_FROM_WIDGET);
+            if (!requestingLocationUpdates(this)) {
+                RealTimeFragment.mService.startUpdatesButtonHandler();
+            }
+        } else if (EXTRA_STOP_FROM_WIDGET.equals(intent.getAction())) {
+            Log.e(TAG, EXTRA_STOP_FROM_WIDGET);
+            if (requestingLocationUpdates(this)) {
+                RealTimeFragment.mService.stopLocationUpdates();
+                TrackerBroadcastReceiver.mNotificationManager.cancel(NOTIFICATION_ID);
+            }
+        }
+
+
         // We got here because the user decided to remove location updates from the notification.
         if (startedFromNotification) {
-            Log.i(TAG, "EXTRA_STARTED_FROM_NOTIFICATION_KILL");
-            stopLocationUpdates();
+            Log.i(TAG, "EXTRA_STARTED_FROM_NOTIFICATION_KILL or WIDGE KILL");
+            RealTimeFragment.mService.stopLocationUpdates();
 //            stopSelf();
             TrackerBroadcastReceiver.mNotificationManager.cancel(NOTIFICATION_ID);
         }
+
         // Tells the system to not try to recreate the service after it has been killed.
         return START_NOT_STICKY;
     }
@@ -461,31 +480,20 @@ public class LocationUpdatesService extends Service implements SensorEventListen
     public void stopLocationUpdates() {
 
         Log.i(TAG, "Removing location updates");
-        try {
-            mFusedLocationClient.removeLocationUpdates(mLocationCallback);
-            setRequestingLocationUpdates(this, false);
-            stopSelf();
-        } catch (SecurityException unlikely) {
-            setRequestingLocationUpdates(this, true);
-            Log.e(TAG, "Lost location permission. Could not remove updates. " + unlikely);
+//        try {
+        mFusedLocationClient.removeLocationUpdates(mLocationCallback);
+        setRequestingLocationUpdates(this, false);
+        stopSelf();
+//        } catch (SecurityException unlikely) {
+//            setRequestingLocationUpdates(this, true);
+//            Log.e(TAG, "Lost location permission. Could not remove updates. " + unlikely);
+//        }
+
+        if (!requestingLocationUpdates(this)) {
+            Log.d(TAG, "stopLocationUpdates: updates never requested, no-op.");
+            return;
         }
 
-//        if (!mRequestingLocationUpdates) {
-//            Log.d(TAG, "stopLocationUpdates: updates never requested, no-op.");
-//            return;
-//        }
-//
-//        // It is a good practice to remove location requests when the activity is in a paused or
-//        // stopped state. Doing so helps battery performance and is especially
-//        // recommended in applications that request frequent location updates.
-//        mFusedLocationClient.removeLocationUpdates(mLocationCallback)
-//                .addOnCompleteListener((Activity) mContext, new OnCompleteListener<Void>() {
-//                    @Override
-//                    public void onComplete(@NonNull Task<Void> task) {
-//                        mRequestingLocationUpdates = false;
-//                        setButtonsEnabledState(ServiceConstants.requestingLocationUpdates(mContext));
-//                    }
-//                });
     }
 
     /**
@@ -528,7 +536,6 @@ public class LocationUpdatesService extends Service implements SensorEventListen
 //
 //        return notification;
 //    }
-
     @RequiresApi(api = Build.VERSION_CODES.O)
     private void onNewLocation(Location location) {
         Log.i(TAG, "New location: " + location);
@@ -563,6 +570,14 @@ public class LocationUpdatesService extends Service implements SensorEventListen
         startNotificationIntent.putExtra(EXTRA_TOTAL_DISTANCE, mTotalDistance);
 
         sendBroadcast(startNotificationIntent);
+
+        Intent startWidgetIntent = new Intent(this, TrackingWidgetProvider.class);
+        startWidgetIntent.setAction(WIDGET_ELAPSED_TIME_TOTAL_DISTANCE);
+        startWidgetIntent.putExtra(EXTRA_TOTAL_TIME, mElapsedTimeMillis);
+        startWidgetIntent.putExtra(EXTRA_CURRENT_ID, mCurrentId);
+        startWidgetIntent.putExtra(EXTRA_TOTAL_DISTANCE, mTotalDistance);
+
+        sendBroadcast(startWidgetIntent);
 
 
         // Update notification content if running as a foreground service.

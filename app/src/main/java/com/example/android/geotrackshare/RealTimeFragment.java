@@ -45,6 +45,7 @@ import java.util.concurrent.TimeUnit;
 
 import static com.example.android.geotrackshare.AdvancedSettingsActivity.preferenceBooleanDisableAutoStop;
 import static com.example.android.geotrackshare.LocationService.LocationUpdatesService.REQUEST_CHECK_SETTINGS;
+import static com.example.android.geotrackshare.TrackerBroadcastReceiver.NOTIFICATION_ID;
 import static com.example.android.geotrackshare.Utils.ServiceConstants.requestingLocationUpdates;
 
 
@@ -62,7 +63,7 @@ public class RealTimeFragment extends Fragment implements
 
     public static final String MY_PREFERENCE_KEY = "mili";
     //    leaving these constants here in case of shared prefs need
-    public static final double NOISEd = 0.07;
+    public static final double NOISEd = 0.04;
     public static final double NOISEc = 0.02;
     private static final String TAG = MainActivity.class.getSimpleName();
     /**
@@ -90,16 +91,11 @@ public class RealTimeFragment extends Fragment implements
      * The fastest rate for active location updates. Exact. Updates will never be more frequent
      * than this value.
      */
-    private static final long FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS =
-            UPDATE_INTERVAL_IN_MILLISECONDS / 5;
+
     public static String UPDATE_INTERVAL_IN_MILLISECONDS_STRING = "";
-    public static int THEME;
     public static String START_TIME;
-    public static String CURRENT_RUN;
     public static String DELETE_LAST_ROWS_STRING = "";
     public static int DELETE_LAST_ROWS = 15;
-    public static int THEME_LIGHT = 1;
-    public static int THEME_DARK = 2;
     public static boolean DISABLE_AUTO_CLOSE;
     public static Context mContext;
     public static SharedPreferences sharedPrefs;
@@ -183,7 +179,7 @@ public class RealTimeFragment extends Fragment implements
      */
     private Boolean mRequestingLocationUpdates;
     // A reference to the service used to get location updates.
-    private LocationUpdatesService mService = null;
+    public static LocationUpdatesService mService = null;
     // Tracks the bound state of the service.
     private boolean mBound = false;
     // Monitors the state of the connection to the service.
@@ -254,7 +250,7 @@ public class RealTimeFragment extends Fragment implements
         // Inflate the layout for this fragment
         try {
             if (mView == null) {
-                mView = inflater.inflate(R.layout.fragment_real_time_service, container, false);
+                mView = inflater.inflate(R.layout.fragment_real_time, container, false);
             }
 
         } catch (Exception e) {
@@ -374,8 +370,6 @@ public class RealTimeFragment extends Fragment implements
                 mDeleteTextView.setText(String.format(Locale.ENGLISH, "%s: %s", mDeleteLabel,
                         mDeleteloopp));
 
-
-
             }
         });
 
@@ -386,7 +380,9 @@ public class RealTimeFragment extends Fragment implements
 //                stopUpdatesButtonHandler();
                 mRunNumber.setText(String.format(Locale.ENGLISH, "%s: %s",
                         mLastRunLabel, mCurrentId));
-
+                if (TrackerBroadcastReceiver.mNotificationManager != null) {
+                    TrackerBroadcastReceiver.mNotificationManager.cancel(NOTIFICATION_ID);
+                }
 //                Intent stopIntent = new Intent();
 //                stopIntent.setAction(Constants.ACTION.STOPFOREGROUND_ACTION);
 //                mContext.startService(stopIntent);

@@ -51,7 +51,6 @@ public class TrackerBroadcastReceiver extends BroadcastReceiver {
      */
     public static final int NOTIFICATION_ID = 12345678;
     private long startTime;
-    private int currentRun;
     private Notification notification;
     public static NotificationManager mNotificationManager;
     NotificationChannel mChannel;
@@ -107,7 +106,7 @@ public class TrackerBroadcastReceiver extends BroadcastReceiver {
 
 
         String action = intent.getAction();
-        currentRun = intent.getIntExtra(EXTRA_CURRENT_ID, 0);
+        int currentRun = intent.getIntExtra(EXTRA_CURRENT_ID, 0);
         Long mElapsedTimeMillis = intent.getLongExtra(LocationUpdatesService.EXTRA_TOTAL_TIME, 0);
 //        String mElapsedTime = String.format("%02d:%02d:%02d", TimeUnit.MILLISECONDS.toHours(mElapsedTimeMillis),
 //                TimeUnit.MILLISECONDS.toMinutes(mElapsedTimeMillis) % TimeUnit.HOURS.toMinutes(1),
@@ -143,7 +142,6 @@ public class TrackerBroadcastReceiver extends BroadcastReceiver {
             mChannel.setVibrationPattern(new long[]{100, 200, 300, 400, 500, 400, 300, 200, 400});
             mNotificationManager.createNotificationChannel(mChannel);
         }
-
 
         // Create an explicit content Intent that starts the main Activity.
         Intent notificationIntent = new Intent(context, MainActivity.class);
