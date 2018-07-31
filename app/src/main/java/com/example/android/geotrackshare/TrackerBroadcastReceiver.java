@@ -37,7 +37,7 @@ import com.example.android.geotrackshare.LocationService.LocationUpdatesService;
 import com.example.android.geotrackshare.Utils.Constants;
 
 import static com.example.android.geotrackshare.LocationService.LocationUpdatesService.EXTRA_CURRENT_ID;
-import static com.example.android.geotrackshare.LocationService.LocationUpdatesService.EXTRA_STARTED_FROM_NOTIFICATION;
+import static com.example.android.geotrackshare.LocationService.LocationUpdatesService.EXTRA_STOP_FROM_NOTIFICATION;
 
 
 public class TrackerBroadcastReceiver extends BroadcastReceiver {
@@ -49,10 +49,10 @@ public class TrackerBroadcastReceiver extends BroadcastReceiver {
     /**
      * The identifier for the notification displayed for the foreground service.
      */
-    public static final int NOTIFICATION_ID = 12345678;
+    private static final int NOTIFICATION_ID = 12345678;
     private long startTime;
     private Notification notification;
-    public static NotificationManager mNotificationManager;
+    private static NotificationManager mNotificationManager;
     NotificationChannel mChannel;
 
     @SuppressLint("NewApi")
@@ -173,7 +173,7 @@ public class TrackerBroadcastReceiver extends BroadcastReceiver {
 
         Intent stopIntent = new Intent(context, LocationUpdatesService.class);
         // Extra to help us figure out if we arrived in onStartCommand via the notification or not.
-        stopIntent.putExtra(EXTRA_STARTED_FROM_NOTIFICATION, true);
+        stopIntent.putExtra(EXTRA_STOP_FROM_NOTIFICATION, true);
         PendingIntent pStopIntent = PendingIntent.getService(context, 0,
                 stopIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 

@@ -45,7 +45,6 @@ import java.util.concurrent.TimeUnit;
 
 import static com.example.android.geotrackshare.AdvancedSettingsActivity.preferenceBooleanDisableAutoStop;
 import static com.example.android.geotrackshare.LocationService.LocationUpdatesService.REQUEST_CHECK_SETTINGS;
-import static com.example.android.geotrackshare.TrackerBroadcastReceiver.NOTIFICATION_ID;
 import static com.example.android.geotrackshare.Utils.ServiceConstants.requestingLocationUpdates;
 
 
@@ -210,10 +209,12 @@ public class RealTimeFragment extends Fragment implements
 
         mContext = getActivity();
         sharedPrefs = PreferenceManager.getDefaultSharedPreferences(mContext);
+        mRequestingLocationUpdates = requestingLocationUpdates(mContext);
+
         DISABLE_AUTO_CLOSE = switchDisableAutoStop();
         myReceiver = new MyReceiver();
         // Check that the user hasn't revoked permissions by going to Settings.
-        if (requestingLocationUpdates(mContext)) {
+        if (mRequestingLocationUpdates) {
             if (!checkPermissions()) {
                 requestPermissions();
             }
@@ -303,8 +304,6 @@ public class RealTimeFragment extends Fragment implements
         mDeleteLabel = "Delete loops";
 //        mAndroid_id = Secure.getString(getContext().getContentResolver(), Secure.ANDROID_ID);
 
-        mRequestingLocationUpdates = ServiceConstants.requestingLocationUpdates(mContext);
-
         mLastUpdateTime = "";
         mElapsedTime = "";
         mStartTimeString = "";
@@ -376,22 +375,16 @@ public class RealTimeFragment extends Fragment implements
         mRemoveLocationUpdatesButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                mService.stopLocationUpdates();
-//                stopUpdatesButtonHandler();
+//                mService.stopLocationUpdates();
+                mService.stopUpdatesButtonHandler();
                 mRunNumber.setText(String.format(Locale.ENGLISH, "%s: %s",
                         mLastRunLabel, mCurrentId));
-                if (TrackerBroadcastReceiver.mNotificationManager != null) {
-                    TrackerBroadcastReceiver.mNotificationManager.cancel(NOTIFICATION_ID);
-                }
-//                Intent stopIntent = new Intent();
-//                stopIntent.setAction(Constants.ACTION.STOPFOREGROUND_ACTION);
-//                mContext.startService(stopIntent);
 
             }
         });
+
         // Restore the state of the buttons when the activity (re)launches.
         setButtonsEnabledState(mRequestingLocationUpdates);
-
         // Bind to the service. If the service is in foreground mode, this signals to the service
         // that since this activity is in the foreground, the service can exit foreground mode.
         mContext.getApplicationContext().bindService(new Intent(mContext, LocationUpdatesService.class), mServiceConnection,

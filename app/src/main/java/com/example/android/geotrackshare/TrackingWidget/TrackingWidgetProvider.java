@@ -31,6 +31,7 @@ import android.widget.RemoteViews;
 import com.example.android.geotrackshare.LocationService.LocationUpdatesService;
 import com.example.android.geotrackshare.MainActivity;
 import com.example.android.geotrackshare.R;
+import com.example.android.geotrackshare.Utils.ServiceConstants;
 
 import static com.example.android.geotrackshare.LocationService.LocationUpdatesService.EXTRA_CURRENT_ID;
 import static com.example.android.geotrackshare.LocationService.LocationUpdatesService.EXTRA_START_FROM_WIDGET;
@@ -71,19 +72,32 @@ public class TrackingWidgetProvider extends AppWidgetProvider {
 
             appWidgetManager.updateAppWidget(thisWidget, remoteViews);
 
-        }
-        if (WIDGET_BUTTON_START_SERVICE.equals(intent.getAction())) {
+        } else if (WIDGET_BUTTON_START_SERVICE.equals(intent.getAction())) {
             Intent startServiceIntent = new Intent(context, LocationUpdatesService.class);
             startServiceIntent.setAction(EXTRA_START_FROM_WIDGET);
-            context.startService(startServiceIntent);
+            ServiceConstants.setRequestingLocationUpdatesWidget(context, true);
+
             Log.e(TAG, WIDGET_BUTTON_START_SERVICE);
 
-        }
-        if (WIDGET_BUTTON_STOP_SERVICE.equals(intent.getAction())) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                context.startForegroundService(startServiceIntent);
+            } else {
+                context.startService(startServiceIntent);
+            }
+
+        } else if (WIDGET_BUTTON_STOP_SERVICE.equals(intent.getAction())) {
             Intent stopServiceIntent = new Intent(context, LocationUpdatesService.class);
             stopServiceIntent.setAction(EXTRA_STOP_FROM_WIDGET);
-            context.startService(stopServiceIntent);
+            ServiceConstants.setRequestingLocationUpdatesWidget(context, false);
+
             Log.e(TAG, WIDGET_BUTTON_STOP_SERVICE);
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                context.startForegroundService(stopServiceIntent);
+            } else {
+                context.startService(stopServiceIntent);
+            }
+
         } else {
             super.onReceive(context, intent);
         }

@@ -29,6 +29,7 @@ import java.util.Date;
 public class ServiceConstants {
 
     public static final String KEY_REQUESTING_LOCATION_UPDATES = "requesting_locaction_updates";
+    public static final String KEY_REQUESTING_LOCATION_UPDATES_WIDGET = "requesting_locaction_updates_widget";
 
     /**
      * Returns true if requesting location updates, otherwise returns false.
@@ -65,5 +66,23 @@ public class ServiceConstants {
     public static String getLocationTitle(Context context) {
         return context.getString(R.string.location_updated,
                 DateFormat.getDateTimeInstance().format(new Date()));
+    }
+
+
+    public static boolean requestingLocationUpdatesWidget(Context context) {
+        return PreferenceManager.getDefaultSharedPreferences(context)
+                .getBoolean(KEY_REQUESTING_LOCATION_UPDATES_WIDGET, false);
+    }
+
+    /**
+     * Stores the location updates state in SharedPreferences.
+     *
+     * @param requestingLocationUpdates The location updates state.
+     */
+    public static void setRequestingLocationUpdatesWidget(Context context, boolean requestingLocationUpdates) {
+        PreferenceManager.getDefaultSharedPreferences(context)
+                .edit()
+                .putBoolean(KEY_REQUESTING_LOCATION_UPDATES_WIDGET, requestingLocationUpdates)
+                .apply();
     }
 }

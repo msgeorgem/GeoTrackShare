@@ -176,4 +176,11 @@
     <string name="remove_location_updates">Remove location updates</string>
 
     <string name="location_updated">Location Updated: %1$s</string>
+    <string name="Tracking_stopped_at">Tracking stopped at: </string>
+    <string name="Tracking_started_at">Tracking started at: </string>
+    <string name="Last_run_number">Last run No.: </string>
+    <string name="Current_run">Current run No.: </string>
+    <string name="Tracker_not_running">Tracker is not running. Hit the start button to start new tracking.</string>
+    <string name="Tracker_is_running">Tracker is running already. Hit the stop button to stop current tracking.</string>
+    <string name="Welcome_to_the_tracker">Enjoy your new tracker</string>
 </resources>
