@@ -62,7 +62,7 @@ public class RealTimeFragment extends Fragment implements
 
     public static final String MY_PREFERENCE_KEY = "mili";
     //    leaving these constants here in case of shared prefs need
-    public static final double NOISEd = 0.04;
+    public static final double NOISEd = 0.05;
     public static final double NOISEc = 0.02;
     private static final String TAG = MainActivity.class.getSimpleName();
     /**

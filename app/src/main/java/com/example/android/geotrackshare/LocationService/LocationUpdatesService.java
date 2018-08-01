@@ -352,7 +352,6 @@ public class LocationUpdatesService extends Service implements SensorEventListen
                 mNotificationRunInformation = getResources().getString(R.string.Current_run) + mCurrentId;
                 sendNotification(this, mNotificationInformation, mNotificationRunInformation);
             }
-
         }
     }
 
