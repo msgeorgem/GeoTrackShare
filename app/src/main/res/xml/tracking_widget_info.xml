@@ -18,10 +18,10 @@
 
 <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
     android:initialLayout="@layout/tracking_widget"
-    android:minHeight="200dp"
-    android:minWidth="200dp"
+    android:minHeight="110dp"
+    android:minWidth="180dp"
     android:previewImage="@drawable/ic_launcher_foreground"
-    android:resizeMode="horizontal|vertical"
-    android:updatePeriodMillis="5000"
+    android:resizeMode="vertical"
+    android:updatePeriodMillis="0"
     android:widgetCategory="home_screen" />
 

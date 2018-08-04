@@ -117,6 +117,7 @@ public class LocationUpdatesService extends Service implements SensorEventListen
      * The name of the channel for notifications.
      */
     public static final String CHANNEL_ID = "channel_999999";
+    public static final String EXTRA_RUN_TYPE = "EXTRA_RUN_TYPE";
     public static final String EXTRA_LATITUDE = "EXTRA LATITUDE";
     public static final String EXTRA_LONGITUDE = "EXTRA_LONGITUDE";
     public static final String EXTRA_ALTITUDE = "EXTRA_ALTITUDE";
@@ -332,27 +333,8 @@ public class LocationUpdatesService extends Service implements SensorEventListen
         HandlerThread handlerThread = new HandlerThread(TAG);
         handlerThread.start();
         mServiceHandler = new Handler(handlerThread.getLooper());
-//        mNotificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-//
-//        // Android O requires a Notification Channel.
-//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-//            CharSequence name = getString(R.string.app_name);
-//            // Create the channel for the notification
-//            NotificationChannel mChannel =
-//                    new NotificationChannel(CHANNEL_ID, name, NotificationManager.IMPORTANCE_DEFAULT);
-//
-//            // Set the Notification Channel for the Notification Manager.
-//            mNotificationManager.createNotificationChannel(mChannel);
-//        }
-        if (Build.VERSION.SDK_INT >= 26) {
-            if (!requestingLocationUpdates(this)) {
-                startTime = System.currentTimeMillis();
-                mCurrentId = queryMaxId() + 1;
-                mNotificationInformation = getResources().getString(R.string.Tracking_started_at) + getFormatedTimeInString() + "   STARTED...";
-                mNotificationRunInformation = getResources().getString(R.string.Current_run) + mCurrentId;
-                sendNotification(this, mNotificationInformation, mNotificationRunInformation);
-            }
-        }
+
+
     }
 
     @Override
@@ -373,38 +355,15 @@ public class LocationUpdatesService extends Service implements SensorEventListen
         Log.i(TAG, "onStartCommand");
 
 
-        if (EXTRA_START_FROM_WIDGET.equals(intent.getAction())) {
-            Log.e(TAG, EXTRA_START_FROM_WIDGET);
-            if (!requestingLocationUpdates(this)) {
-                RealTimeFragment.mService.startLocationUpdates();
-            }
-        } else if (EXTRA_STOP_FROM_WIDGET.equals(intent.getAction())) {
-            stopForeground(true);
-            Log.e(TAG, EXTRA_STOP_FROM_WIDGET);
-            if (requestingLocationUpdates(this)) {
-                mNotificationInformation = getResources().getString(R.string.Tracking_stopped_at) + getFormatedTimeInString() + "  ...STOPPED";
-                mNotificationRunInformation = getResources().getString(R.string.Last_run_number) + mCurrentId;
-                sendNotification(this, mNotificationInformation, mNotificationRunInformation);
-                RealTimeFragment.mService.stopLocationUpdates();
-
-            }
-        } else if (EXTRA_START_FROM_NOTIFICATION.equals(intent.getAction())) {
+        if (EXTRA_START_FROM_NOTIFICATION.equals(intent.getAction())) {
             stopForeground(true);
             if (!requestingLocationUpdates(this)) {
                 RealTimeFragment.mService.startUpdatesButtonHandler();
-            } else {
-                mNotificationRunInformation = getResources().getString(R.string.Tracker_is_running);
-                sendNotification(this, mNotificationInformation, mNotificationRunInformation);
             }
         } else if (EXTRA_STOP_FROM_NOTIFICATION.equals(intent.getAction())) {
             stopForeground(true);
             if (requestingLocationUpdates(this)) {
                 RealTimeFragment.mService.stopUpdatesButtonHandler();
-
-            } else {
-                mNotificationRunInformation = getResources().getString(R.string.Tracker_not_running);
-//                mNotificationInformation = getResources().getString(R.string.Tracker_not_running);
-                sendNotification(this, mNotificationInformation, mNotificationRunInformation);
             }
         }
 
@@ -422,18 +381,20 @@ public class LocationUpdatesService extends Service implements SensorEventListen
         if (!mChangingConfiguration && requestingLocationUpdates(this)) {
             Log.i(TAG, "Starting foreground service");
 
-//            // TODO(developer). If targeting O, use the following code.
-//            if (Build.VERSION.SDK_INT == Build.VERSION_CODES.O) {
-//
-//
-//                startForegroundService(new Intent(this, LocationUpdatesService.class));
-//
-//
-//            } else {
-//                startForeground(NOTIFICATION_ID, getNotification());
-//            }
+            // TODO(developer). If targeting O, use the following code.
+            if (Build.VERSION.SDK_INT == Build.VERSION_CODES.O) {
 
-//            startForeground(NOTIFICATION_ID, notification);
+
+                startForegroundService(new Intent(this, LocationUpdatesService.class));
+
+            } else {
+                if (requestingLocationUpdates(this)) {
+                    sendNotificationAfterStart(this, mNotificationInformation, mNotificationRunInformation);
+                } else {
+                    sendNotificationAfterStop(this, mNotificationInformation, mNotificationRunInformation);
+                }
+            }
+
         }
         return true; // Ensures onRebind() is called when a client re-binds.
     }
@@ -444,13 +405,6 @@ public class LocationUpdatesService extends Service implements SensorEventListen
      */
     private void startLocationUpdates() {
 
-//        // Begin by checking if the device has the necessary location settings.
-//        mSettingsClient.checkLocationSettings(mLocationSettingsRequest)
-//                .addOnSuccessListener(this, new OnSuccessListener<LocationSettingsResponse>() {
-//                    @SuppressLint("MissingPermission")
-//                    @Override
-//                    public void onSuccess(LocationSettingsResponse locationSettingsResponse) {
-//                        Log.i(TAG, "All location settings are satisfied.");
 
         Log.i(TAG, "Requesting location updates");
         setRequestingLocationUpdates(getApplicationContext(), true);
@@ -462,39 +416,7 @@ public class LocationUpdatesService extends Service implements SensorEventListen
             setRequestingLocationUpdates(getApplicationContext(), false);
             Log.e(TAG, "Lost location permission. Could not request updates. " + unlikely);
         }
-//                        setRequestingLocationUpdates(getApplicationContext(),true);
-//                        setButtonsEnabledState(requestingLocationUpdates(getApplicationContext()));
-//                    }
-//                })
-//                .addOnFailureListener((Executor) this, new OnFailureListener() {
-//                    @Override
-//                    public void onFailure(@NonNull Exception e) {
-//                        int statusCode = ((ApiException) e).getStatusCode();
-//                        switch (statusCode) {
-//                            case LocationSettingsStatusCodes.RESOLUTION_REQUIRED:
-//                                Log.i(TAG, "Location settings are not satisfied. Attempting to upgrade " +
-//                                        "location settings ");
-//                                try {
-//                                    // Show the dialog by calling startResolutionForResult(), and check the
-//                                    // result in onActivityResult().
-//                                    ResolvableApiException rae = (ResolvableApiException) e;
-//                                    rae.startResolutionForResult((Activity) RealTimeFragment.mContext, REQUEST_CHECK_SETTINGS);
-//                                } catch (IntentSender.SendIntentException sie) {
-//                                    Log.i(TAG, "PendingIntent unable to execute request.");
-//                                }
-//                                break;
-//                            case LocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE:
-//                                String errorMessage = "Location settings are inadequate, and cannot be " +
-//                                        "fixed here. Fix in Settings.";
-//                                Log.e(TAG, errorMessage);
-//                                Toast.makeText(RealTimeFragment.mContext, errorMessage, Toast.LENGTH_LONG).show();
-//                                setRequestingLocationUpdates(getApplicationContext(),false);
-//                        }
-//                        setRequestingLocationUpdates(getApplicationContext(),true);
-////                        setButtonsEnabledState(requestingLocationUpdates(getApplicationContext()));
 
-//                    }
-//                });
     }
 
 
@@ -531,7 +453,7 @@ public class LocationUpdatesService extends Service implements SensorEventListen
             startLocationUpdates();
             mNotificationInformation = getResources().getString(R.string.Tracking_started_at) + getFormatedTimeInString() + "      STARTED...";
             mNotificationRunInformation = getResources().getString(R.string.Current_run) + mCurrentId;
-            sendNotification(this, mNotificationInformation, mNotificationRunInformation);
+            sendNotificationAfterStart(this, mNotificationInformation, mNotificationRunInformation);
         }
     }
 
@@ -545,50 +467,11 @@ public class LocationUpdatesService extends Service implements SensorEventListen
         stopLocationUpdates();
         mNotificationInformation = getResources().getString(R.string.Tracking_stopped_at) + getFormatedTimeInString() + "     ...STOPPED";
         mNotificationRunInformation = getResources().getString(R.string.Last_run_number) + mCurrentId;
-        sendNotification(this, mNotificationInformation, mNotificationRunInformation);
+        sendNotificationAfterStop(this, mNotificationInformation, mNotificationRunInformation);
 
     }
 
-    /**
-     * Returns the {@link NotificationCompat} used as part of the foreground service.
-     */
 
-//    private Notification getNotification() {
-//
-//
-//        Intent intent = new Intent(this, LocationUpdatesService.class);
-//
-//        CharSequence text = ServiceConstants.getLocationText(mCurrentLocation);
-//
-//        // Extra to help us figure out if we arrived in onStartCommand via the notification or not.
-//        intent.putExtra(EXTRA_STARTED_FROM_NOTIFICATION, true);
-//
-//        // The PendingIntent that leads to a call to onStartCommand() in this service.
-//        PendingIntent servicePendingIntent = PendingIntent.getService(this, 0, intent,
-//                PendingIntent.FLAG_UPDATE_CURRENT);
-//
-//        // The PendingIntent to launch activity.
-//        PendingIntent activityPendingIntent = PendingIntent.getActivity(this, 0,
-//                new Intent(this, RealTimeFragment.class), 0);
-//
-//
-//        notification = new NotificationCompat.Builder(this, CHANNEL_ID)
-//                .addAction(R.drawable.ic_launch, getString(R.string.launch_activity),
-//                        activityPendingIntent)
-//                .addAction(R.drawable.ic_cancel, getString(R.string.remove_location_updates),
-//                        servicePendingIntent)
-//                .setContentText(text)
-//                .setContentTitle(ServiceConstants.getLocationTitle(this))
-//                .setOngoing(true)
-//                .setSmallIcon(R.mipmap.ic_launcher)
-//                .setTicker(text)
-//                .setWhen(System.currentTimeMillis())
-//                .setAutoCancel(false)
-//                .build();
-//
-//
-//        return notification;
-//    }
     @RequiresApi(api = Build.VERSION_CODES.O)
     private void onNewLocation(Location location) {
         Log.i(TAG, "New location: " + location);
@@ -616,14 +499,6 @@ public class LocationUpdatesService extends Service implements SensorEventListen
         LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(intent);
 
 
-//        Intent startNotificationIntent = new Intent(this, TrackerBroadcastReceiver.class);
-//        startNotificationIntent.setAction(Constants.ACTION.STARTFOREGROUND_ACTION);
-//        startNotificationIntent.putExtra(EXTRA_TOTAL_TIME, mElapsedTimeMillis);
-//        startNotificationIntent.putExtra(EXTRA_CURRENT_ID, mCurrentId);
-//        startNotificationIntent.putExtra(EXTRA_TOTAL_DISTANCE, mTotalDistance);
-//
-//        sendBroadcast(startNotificationIntent);
-
         Intent startWidgetIntent = new Intent(this, TrackingWidgetProvider.class);
         startWidgetIntent.setAction(WIDGET_ELAPSED_TIME_TOTAL_DISTANCE);
         startWidgetIntent.putExtra(EXTRA_TOTAL_TIME, mElapsedTimeMillis);
@@ -638,10 +513,6 @@ public class LocationUpdatesService extends Service implements SensorEventListen
         sendBroadcast(startWidgetIntent);
 
 
-        // Update notification content if running as a foreground service.
-//        if (serviceIsRunningInForeground(this)) {
-//            mNotificationManager.notify(NOTIFICATION_ID, getNotification());
-//        }
     }
 
     @Override
@@ -1271,7 +1142,7 @@ public class LocationUpdatesService extends Service implements SensorEventListen
             float mTotalDistanceFloat = (float) (Math.floor(mTotalDistance * precision + .5) / precision);
             String mElapsedTime1 = getDateFromMillis(mElapsedTimeMillis);
 
-            sendNotification(this, mNotificationInformation, mNotificationRunInformation);
+            sendNotificationAfterStart(this, mNotificationInformation, mNotificationRunInformation);
 
         }
     }
@@ -1313,7 +1184,7 @@ public class LocationUpdatesService extends Service implements SensorEventListen
 //        mLocationRequest.setSmallestDisplacement(DISPLACEMENT);
     }
 
-    private void sendNotification(Context context, String mNotificationInformation, String mNotificationRunInformation) {
+    private void sendNotificationAfterStart(Context context, String mNotificationInformation, String mNotificationRunInformation) {
         // Get an instance of the Notification manager
         mNotificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
 
@@ -1351,6 +1222,62 @@ public class LocationUpdatesService extends Service implements SensorEventListen
         PendingIntent pStopIntent = PendingIntent.getService(context, 0,
                 stopIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
+        Bitmap icon = BitmapFactory.decodeResource(context.getResources(), R.drawable.ic_directions_walk_black_24dp);
+
+        notification = new NotificationCompat.Builder(context, CHANNEL_ID)
+                .setContentTitle(mNotificationRunInformation)
+//                .setTicker("Ultimate Tracker")
+                .setContentText(mNotificationInformation)
+                .setWhen(System.currentTimeMillis())  // the time stamp, you will probably use System.currentTimeMillis() for most scenarios
+//                .setUsesChronometer(true)
+                .setSmallIcon(R.drawable.ic_launcher_foreground)
+                .setLargeIcon(
+                        Bitmap.createScaledBitmap(icon, 128, 128, false))
+                .setContentIntent(notificationPendingIntent)
+                .setOngoing(true)
+                .addAction(R.drawable.ic_stop, "Stop Tracking",
+                        pStopIntent)
+                .setAutoCancel(false)
+                .build();
+
+
+//        // Issue the notification
+//        assert mNotificationManager != null;
+//        mNotificationManager.notify(NOTIFICATION_ID, notification);
+        startForeground(NOTIFICATION_ID, notification);
+    }
+
+    private void sendNotificationAfterStop(Context context, String mNotificationInformation, String mNotificationRunInformation) {
+        // Get an instance of the Notification manager
+        mNotificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+
+        int importance = NotificationManager.IMPORTANCE_LOW;
+        NotificationChannel mChannel = null;
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            mChannel = new NotificationChannel(CHANNEL_ID, CHANNEL_NAME, importance);
+            mChannel.setDescription(DESCRIPTION);
+            mChannel.enableLights(true);
+            mChannel.enableVibration(true);
+            mChannel.setVibrationPattern(new long[]{100, 200, 300, 400, 500, 400, 300, 200, 400});
+            mNotificationManager.createNotificationChannel(mChannel);
+        }
+
+        // Create an explicit content Intent that starts the main Activity.
+        Intent notificationIntent = new Intent(context, MainActivity.class);
+
+        // Construct a task stack.
+        TaskStackBuilder stackBuilder = TaskStackBuilder.create(context);
+
+        // Add the main Activity to the task stack as the parent.
+        stackBuilder.addParentStack(MainActivity.class);
+
+        // Push the content Intent onto the stack.
+        stackBuilder.addNextIntent(notificationIntent);
+
+//         Get a PendingIntent containing the entire back stack.
+        PendingIntent notificationPendingIntent =
+                stackBuilder.getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT);
+
         Intent startIntent = new Intent(context, LocationUpdatesService.class);
         // Extra to help us figure out if we arrived in onStartCommand via the notification or not.
         startIntent.setAction(EXTRA_START_FROM_NOTIFICATION);
@@ -1373,17 +1300,11 @@ public class LocationUpdatesService extends Service implements SensorEventListen
                 .setOngoing(true)
                 .addAction(R.id.icon_only, "Start Tracking",
                         pStartIntent)
-                .addAction(R.drawable.ic_stop, "Stop Tracking",
-                        pStopIntent)
                 .setAutoCancel(false)
                 .build();
 
-
-//        // Issue the notification
-//        assert mNotificationManager != null;
-//        mNotificationManager.notify(NOTIFICATION_ID, notification);
         startForeground(NOTIFICATION_ID, notification);
-//        return notification;
+
     }
 
 }

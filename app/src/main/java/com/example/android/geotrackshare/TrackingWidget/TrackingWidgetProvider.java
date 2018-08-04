@@ -53,6 +53,11 @@ public class TrackingWidgetProvider extends AppWidgetProvider {
             AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(context);
             ComponentName thisWidget = new ComponentName(context, TrackingWidgetProvider.class);
 
+//            Double mCurrentRunType = String.valueOf(intent.getDoubleExtra(LocationUpdatesService.EXTRA_RUN_TYPE, 0));
+
+
+//            remoteViews.setTextViewText(R.id.current_speed_dynamic, mCurrentRunType);
+
             Double mTotalDistance = intent.getDoubleExtra(LocationUpdatesService.EXTRA_TOTAL_DISTANCE, 0);
             int precision = 1000; //keep 3 digits
             String mTotalDistanceString = String.valueOf((float) (Math.floor(mTotalDistance * precision + .5) / precision));
@@ -64,6 +69,18 @@ public class TrackingWidgetProvider extends AppWidgetProvider {
             Long mElapsedTimeMillis = intent.getLongExtra(LocationUpdatesService.EXTRA_TOTAL_TIME, 0);
             String mElapsedTime = getDateFromMillis(mElapsedTimeMillis);
             remoteViews.setTextViewText(R.id.tracking_time_dynamic, mElapsedTime);
+
+            String mMaxAltitude = String.valueOf(intent.getDoubleExtra(LocationUpdatesService.EXTRA_MAX_ALTITUDE, 0));
+            remoteViews.setTextViewText(R.id.max_altitude_dynamic, mMaxAltitude);
+
+            String mAverageSpeed = String.valueOf(intent.getDoubleExtra(LocationUpdatesService.EXTRA_AVG_SPEED, 0));
+            remoteViews.setTextViewText(R.id.avg_speed_dynamic, mAverageSpeed);
+
+            String mCurrentAltitude = String.valueOf(intent.getDoubleExtra(LocationUpdatesService.EXTRA_ALTITUDE, 0));
+            remoteViews.setTextViewText(R.id.current_altitude_dynamic, mCurrentAltitude);
+
+            String mCurrentSpeed = String.valueOf(intent.getDoubleExtra(LocationUpdatesService.EXTRA_SPEED, 0));
+            remoteViews.setTextViewText(R.id.current_speed_dynamic, mCurrentSpeed);
 
             Log.e(TAG, runNumber + " " + mElapsedTime + " " + mTotalDistanceString);
 
