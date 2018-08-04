@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.example.android.geotrackshare.Utils;
+package com.example.android.geotrackshare.LocationService;
 
 
 import android.content.Context;
@@ -26,7 +26,7 @@ import com.example.android.geotrackshare.R;
 import java.text.DateFormat;
 import java.util.Date;
 
-public class ServiceConstants {
+public class LocationServiceConstants {
 
     public static final String KEY_REQUESTING_LOCATION_UPDATES = "requesting_locaction_updates";
     public static final String KEY_REQUESTING_LOCATION_UPDATES_WIDGET = "requesting_locaction_updates_widget";

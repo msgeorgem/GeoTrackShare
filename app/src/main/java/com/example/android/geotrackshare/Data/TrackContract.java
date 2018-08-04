@@ -22,9 +22,9 @@ public class TrackContract {
 
 
         public static final Uri CONTENT_URI = Uri.withAppendedPath(BASE_CONTENT_URI, PATH_TRACK);
-        public static final String TABLE_NAME = "tracking";
+        public static final String TABLE_NAME = "trackingg";
         public static final String COLUMN_RUN_ID = "run";
-        public static final String COLUMN_RUN_TYPE = "run_type";
+        public static final String COLUMN_RUNTYPE = "type";
         public static final String COLUMN_TIME = "time";
         public static final String COLUMN_LATITUDE = "latitude";
         public static final String COLUMN_LONGITUDE = "longitude";
@@ -39,8 +39,6 @@ public class TrackContract {
         public static final String COLUMN_TOTAL_DISTANCE = "total_distance";
         public static final String COLUMN_MOVE_DISTANCE = "move_distance";
         public static final String COLUMN_MOVE_CLOSE = "move_close";
-        public static final String COLUMN_ADDRESS = "address";
-
 
         /**
          * The MIME type of the {@link #CONTENT_URI} for a list of items.

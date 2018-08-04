@@ -83,7 +83,7 @@ import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_MOVE_CLOSE;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_MOVE_DISTANCE;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_RUN_ID;
-import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_RUN_TYPE;
+import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_RUNTYPE;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_SPEED;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_TIME;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_TIME_COUNTER;
@@ -97,8 +97,8 @@ import static com.example.android.geotrackshare.RealTimeFragment.NOISEd;
 import static com.example.android.geotrackshare.RealTimeFragment.RUN_TYPE_PICTURE;
 import static com.example.android.geotrackshare.RealTimeFragment.RUN_TYPE_VALUE;
 import static com.example.android.geotrackshare.TrackingWidget.TrackingWidgetProvider.WIDGET_ELAPSED_TIME_TOTAL_DISTANCE;
-import static com.example.android.geotrackshare.Utils.ServiceConstants.requestingLocationUpdates;
-import static com.example.android.geotrackshare.Utils.ServiceConstants.setRequestingLocationUpdates;
+import static com.example.android.geotrackshare.LocationService.LocationServiceConstants.requestingLocationUpdates;
+import static com.example.android.geotrackshare.LocationService.LocationServiceConstants.setRequestingLocationUpdates;
 
 /**
  * A bound and started service that is promoted to a foreground service when location updates have
@@ -1019,7 +1019,7 @@ public class LocationUpdatesService extends Service implements SensorEventListen
             protected Void doInBackground(Void... voids) {
                 ContentValues values = new ContentValues();
                 values.put(COLUMN_RUN_ID, runId);
-                values.put(COLUMN_RUN_TYPE, runType);
+                values.put(COLUMN_RUNTYPE, runType);
                 values.put(COLUMN_TIME, currentTime);
                 values.put(COLUMN_LATITUDE, currentLatitude);
                 values.put(COLUMN_LONGITUDE, currentLongitude);
@@ -1141,7 +1141,6 @@ public class LocationUpdatesService extends Service implements SensorEventListen
                         mAverageSpeed, mElapsedTimeMillis, mDistance, mTotalDistance, mMoveDistance,
                         mMoveClose);
             }
-
 
             int precision = 1000; //keep 3 digits
             float mTotalDistanceFloat = (float) (Math.floor(mTotalDistance * precision + .5) / precision);

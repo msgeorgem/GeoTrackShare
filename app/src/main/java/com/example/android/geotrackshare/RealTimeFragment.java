@@ -36,7 +36,7 @@ import android.widget.TextView;
 import com.example.android.geotrackshare.LocationService.LocationUpdatesService;
 import com.example.android.geotrackshare.RunTypes.RunType;
 import com.example.android.geotrackshare.RunTypes.RunTypesAdapter;
-import com.example.android.geotrackshare.Utils.ServiceConstants;
+import com.example.android.geotrackshare.LocationService.LocationServiceConstants;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
@@ -50,7 +50,7 @@ import java.util.concurrent.TimeUnit;
 
 import static com.example.android.geotrackshare.AdvancedSettingsActivity.preferenceBooleanDisableAutoStop;
 import static com.example.android.geotrackshare.LocationService.LocationUpdatesService.REQUEST_CHECK_SETTINGS;
-import static com.example.android.geotrackshare.Utils.ServiceConstants.requestingLocationUpdates;
+import static com.example.android.geotrackshare.LocationService.LocationServiceConstants.requestingLocationUpdates;
 
 
 /**
@@ -836,8 +836,8 @@ public class RealTimeFragment extends Fragment implements
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String s) {
         // Update the buttons state depending on whether location updates are being requested.
-        if (s.equals(ServiceConstants.KEY_REQUESTING_LOCATION_UPDATES)) {
-            setButtonsEnabledState(sharedPreferences.getBoolean(ServiceConstants.KEY_REQUESTING_LOCATION_UPDATES,
+        if (s.equals(LocationServiceConstants.KEY_REQUESTING_LOCATION_UPDATES)) {
+            setButtonsEnabledState(sharedPreferences.getBoolean(LocationServiceConstants.KEY_REQUESTING_LOCATION_UPDATES,
                     false));
         }
     }
