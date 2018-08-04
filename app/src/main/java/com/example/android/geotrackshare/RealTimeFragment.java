@@ -28,16 +28,22 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.Button;
+import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.example.android.geotrackshare.LocationService.LocationUpdatesService;
+import com.example.android.geotrackshare.RunTypes.RunType;
+import com.example.android.geotrackshare.RunTypes.RunTypesAdapter;
 import com.example.android.geotrackshare.Utils.ServiceConstants;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.Locale;
 import java.util.UUID;
@@ -57,7 +63,7 @@ import static com.example.android.geotrackshare.Utils.ServiceConstants.requestin
  * create an instance of this fragment.
  */
 public class RealTimeFragment extends Fragment implements
-        SharedPreferences.OnSharedPreferenceChangeListener {
+        SharedPreferences.OnSharedPreferenceChangeListener, AdapterView.OnItemSelectedListener {
 
 
     public static final String MY_PREFERENCE_KEY = "mili";
@@ -172,6 +178,8 @@ public class RealTimeFragment extends Fragment implements
             mAverageSpeed, mMaxAltitude, mMinAltitude, mTotalTime, mDistance, mTotalDistance,
             mPreviousLatitude, mPreviousLongitude, mRoundedDistance;
     private Location mCurrentLocation;
+    public ArrayList<RunType> mCategories;
+    public RunTypesAdapter mAdapter;
     /**
      * Tracks the status of the location updates request. Value changes when the user presses the
      * Start Updates and Stop Updates buttons.
@@ -311,7 +319,6 @@ public class RealTimeFragment extends Fragment implements
         // Update values using data stored in the Bundle.
         updateValuesFromBundle(savedInstanceState);
 
-
         final Double mSelectedLatitude = createNewLocation()[0];
         final Double mSelectedLongitude = createNewLocation()[1];
 
@@ -349,6 +356,27 @@ public class RealTimeFragment extends Fragment implements
                 startActivity(intent);
             }
         });
+
+        // Spinner element
+        Spinner spinner = mView.findViewById(R.id.run_type_spinner);
+
+        // Spinner click listener
+        spinner.setOnItemSelectedListener(this);
+
+        // Spinner Drop down elements
+        mCategories = new ArrayList<RunType>();
+        mCategories.add(new RunType(R.drawable.ic_directions_walk_black_24dp, R.string.Run_type_walk, R.string.Run_type_walk_desc));
+        mCategories.add(new RunType(R.drawable.ic_directions_bike_black_24dp, R.string.Run_type_bike, R.string.Run_type_bike_desc));
+        mCategories.add(new RunType(R.drawable.ic_directions_car_black_24dp, R.string.Run_type_car, R.string.Run_type_car_desc));
+        mCategories.add(new RunType(R.drawable.ic_developer_board_black_48dp, R.string.Run_type_custom, R.string.Run_type_custom_desc));
+
+        // Creating adapter for spinner
+        mAdapter = new RunTypesAdapter(getActivity(), R.layout.list_run_type, mCategories);
+
+        // Setting a Custom Adapter to the Spinner
+        spinner.setAdapter(mAdapter);
+
+
 
         mRequestLocationUpdatesButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -868,6 +896,20 @@ public class RealTimeFragment extends Fragment implements
                 mAddressOutputTextView.setText(R.string.in_motion);
             }
         }
+
+    }
+
+    @Override
+    public void onItemSelected(AdapterView<?> adapterView, View view, int position, long l) {
+        // On selecting a spinner item
+        String item = adapterView.getItemAtPosition(position).toString();
+
+        // Showing selected spinner item
+        Toast.makeText(adapterView.getContext(), "Selected: " + item, Toast.LENGTH_LONG).show();
+    }
+
+    @Override
+    public void onNothingSelected(AdapterView<?> adapterView) {
 
     }
 

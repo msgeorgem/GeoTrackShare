@@ -334,7 +334,6 @@ public class LocationUpdatesService extends Service implements SensorEventListen
         handlerThread.start();
         mServiceHandler = new Handler(handlerThread.getLooper());
 
-
     }
 
     @Override
@@ -383,7 +382,6 @@ public class LocationUpdatesService extends Service implements SensorEventListen
 
             // TODO(developer). If targeting O, use the following code.
             if (Build.VERSION.SDK_INT == Build.VERSION_CODES.O) {
-
 
                 startForegroundService(new Intent(this, LocationUpdatesService.class));
 

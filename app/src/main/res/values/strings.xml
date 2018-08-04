@@ -183,4 +183,15 @@
     <string name="Tracker_not_running">Tracker is not running. Hit the start button to start new tracking.</string>
     <string name="Tracker_is_running">Tracker is running already. Hit the stop button to stop current tracking.</string>
     <string name="Welcome_to_the_tracker">Enjoy your new tracker</string>
+
+    <string name="Run_types">Run Types</string>
+    <string name="Run_type_walk">Walk</string>
+    <string name="Run_type_car">Car</string>
+    <string name="Run_type_bike">Bike</string>
+    <string name="Run_type_custom">Custom</string>
+
+    <string name="Run_type_walk_desc">Travel on foot with predefined settings specified for walk</string>
+    <string name="Run_type_car_desc">Travel by car with predefined settings specified for car movement</string>
+    <string name="Run_type_bike_desc">Travel by bike with predefined settings specified for bike movement </string>
+    <string name="Run_type_custom_desc">Travel any way you like with custom settings you can specify on your own</string>
 </resources>
