@@ -100,10 +100,12 @@ public class RealTimeFragment extends Fragment implements
     public static String UPDATE_INTERVAL_IN_MILLISECONDS_STRING = "";
     public static String START_TIME;
     public static String DELETE_LAST_ROWS_STRING = "";
+    public static int RUN_TYPE_VALUE;
+    public static String RUN_TYPE_KEY = "RUN_TYPE_KEY";
     public static int DELETE_LAST_ROWS = 15;
     public static boolean DISABLE_AUTO_CLOSE;
     public static Context mContext;
-    public static SharedPreferences sharedPrefs;
+    public static SharedPreferences sharedPrefs, mSharedPrefsRunType;
     public String tmDevice, tmSerial, androidId, deviceId;
     public TelephonyManager tm;
     /**
@@ -179,7 +181,8 @@ public class RealTimeFragment extends Fragment implements
             mPreviousLatitude, mPreviousLongitude, mRoundedDistance;
     private Location mCurrentLocation;
     public ArrayList<RunType> mCategories;
-    public RunTypesAdapter mAdapter;
+    private RunTypesAdapter mAdapter;
+    private Spinner mSpinner;
     /**
      * Tracks the status of the location updates request. Value changes when the user presses the
      * Start Updates and Stop Updates buttons.
@@ -217,6 +220,7 @@ public class RealTimeFragment extends Fragment implements
 
         mContext = getActivity();
         sharedPrefs = PreferenceManager.getDefaultSharedPreferences(mContext);
+        mSharedPrefsRunType = mContext.getSharedPreferences("Run_Type", Context.MODE_PRIVATE);
         mRequestingLocationUpdates = requestingLocationUpdates(mContext);
 
         DISABLE_AUTO_CLOSE = switchDisableAutoStop();
@@ -357,11 +361,12 @@ public class RealTimeFragment extends Fragment implements
             }
         });
 
+
         // Spinner element
-        Spinner spinner = mView.findViewById(R.id.run_type_spinner);
+        mSpinner = mView.findViewById(R.id.run_type_spinner);
 
         // Spinner click listener
-        spinner.setOnItemSelectedListener(this);
+        mSpinner.setOnItemSelectedListener(this);
 
         // Spinner Drop down elements
         mCategories = new ArrayList<RunType>();
@@ -374,9 +379,13 @@ public class RealTimeFragment extends Fragment implements
         mAdapter = new RunTypesAdapter(getActivity(), R.layout.list_run_type, mCategories);
 
         // Setting a Custom Adapter to the Spinner
-        spinner.setAdapter(mAdapter);
+        mSpinner.setAdapter(mAdapter);
 
-
+        RUN_TYPE_VALUE = mSharedPrefsRunType.getInt(RUN_TYPE_KEY, -1);
+        if (RUN_TYPE_VALUE != -1) {
+            // set the selected value of the spinner
+            mSpinner.setSelection(RUN_TYPE_VALUE);
+        }
 
         mRequestLocationUpdatesButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -904,8 +913,14 @@ public class RealTimeFragment extends Fragment implements
         // On selecting a spinner item
         String item = adapterView.getItemAtPosition(position).toString();
 
+
+        RUN_TYPE_VALUE = mSpinner.getSelectedItemPosition();
+        SharedPreferences.Editor preferEditor = mSharedPrefsRunType.edit();
+        preferEditor.putInt(RUN_TYPE_KEY, RUN_TYPE_VALUE);
+        preferEditor.apply();
+
         // Showing selected spinner item
-        Toast.makeText(adapterView.getContext(), "Selected: " + item, Toast.LENGTH_LONG).show();
+        Toast.makeText(adapterView.getContext(), "Selected: " + RUN_TYPE_VALUE, Toast.LENGTH_LONG).show();
     }
 
     @Override
