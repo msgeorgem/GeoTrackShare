@@ -31,11 +31,8 @@ import android.widget.RemoteViews;
 import com.example.android.geotrackshare.LocationService.LocationUpdatesService;
 import com.example.android.geotrackshare.MainActivity;
 import com.example.android.geotrackshare.R;
-import com.example.android.geotrackshare.Utils.ServiceConstants;
 
 import static com.example.android.geotrackshare.LocationService.LocationUpdatesService.EXTRA_CURRENT_ID;
-import static com.example.android.geotrackshare.LocationService.LocationUpdatesService.EXTRA_START_FROM_WIDGET;
-import static com.example.android.geotrackshare.LocationService.LocationUpdatesService.EXTRA_STOP_FROM_WIDGET;
 import static com.example.android.geotrackshare.TrackerBroadcastReceiver.getDateFromMillis;
 
 
@@ -59,44 +56,18 @@ public class TrackingWidgetProvider extends AppWidgetProvider {
             Double mTotalDistance = intent.getDoubleExtra(LocationUpdatesService.EXTRA_TOTAL_DISTANCE, 0);
             int precision = 1000; //keep 3 digits
             String mTotalDistanceString = String.valueOf((float) (Math.floor(mTotalDistance * precision + .5) / precision));
-            remoteViews.setTextViewText(R.id.total_distance, mTotalDistanceString);
+            remoteViews.setTextViewText(R.id.tracking_distance_dynamic, mTotalDistanceString);
 
             String runNumber = String.valueOf(intent.getIntExtra(EXTRA_CURRENT_ID, 0));
             remoteViews.setTextViewText(R.id.run_number, runNumber);
 
             Long mElapsedTimeMillis = intent.getLongExtra(LocationUpdatesService.EXTRA_TOTAL_TIME, 0);
             String mElapsedTime = getDateFromMillis(mElapsedTimeMillis);
-            remoteViews.setTextViewText(R.id.total_time, mElapsedTime);
+            remoteViews.setTextViewText(R.id.tracking_time_dynamic, mElapsedTime);
 
             Log.e(TAG, runNumber + " " + mElapsedTime + " " + mTotalDistanceString);
 
             appWidgetManager.updateAppWidget(thisWidget, remoteViews);
-
-        } else if (WIDGET_BUTTON_START_SERVICE.equals(intent.getAction())) {
-            Intent startServiceIntent = new Intent(context, LocationUpdatesService.class);
-            startServiceIntent.setAction(EXTRA_START_FROM_WIDGET);
-            ServiceConstants.setRequestingLocationUpdatesWidget(context, true);
-
-            Log.e(TAG, WIDGET_BUTTON_START_SERVICE);
-
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                context.startForegroundService(startServiceIntent);
-            } else {
-                context.startService(startServiceIntent);
-            }
-
-        } else if (WIDGET_BUTTON_STOP_SERVICE.equals(intent.getAction())) {
-            Intent stopServiceIntent = new Intent(context, LocationUpdatesService.class);
-            stopServiceIntent.setAction(EXTRA_STOP_FROM_WIDGET);
-            ServiceConstants.setRequestingLocationUpdatesWidget(context, false);
-
-            Log.e(TAG, WIDGET_BUTTON_STOP_SERVICE);
-
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                context.startForegroundService(stopServiceIntent);
-            } else {
-                context.startService(stopServiceIntent);
-            }
 
         } else {
             super.onReceive(context, intent);
@@ -117,27 +88,7 @@ public class TrackingWidgetProvider extends AppWidgetProvider {
             RemoteViews remoteViews = new RemoteViews(context.getPackageName(), R.layout.tracking_widget);
             Intent intentActivity = new Intent(context, MainActivity.class);
             PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intentActivity, 0);
-            remoteViews.setOnClickPendingIntent(R.id.enter_tracker, pendingIntent);
-
-//            Boolean mRequestingLocationUpdates = ServiceConstants.requestingLocationUpdates(context);
-//
-//            if (mRequestingLocationUpdates) {
-//                remoteViews.setViewVisibility(R.id.start_tracking, View.INVISIBLE);
-//                remoteViews.setViewVisibility(R.id.stop_tracking, View.VISIBLE);
-//            } else {
-//                remoteViews.setViewVisibility(R.id.start_tracking, View.VISIBLE);
-//                remoteViews.setViewVisibility(R.id.stop_tracking, View.INVISIBLE);
-//            }
-
-            Intent intentStop = new Intent(context, TrackingWidgetProvider.class);
-            intentStop.setAction(WIDGET_BUTTON_STOP_SERVICE);
-            PendingIntent pendingIntentStop = PendingIntent.getBroadcast(context, 0, intentStop, PendingIntent.FLAG_UPDATE_CURRENT);
-            remoteViews.setOnClickPendingIntent(R.id.stop_tracking, pendingIntentStop);
-
-            Intent intentStart = new Intent(context, TrackingWidgetProvider.class);
-            intentStart.setAction(WIDGET_BUTTON_START_SERVICE);
-            PendingIntent pendingIntentStart = PendingIntent.getBroadcast(context, 0, intentStart, PendingIntent.FLAG_UPDATE_CURRENT);
-            remoteViews.setOnClickPendingIntent(R.id.start_tracking, pendingIntentStart);
+            remoteViews.setOnClickPendingIntent(R.id.tracking_widget, pendingIntent);
 
             appWidgetManager.updateAppWidget(widgetId, remoteViews);
 
