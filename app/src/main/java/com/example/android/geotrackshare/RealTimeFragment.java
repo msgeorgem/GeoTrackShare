@@ -32,7 +32,6 @@ import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.Spinner;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.example.android.geotrackshare.LocationService.LocationUpdatesService;
 import com.example.android.geotrackshare.RunTypes.RunType;
@@ -102,6 +101,9 @@ public class RealTimeFragment extends Fragment implements
     public static String DELETE_LAST_ROWS_STRING = "";
     public static int RUN_TYPE_VALUE;
     public static String RUN_TYPE_KEY = "RUN_TYPE_KEY";
+    public static String RUN_TYPE_TITLE;
+    public static String RUN_TYPE_DESCRIPTION;
+    public static int RUN_TYPE_PICTURE;
     public static int DELETE_LAST_ROWS = 15;
     public static boolean DISABLE_AUTO_CLOSE;
     public static Context mContext;
@@ -180,7 +182,7 @@ public class RealTimeFragment extends Fragment implements
             mAverageSpeed, mMaxAltitude, mMinAltitude, mTotalTime, mDistance, mTotalDistance,
             mPreviousLatitude, mPreviousLongitude, mRoundedDistance;
     private Location mCurrentLocation;
-    public ArrayList<RunType> mCategories;
+    public static ArrayList<RunType> mCategories;
     private RunTypesAdapter mAdapter;
     private Spinner mSpinner;
     /**
@@ -387,6 +389,7 @@ public class RealTimeFragment extends Fragment implements
             mSpinner.setSelection(RUN_TYPE_VALUE);
         }
 
+
         mRequestLocationUpdatesButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -519,7 +522,6 @@ public class RealTimeFragment extends Fragment implements
                 break;
         }
     }
-
     /**
      * Updates all UI fields.
      */
@@ -536,9 +538,11 @@ public class RealTimeFragment extends Fragment implements
     public void setButtonsEnabledState(Boolean requestingLocationUpdates) {
         if (requestingLocationUpdates) {
             mRequestLocationUpdatesButton.setEnabled(false);
+            mSpinner.setEnabled(false);
             mRemoveLocationUpdatesButton.setEnabled(true);
         } else {
             mRequestLocationUpdatesButton.setEnabled(true);
+            mSpinner.setEnabled(true);
             mRemoveLocationUpdatesButton.setEnabled(false);
         }
     }
@@ -911,16 +915,16 @@ public class RealTimeFragment extends Fragment implements
     @Override
     public void onItemSelected(AdapterView<?> adapterView, View view, int position, long l) {
         // On selecting a spinner item
-        String item = adapterView.getItemAtPosition(position).toString();
-
 
         RUN_TYPE_VALUE = mSpinner.getSelectedItemPosition();
         SharedPreferences.Editor preferEditor = mSharedPrefsRunType.edit();
         preferEditor.putInt(RUN_TYPE_KEY, RUN_TYPE_VALUE);
         preferEditor.apply();
 
-        // Showing selected spinner item
-        Toast.makeText(adapterView.getContext(), "Selected: " + RUN_TYPE_VALUE, Toast.LENGTH_LONG).show();
+        RUN_TYPE_TITLE = getString(mAdapter.getItem(RUN_TYPE_VALUE).getTitle());
+        RUN_TYPE_PICTURE = mAdapter.getItem(RUN_TYPE_VALUE).getPicture();
+        RUN_TYPE_DESCRIPTION = getString(mAdapter.getItem(RUN_TYPE_VALUE).getDescription());
+
     }
 
     @Override

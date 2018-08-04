@@ -68,21 +68,4 @@ public class ServiceConstants {
                 DateFormat.getDateTimeInstance().format(new Date()));
     }
 
-
-    public static boolean requestingLocationUpdatesWidget(Context context) {
-        return PreferenceManager.getDefaultSharedPreferences(context)
-                .getBoolean(KEY_REQUESTING_LOCATION_UPDATES_WIDGET, false);
-    }
-
-    /**
-     * Stores the location updates state in SharedPreferences.
-     *
-     * @param requestingLocationUpdates The location updates state.
-     */
-    public static void setRequestingLocationUpdatesWidget(Context context, boolean requestingLocationUpdates) {
-        PreferenceManager.getDefaultSharedPreferences(context)
-                .edit()
-                .putBoolean(KEY_REQUESTING_LOCATION_UPDATES_WIDGET, requestingLocationUpdates)
-                .apply();
-    }
 }

@@ -24,6 +24,7 @@ public class TrackContract {
         public static final Uri CONTENT_URI = Uri.withAppendedPath(BASE_CONTENT_URI, PATH_TRACK);
         public static final String TABLE_NAME = "tracking";
         public static final String COLUMN_RUN_ID = "run";
+        public static final String COLUMN_RUN_TYPE = "run_type";
         public static final String COLUMN_TIME = "time";
         public static final String COLUMN_LATITUDE = "latitude";
         public static final String COLUMN_LONGITUDE = "longitude";

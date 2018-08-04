@@ -83,6 +83,7 @@ import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_MOVE_CLOSE;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_MOVE_DISTANCE;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_RUN_ID;
+import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_RUN_TYPE;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_SPEED;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_TIME;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_TIME_COUNTER;
@@ -93,6 +94,8 @@ import static com.example.android.geotrackshare.RealTimeFragment.DELETE_LAST_ROW
 import static com.example.android.geotrackshare.RealTimeFragment.DISABLE_AUTO_CLOSE;
 import static com.example.android.geotrackshare.RealTimeFragment.NOISEc;
 import static com.example.android.geotrackshare.RealTimeFragment.NOISEd;
+import static com.example.android.geotrackshare.RealTimeFragment.RUN_TYPE_PICTURE;
+import static com.example.android.geotrackshare.RealTimeFragment.RUN_TYPE_VALUE;
 import static com.example.android.geotrackshare.TrackingWidget.TrackingWidgetProvider.WIDGET_ELAPSED_TIME_TOTAL_DISTANCE;
 import static com.example.android.geotrackshare.Utils.ServiceConstants.requestingLocationUpdates;
 import static com.example.android.geotrackshare.Utils.ServiceConstants.setRequestingLocationUpdates;
@@ -200,7 +203,7 @@ public class LocationUpdatesService extends Service implements SensorEventListen
      */
     private Location mCurrentLocation;
     private Cursor cur;
-    private int mMaxId, mCurrentId, mLast_ID;
+    private int mMaxId, mCurrentId, mLast_ID, mRunType;
     private long mLastUpdateTimeMillis, mElapsedTimeMillis;
     private double mCurrentLatitude, mCurrentLongitude, mCurrentAltitude, mCurrentSpeed, mMaxSpeed,
             mAverageSpeed, mMaxAltitude, mMinAltitude, mTotalTime, mDistance, mTotalDistance,
@@ -448,6 +451,7 @@ public class LocationUpdatesService extends Service implements SensorEventListen
         if (!requestingLocationUpdates(this)) {
             startTime = System.currentTimeMillis();
             mCurrentId = queryMaxId() + 1;
+            mRunType = RUN_TYPE_VALUE;
             startLocationUpdates();
             mNotificationInformation = getResources().getString(R.string.Tracking_started_at) + getFormatedTimeInString() + "      STARTED...";
             mNotificationRunInformation = getResources().getString(R.string.Current_run) + mCurrentId;
@@ -478,6 +482,7 @@ public class LocationUpdatesService extends Service implements SensorEventListen
         // Notify anyone listening for broadcasts about the new location.
         Intent intent = new Intent(ACTION_BROADCAST);
         intent.putExtra(EXTRA_CURRENT_ID, mCurrentId);
+        intent.putExtra(EXTRA_RUN_TYPE, mRunType);
         intent.putExtra(EXTRA_LOCATION, location);
         intent.putExtra(EXTRA_LATITUDE, mCurrentLatitude);
         intent.putExtra(EXTRA_LONGITUDE, mCurrentLongitude);
@@ -501,6 +506,7 @@ public class LocationUpdatesService extends Service implements SensorEventListen
         startWidgetIntent.setAction(WIDGET_ELAPSED_TIME_TOTAL_DISTANCE);
         startWidgetIntent.putExtra(EXTRA_TOTAL_TIME, mElapsedTimeMillis);
         startWidgetIntent.putExtra(EXTRA_CURRENT_ID, mCurrentId);
+        startWidgetIntent.putExtra(EXTRA_RUN_TYPE, mRunType);
         startWidgetIntent.putExtra(EXTRA_TOTAL_DISTANCE, mTotalDistance);
         startWidgetIntent.putExtra(EXTRA_TOTAL_DISTANCE, mTotalDistance);
         startWidgetIntent.putExtra(EXTRA_SPEED, mCurrentSpeed);
@@ -1000,7 +1006,7 @@ public class LocationUpdatesService extends Service implements SensorEventListen
         }
     }
 
-    private void saveItem(final int runId, final long currentTime, final double currentLatitude, final double currentLongitude,
+    private void saveItem(final int runId, final int runType, final long currentTime, final double currentLatitude, final double currentLongitude,
                           final double currentAltitude, final double currentMaxAlt, final double currentMinAlt,
                           final double currentSpeed, final double currentMaxSpeed, final double currentAvrSpeed,
                           final long currentElapsedTime, final double currentDistance, final double currentTotalDistance,
@@ -1013,6 +1019,7 @@ public class LocationUpdatesService extends Service implements SensorEventListen
             protected Void doInBackground(Void... voids) {
                 ContentValues values = new ContentValues();
                 values.put(COLUMN_RUN_ID, runId);
+                values.put(COLUMN_RUN_TYPE, runType);
                 values.put(COLUMN_TIME, currentTime);
                 values.put(COLUMN_LATITUDE, currentLatitude);
                 values.put(COLUMN_LONGITUDE, currentLongitude);
@@ -1129,7 +1136,7 @@ public class LocationUpdatesService extends Service implements SensorEventListen
                     mCurrentAddress = "";
                 }
 
-                saveItem(mCurrentId, mLastUpdateTimeMillis, mCurrentLatitude, mCurrentLongitude,
+                saveItem(mCurrentId, mRunType, mLastUpdateTimeMillis, mCurrentLatitude, mCurrentLongitude,
                         mCurrentAltitude, mMaxAltitude, mMinAltitude, mCurrentSpeed, mMaxSpeed,
                         mAverageSpeed, mElapsedTimeMillis, mDistance, mTotalDistance, mMoveDistance,
                         mMoveClose);
@@ -1220,7 +1227,8 @@ public class LocationUpdatesService extends Service implements SensorEventListen
         PendingIntent pStopIntent = PendingIntent.getService(context, 0,
                 stopIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
-        Bitmap icon = BitmapFactory.decodeResource(context.getResources(), R.drawable.ic_directions_walk_black_24dp);
+
+        Bitmap icon = BitmapFactory.decodeResource(context.getResources(), RUN_TYPE_PICTURE);
 
         notification = new NotificationCompat.Builder(context, CHANNEL_ID)
                 .setContentTitle(mNotificationRunInformation)
@@ -1282,8 +1290,7 @@ public class LocationUpdatesService extends Service implements SensorEventListen
         PendingIntent pStartIntent = PendingIntent.getService(context, 0,
                 startIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
-
-        Bitmap icon = BitmapFactory.decodeResource(context.getResources(), R.drawable.ic_directions_walk_black_24dp);
+        Bitmap icon = BitmapFactory.decodeResource(context.getResources(), RUN_TYPE_PICTURE);
 
         notification = new NotificationCompat.Builder(context, CHANNEL_ID)
                 .setContentTitle(mNotificationRunInformation)

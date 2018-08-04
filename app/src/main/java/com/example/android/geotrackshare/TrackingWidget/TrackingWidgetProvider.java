@@ -23,6 +23,8 @@ import android.appwidget.AppWidgetProvider;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
@@ -33,7 +35,8 @@ import com.example.android.geotrackshare.MainActivity;
 import com.example.android.geotrackshare.R;
 
 import static com.example.android.geotrackshare.LocationService.LocationUpdatesService.EXTRA_CURRENT_ID;
-import static com.example.android.geotrackshare.TrackerBroadcastReceiver.getDateFromMillis;
+import static com.example.android.geotrackshare.RealTimeFragment.RUN_TYPE_PICTURE;
+
 
 
 public class TrackingWidgetProvider extends AppWidgetProvider {
@@ -53,10 +56,8 @@ public class TrackingWidgetProvider extends AppWidgetProvider {
             AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(context);
             ComponentName thisWidget = new ComponentName(context, TrackingWidgetProvider.class);
 
-//            Double mCurrentRunType = String.valueOf(intent.getDoubleExtra(LocationUpdatesService.EXTRA_RUN_TYPE, 0));
-
-
-//            remoteViews.setTextViewText(R.id.current_speed_dynamic, mCurrentRunType);
+            Bitmap icon = BitmapFactory.decodeResource(context.getResources(), RUN_TYPE_PICTURE);
+            remoteViews.setImageViewBitmap(R.id.run_type, icon);
 
             Double mTotalDistance = intent.getDoubleExtra(LocationUpdatesService.EXTRA_TOTAL_DISTANCE, 0);
             int precision = 1000; //keep 3 digits
@@ -67,7 +68,7 @@ public class TrackingWidgetProvider extends AppWidgetProvider {
             remoteViews.setTextViewText(R.id.run_number, runNumber);
 
             Long mElapsedTimeMillis = intent.getLongExtra(LocationUpdatesService.EXTRA_TOTAL_TIME, 0);
-            String mElapsedTime = getDateFromMillis(mElapsedTimeMillis);
+            String mElapsedTime = LocationUpdatesService.getDateFromMillis(mElapsedTimeMillis);
             remoteViews.setTextViewText(R.id.tracking_time_dynamic, mElapsedTime);
 
             String mMaxAltitude = String.valueOf(intent.getDoubleExtra(LocationUpdatesService.EXTRA_MAX_ALTITUDE, 0));

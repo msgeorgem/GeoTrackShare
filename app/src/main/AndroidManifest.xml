@@ -55,6 +55,7 @@
             android:theme="@style/AppThemeGTSDark">
 
         </activity>
+
         <activity
             android:name=".MainActivity"
             android:configChanges="orientation|screenSize"
@@ -97,7 +98,6 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.example.android.geotrackshare.MainActivity" />
         </activity>
-        <receiver android:name=".TrackerBroadcastReceiver" />
 
         <provider
             android:name="com.example.android.geotrackshare.Data.TrackProvider"
