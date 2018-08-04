@@ -629,6 +629,11 @@ public class LocationUpdatesService extends Service implements SensorEventListen
         startWidgetIntent.putExtra(EXTRA_TOTAL_TIME, mElapsedTimeMillis);
         startWidgetIntent.putExtra(EXTRA_CURRENT_ID, mCurrentId);
         startWidgetIntent.putExtra(EXTRA_TOTAL_DISTANCE, mTotalDistance);
+        startWidgetIntent.putExtra(EXTRA_TOTAL_DISTANCE, mTotalDistance);
+        startWidgetIntent.putExtra(EXTRA_SPEED, mCurrentSpeed);
+        startWidgetIntent.putExtra(EXTRA_AVG_SPEED, mAverageSpeed);
+        startWidgetIntent.putExtra(EXTRA_ALTITUDE, mCurrentAltitude);
+        startWidgetIntent.putExtra(EXTRA_MAX_ALTITUDE, mMaxAltitude);
 
         sendBroadcast(startWidgetIntent);
 
