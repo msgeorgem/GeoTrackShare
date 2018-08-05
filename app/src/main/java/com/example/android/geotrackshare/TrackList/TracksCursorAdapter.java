@@ -98,16 +98,16 @@ public class TracksCursorAdapter extends CursorRecyclerAdapter<TracksCursorAdapt
 
         final Context context = viewHolder.itemView.getContext();
 
-        cursor = context.getContentResolver()
-                .query(CONTENT_URI, null, null, null, ORDER);
+//        cursor = context.getContentResolver()
+//                .query(CONTENT_URI, null, null, null, null);
         int numberofcolumns = cursor.getColumnCount();
 
         cursor.getColumnNames();
         Log.e("numberofcolumns", Arrays.toString(cursor.getColumnNames()));
 //        viewHolder.setIsRecyclable(false);
 
-        if (cursor != null && cursor.moveToFirst()) {
-            while (cursor.moveToNext()) {
+//        if (cursor != null && cursor.moveToFirst()) {
+//            while (cursor.moveToNext()) {
 
                 // Find the columns of item attributes that we're interested in
                 id = cursor.getLong(cursor.getColumnIndex(_ID));
@@ -135,8 +135,9 @@ public class TracksCursorAdapter extends CursorRecyclerAdapter<TracksCursorAdapt
                 double itemDistance = cursor.getDouble(distColumnIndex);
 //        int runType = cursor.getInt(runTypeColumnIndex);
 //        Log.e("Database", String.valueOf(runTypeColumnIndex));
-                int runTypeInt = cursor.getInt(runTypeColumnIndex);
+                int runTypeInt = 1;
                 Log.e("runTypeInt", String.valueOf(runTypeInt));
+                Log.e("runTypeColumnIndex", String.valueOf(runTypeColumnIndex));
 
 //        String itemMaxAlt = cursor.getString(maxAltColumnIndex);
 //        String itemMinAlt = cursor.getString(minAltColumnIndex);
@@ -179,12 +180,12 @@ public class TracksCursorAdapter extends CursorRecyclerAdapter<TracksCursorAdapt
                         fragment.onItemClick(id);
                     }
                 });
-            }
-        }
+//            }
+//        }
 
-        if (cursor != null) {
-            cursor.close();
-        }
+//        if (cursor != null) {
+//            cursor.close();
+//        }
 
 
         DetailActivity.favPrefs = context.getSharedPreferences("favourites", Context.MODE_PRIVATE);

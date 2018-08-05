@@ -61,7 +61,7 @@ import static com.example.android.geotrackshare.TrackList.RunListFragment.EXTRA_
 public class DetailActivity extends AppCompatActivity implements OnMapReadyCallback {
 
 
-    public static final String TEST_MDB_MOVIE_PATH = "https://api.themoviedb.org/3/movie/321612/videos?api_key=1157007d8e3f7d5e0af6d7e4165e2730";
+
     public static final String LOG_TAG = DetailActivity.class.getSimpleName();
     private static final String BUNDLE_RECYCLER_LAYOUT = "DetailActivity.clipsRecyclerView.activity_detail";
     //    private static final String API_key = BuildConfig.API_KEY;

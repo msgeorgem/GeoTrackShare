@@ -101,6 +101,9 @@ public class RealTimeFragment extends Fragment implements
     public static String DELETE_LAST_ROWS_STRING = "";
     public static int RUN_TYPE_VALUE;
     public static String RUN_TYPE_KEY = "RUN_TYPE_KEY";
+    public static String RUN_TYPE_TTTLE_KEY = "RUN_TYPE_TTTLE_KEY";
+    public static String RUN_TYPE_PICTURE_KEY = "RUN_TYPE_PICTURE_KEY";
+    public static String RUN_TYPE_DESCRIPTION_KEY = "RUN_TYPE_DESCRIPTION_KEY";
     public static String RUN_TYPE_TITLE;
     public static String RUN_TYPE_DESCRIPTION;
     public static int RUN_TYPE_PICTURE;
@@ -917,13 +920,17 @@ public class RealTimeFragment extends Fragment implements
         // On selecting a spinner item
 
         RUN_TYPE_VALUE = mSpinner.getSelectedItemPosition();
-        SharedPreferences.Editor preferEditor = mSharedPrefsRunType.edit();
-        preferEditor.putInt(RUN_TYPE_KEY, RUN_TYPE_VALUE);
-        preferEditor.apply();
-
         RUN_TYPE_TITLE = getString(mAdapter.getItem(RUN_TYPE_VALUE).getTitle());
         RUN_TYPE_PICTURE = mAdapter.getItem(RUN_TYPE_VALUE).getPicture();
         RUN_TYPE_DESCRIPTION = getString(mAdapter.getItem(RUN_TYPE_VALUE).getDescription());
+
+        Log.e("RUN_TYPE_VALUE_onItemse", String.valueOf(RUN_TYPE_VALUE));
+        SharedPreferences.Editor preferEditor = mSharedPrefsRunType.edit();
+        preferEditor.putInt(RUN_TYPE_KEY, RUN_TYPE_VALUE);
+        preferEditor.putString(RUN_TYPE_TTTLE_KEY, RUN_TYPE_TITLE);
+        preferEditor.putInt(RUN_TYPE_PICTURE_KEY, RUN_TYPE_PICTURE);
+        preferEditor.putString(RUN_TYPE_DESCRIPTION_KEY, RUN_TYPE_DESCRIPTION);
+        preferEditor.apply();
 
     }
 

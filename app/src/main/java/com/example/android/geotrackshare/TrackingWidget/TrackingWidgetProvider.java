@@ -36,7 +36,8 @@ import com.example.android.geotrackshare.R;
 
 import static com.example.android.geotrackshare.LocationService.LocationUpdatesService.EXTRA_CURRENT_ID;
 import static com.example.android.geotrackshare.RealTimeFragment.RUN_TYPE_PICTURE;
-
+import static com.example.android.geotrackshare.RealTimeFragment.RUN_TYPE_PICTURE_KEY;
+import static com.example.android.geotrackshare.RealTimeFragment.mSharedPrefsRunType;
 
 
 public class TrackingWidgetProvider extends AppWidgetProvider {
@@ -56,6 +57,7 @@ public class TrackingWidgetProvider extends AppWidgetProvider {
             AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(context);
             ComponentName thisWidget = new ComponentName(context, TrackingWidgetProvider.class);
 
+            int RUN_TYPE_PICTURE = mSharedPrefsRunType.getInt(RUN_TYPE_PICTURE_KEY, -1);
             Bitmap icon = BitmapFactory.decodeResource(context.getResources(), RUN_TYPE_PICTURE);
             remoteViews.setImageViewBitmap(R.id.run_type, icon);
 

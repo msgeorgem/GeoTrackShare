@@ -95,7 +95,9 @@ import static com.example.android.geotrackshare.RealTimeFragment.DISABLE_AUTO_CL
 import static com.example.android.geotrackshare.RealTimeFragment.NOISEc;
 import static com.example.android.geotrackshare.RealTimeFragment.NOISEd;
 import static com.example.android.geotrackshare.RealTimeFragment.RUN_TYPE_PICTURE;
+import static com.example.android.geotrackshare.RealTimeFragment.RUN_TYPE_PICTURE_KEY;
 import static com.example.android.geotrackshare.RealTimeFragment.RUN_TYPE_VALUE;
+import static com.example.android.geotrackshare.RealTimeFragment.mSharedPrefsRunType;
 import static com.example.android.geotrackshare.TrackingWidget.TrackingWidgetProvider.WIDGET_ELAPSED_TIME_TOTAL_DISTANCE;
 import static com.example.android.geotrackshare.LocationService.LocationServiceConstants.requestingLocationUpdates;
 import static com.example.android.geotrackshare.LocationService.LocationServiceConstants.setRequestingLocationUpdates;
@@ -1226,7 +1228,7 @@ public class LocationUpdatesService extends Service implements SensorEventListen
         PendingIntent pStopIntent = PendingIntent.getService(context, 0,
                 stopIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
-
+        int RUN_TYPE_PICTURE = mSharedPrefsRunType.getInt(RUN_TYPE_PICTURE_KEY, -1);
         Bitmap icon = BitmapFactory.decodeResource(context.getResources(), RUN_TYPE_PICTURE);
 
         notification = new NotificationCompat.Builder(context, CHANNEL_ID)
@@ -1288,6 +1290,8 @@ public class LocationUpdatesService extends Service implements SensorEventListen
         startIntent.setAction(EXTRA_START_FROM_NOTIFICATION);
         PendingIntent pStartIntent = PendingIntent.getService(context, 0,
                 startIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+        int RUN_TYPE_PICTURE = mSharedPrefsRunType.getInt(RUN_TYPE_PICTURE_KEY, -1);
 
         Bitmap icon = BitmapFactory.decodeResource(context.getResources(), RUN_TYPE_PICTURE);
 

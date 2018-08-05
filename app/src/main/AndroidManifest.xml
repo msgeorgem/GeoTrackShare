@@ -104,6 +104,11 @@
             android:authorities="com.example.android.geotrackshare"
             android:exported="false" />
 
+        <provider
+            android:name="com.example.android.geotrackshare.Data.TrackPostProvider"
+            android:authorities="com.example.android.geotrackshare"
+            android:exported="false" />
+
         <service
             android:name=".LocationService.LocationUpdatesService"
             android:enabled="true"
