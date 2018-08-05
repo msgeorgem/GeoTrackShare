@@ -39,11 +39,8 @@ import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
 
-import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_ALTITUDE;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_AVR_SPEED;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_AVR_SPEEDP;
-import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_LATITUDE;
-import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_LONGITUDE;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_MAX_ALT;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_MAX_ALTP;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_MAX_SPEED;
@@ -52,12 +49,9 @@ import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_RUNTYPEP;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_RUN_ID;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_RUN_IDP;
-import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_SPEED;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_START_TIME;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_START_TIMEP;
-import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_STOP_TIME;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_STOP_TIMEP;
-import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_TIME;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_TIME_COUNTER;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_TIME_COUNTERP;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_TOTAL_DISTANCE;
@@ -249,7 +243,7 @@ public class RunListFragment extends Fragment implements LoaderManager.LoaderCal
                 PROJECTION_POST,            // The columns to include in the resulting Cursor
                 null,         // The values for the WHERE clause
                 null,   // No SELECTION arguments
-                null);
+                SORT_ORDER);
 
     }
 
@@ -306,22 +300,24 @@ public class RunListFragment extends Fragment implements LoaderManager.LoaderCal
         Intent intent = new Intent(getActivity(), DetailActivity.class);
 
         String specificID = String.valueOf(id);
-        String mSelectionClause = TrackContract.TrackingEntry._ID;
+        String mSelectionClause = TrackContract.TrackingEntry.COLUMN_RUN_IDP;
+        String mSelection = mSelectionClause + " = '" + specificID + "'";
         try {
-            Cursor cursor = getActivity().getContentResolver().query(TrackContract.TrackingEntry.CONTENT_URI_POST, PROJECTION_POST, mSelectionClause + " = '" + specificID + "'", null, null);
+            Cursor cursor = getActivity().getContentResolver().query(TrackContract.TrackingEntry.CONTENT_URI_POST, PROJECTION_POST, mSelection, null, null);
             if (cursor != null && cursor.moveToFirst()) {
                 do {
-                    int runColumnIndex = cursor.getColumnIndex(COLUMN_RUN_ID);
-                    int startTimeColumnIndex = cursor.getColumnIndex(COLUMN_START_TIME);
-                    int stopTimeColumnIndex = cursor.getColumnIndex(COLUMN_STOP_TIME);
-                    int runTypeColumnIndex = cursor.getColumnIndex(COLUMN_RUNTYPE);
-                    int totalDistanceColumnIndex = cursor.getColumnIndex(COLUMN_TOTAL_DISTANCE);
-                    int maxAltitudeColumnIndex = cursor.getColumnIndex(COLUMN_MAX_ALT);
-                    int maxSpeedColumnIndex = cursor.getColumnIndex(COLUMN_MAX_SPEED);
-                    int avrSpeedColumnIndex = cursor.getColumnIndex(COLUMN_AVR_SPEED);
-                    int totalTimeColumnIndex = cursor.getColumnIndex(COLUMN_TIME_COUNTER);
+                    int runColumnIndex = cursor.getColumnIndex(COLUMN_RUN_IDP);
+                    int startTimeColumnIndex = cursor.getColumnIndex(COLUMN_START_TIMEP);
+                    int stopTimeColumnIndex = cursor.getColumnIndex(COLUMN_STOP_TIMEP);
+                    int runTypeColumnIndex = cursor.getColumnIndex(COLUMN_RUNTYPEP);
+                    int totalDistanceColumnIndex = cursor.getColumnIndex(COLUMN_TOTAL_DISTANCEP);
+                    int maxAltitudeColumnIndex = cursor.getColumnIndex(COLUMN_MAX_ALTP);
+                    int maxSpeedColumnIndex = cursor.getColumnIndex(COLUMN_MAX_SPEEDP);
+                    int avrSpeedColumnIndex = cursor.getColumnIndex(COLUMN_AVR_SPEEDP);
+                    int totalTimeColumnIndex = cursor.getColumnIndex(COLUMN_TIME_COUNTERP);
 
-                    String runID = cursor.getString(runColumnIndex);
+                    String runID = String.valueOf(cursor.getInt(runColumnIndex));
+                    Log.e("RUN LIsT FRAGMENT", String.valueOf(runID));
                     Long startTime = cursor.getLong(startTimeColumnIndex);
                     String mHoursStart = new SimpleDateFormat("HH:mm:ss").format(new Date(startTime));
                     Long stopTime = cursor.getLong(stopTimeColumnIndex);

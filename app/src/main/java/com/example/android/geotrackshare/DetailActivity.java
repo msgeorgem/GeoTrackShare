@@ -138,8 +138,9 @@ public class DetailActivity extends AppCompatActivity implements OnMapReadyCallb
         mDetailBinding.part2.runId.setText(currentRun);
         mDetailBinding.part2.startTime.setText(currentTimeStart);
 
-        currentRunId = Long.parseLong(currentRun);
+//        currentRunId = Long.parseLong(currentRun);
         runIdInt = Integer.parseInt(currentRun);
+        Log.e("Detail_Activity", String.valueOf(runIdInt));
         queryCoordinatesList(runIdInt);
 
         context = mDetailBinding.part2.favDetToggleButton.getContext();

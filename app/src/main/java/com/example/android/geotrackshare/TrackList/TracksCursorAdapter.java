@@ -16,39 +16,22 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.ToggleButton;
 
-
 import com.example.android.geotrackshare.DetailActivity;
 import com.example.android.geotrackshare.R;
-
 import com.example.android.geotrackshare.RunTypes.RunTypesAdapterNoUI;
 
-import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
-import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_ALTITUDE;
-import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_AVR_SPEED;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_AVR_SPEEDP;
-import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_DISTANCE;
-import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_MAX_ALT;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_MAX_ALTP;
-import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_MAX_SPEED;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_MAX_SPEEDP;
-import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_MIN_ALT;
-import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_RUNTYPE;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_RUNTYPEP;
-import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_RUN_ID;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_RUN_IDP;
-import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_START_TIME;
-import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_TIME;
-import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_TIME_COUNTER;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_TIME_COUNTERP;
-import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_TOTAL_DISTANCE;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_TOTAL_DISTANCEP;
-import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.CONTENT_URI;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry._ID;
 import static com.example.android.geotrackshare.RealTimeFragment.RUN_TYPE_PICTURE;
 import static com.example.android.geotrackshare.RealTimeFragment.mCategories;
@@ -65,7 +48,7 @@ public class TracksCursorAdapter extends CursorRecyclerAdapter<TracksCursorAdapt
     private RunListFragment fragment = new RunListFragment();
     private long id;
     private String mmElapsedTime, mDate, mHours;
-    private int id1;
+    private int id1, id2;
     private int mQuantity;
     private String ORDER = " DESC LIMIT 1";
 
@@ -75,7 +58,8 @@ public class TracksCursorAdapter extends CursorRecyclerAdapter<TracksCursorAdapt
     }
 
     public TracksCursorAdapter(RunListFragment context, Cursor cursor) {
-//        super( c, );
+        super(context, cursor);
+
         this.fragment = context;
 //        setHasStableIds(true);
     }
@@ -101,13 +85,13 @@ public class TracksCursorAdapter extends CursorRecyclerAdapter<TracksCursorAdapt
 //    }
 
     @Override
-    public void onBindViewHolderCursor(final ViewHolder viewHolder, Cursor cursor) {
+    public void onBindViewHolder(final ViewHolder viewHolder, Cursor cursor) {
 
         final Context context = viewHolder.itemView.getContext();
 
 
-        cursor.getColumnNames();
-        Log.e("numberofcolumns", Arrays.toString(cursor.getColumnNames()));
+//        cursor.getColumnNames();
+//        Log.e("numberofcolumns", Arrays.toString(cursor.getColumnNames()));
 
         // Find the columns of item attributes that we're interested in
         id = cursor.getLong(cursor.getColumnIndex(_ID));
@@ -164,7 +148,8 @@ public class TracksCursorAdapter extends CursorRecyclerAdapter<TracksCursorAdapt
         viewHolder.itemView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                fragment.onItemClick(id);
+                fragment.onItemClick(id1);
+                Log.e("onclick in holder", String.valueOf(id1));
             }
         });
 

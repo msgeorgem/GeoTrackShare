@@ -85,14 +85,13 @@ import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_MIN_ALT;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_MOVE_CLOSE;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_MOVE_DISTANCE;
+import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_RUNTYPE;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_RUNTYPEP;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_RUN_ID;
-import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_RUNTYPE;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_RUN_IDP;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_SPEED;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_START_TIME;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_START_TIMEP;
-import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_STOP_TIME;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_STOP_TIMEP;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_TIME;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_TIME_COUNTER;
@@ -102,6 +101,8 @@ import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.CONTENT_URI;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.CONTENT_URI_POST;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry._ID;
+import static com.example.android.geotrackshare.LocationService.LocationServiceConstants.requestingLocationUpdates;
+import static com.example.android.geotrackshare.LocationService.LocationServiceConstants.setRequestingLocationUpdates;
 import static com.example.android.geotrackshare.RealTimeFragment.DELETE_LAST_ROWS;
 import static com.example.android.geotrackshare.RealTimeFragment.DISABLE_AUTO_CLOSE;
 import static com.example.android.geotrackshare.RealTimeFragment.NOISEc;
@@ -110,8 +111,6 @@ import static com.example.android.geotrackshare.RealTimeFragment.RUN_TYPE_PICTUR
 import static com.example.android.geotrackshare.RealTimeFragment.RUN_TYPE_VALUE;
 import static com.example.android.geotrackshare.RealTimeFragment.mSharedPrefsRunType;
 import static com.example.android.geotrackshare.TrackingWidget.TrackingWidgetProvider.WIDGET_ELAPSED_TIME_TOTAL_DISTANCE;
-import static com.example.android.geotrackshare.LocationService.LocationServiceConstants.requestingLocationUpdates;
-import static com.example.android.geotrackshare.LocationService.LocationServiceConstants.setRequestingLocationUpdates;
 
 /**
  * A bound and started service that is promoted to a foreground service when location updates have
@@ -1061,7 +1060,7 @@ public class LocationUpdatesService extends Service implements SensorEventListen
     private void saveItemPost(final int runId, final long startTimeinMillis, final long stopTimeinMillis, final int runType, final double currentMaxAlt,
                               final double currentMaxSpeed, final double currentAvrSpeed,
                               final long currentElapsedTime, final double currentTotalDistance) {
-        Log.e(TAG, "saving" + runId + stopTimeinMillis + runType);
+        Log.e(TAG, "saving" + runId);
         // Database operations should not be done on the main thread
         AsyncTask<Void, Void, Void> insertItem = new AsyncTask<Void, Void, Void>() {
 
