@@ -11,6 +11,7 @@ import android.util.Log;
 
 import static android.R.attr.id;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_RUN_ID;
+import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_RUN_IDP;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry._ID;
 
 /**
@@ -29,8 +30,8 @@ public class TrackPostProvider extends ContentProvider {
         // The calls to addURI() go here, for all of the content URI patterns that the provider
         // should recognize. All paths added to the UriMatcher have a corresponding code to return
         // when a match is found.
-        sUriMatcher.addURI(TrackContract.CONTENT_AUTHORITY, TrackContract.PATH_TRACK, ITEMS);
-        sUriMatcher.addURI(TrackContract.CONTENT_AUTHORITY, TrackContract.PATH_TRACK + "/#", ITEM_ID);
+        sUriMatcher.addURI(TrackContract.CONTENT_AUTHORITY_POST, TrackContract.PATH_TRACK_POST, ITEMS);
+        sUriMatcher.addURI(TrackContract.CONTENT_AUTHORITY_POST, TrackContract.PATH_TRACK_POST + "/#", ITEM_ID);
     }
 
     private TrackDbHelper mDbHelper;
@@ -67,7 +68,7 @@ public class TrackPostProvider extends ContentProvider {
                 // For the ITEMS code, query the itmes table directly with the given
                 // projection, selection, selection arguments, and sort order. The cursor
                 // could contain multiple rows of the items table.
-                cursor = database.query(TrackContract.TrackingEntry.TABLE_NAME,
+                cursor = database.query(TrackContract.TrackingEntry.TABLE_NAME_POST_TRACKING,
                         projection,
                         selection,
                         selectionArgs,
@@ -89,7 +90,7 @@ public class TrackPostProvider extends ContentProvider {
 
                 // This will perform a query on the items table where the _id equals 3 to return a
                 // Cursor containing that row of the table.
-                cursor = database.query(TrackContract.TrackingEntry.TABLE_NAME, projection, selection, selectionArgs,
+                cursor = database.query(TrackContract.TrackingEntry.TABLE_NAME_POST_TRACKING, projection, selection, selectionArgs,
                         null, null, sortOrder);
                 break;
             default:
@@ -121,16 +122,16 @@ public class TrackPostProvider extends ContentProvider {
     private Uri insertItem(Uri uri, ContentValues values) {
 
         // Check that the movie_id is not null
-        String movie_id = values.getAsString(COLUMN_RUN_ID);
-        if (movie_id == null) {
-            throw new IllegalArgumentException("Item requires a movie_id");
+        String run_id = values.getAsString(COLUMN_RUN_IDP);
+        if (run_id == null) {
+            throw new IllegalArgumentException("Item requires a track_id");
         }
 
         // Gets the database in write mode
         SQLiteDatabase db = mDbHelper.getWritableDatabase();
 
         // Insert a new row for item in the database, returning the ID of that new row.
-        long newRowId = db.insert(TrackContract.TrackingEntry.TABLE_NAME, null, values);
+        long newRowId = db.insert(TrackContract.TrackingEntry.TABLE_NAME_POST_TRACKING, null, values);
 
         // Show a toast message depending on whether or not the insertion was successful
         if (newRowId == -1) {
@@ -162,7 +163,7 @@ public class TrackPostProvider extends ContentProvider {
         switch (match) {
             case ITEMS:
                 // Delete all rows that match the selection and selection args
-                rowsDeleted = database.delete(TrackContract.TrackingEntry.TABLE_NAME, selection, selectionArgs);
+                rowsDeleted = database.delete(TrackContract.TrackingEntry.TABLE_NAME_POST_TRACKING, selection, selectionArgs);
                 if (rowsDeleted != 0) {
                     getContext().getContentResolver().notifyChange(uri, null);
                     // Return the number of rows deleted
@@ -173,7 +174,7 @@ public class TrackPostProvider extends ContentProvider {
                 selection = _ID + "=?";
                 selectionArgs = new String[]{String.valueOf(ContentUris.parseId(uri))};
                 // Delete a single row given by the ID in the URI
-                rowsDeleted = database.delete(TrackContract.TrackingEntry.TABLE_NAME, selection, selectionArgs);
+                rowsDeleted = database.delete(TrackContract.TrackingEntry.TABLE_NAME_POST_TRACKING, selection, selectionArgs);
                 if (rowsDeleted != 0) {
                     getContext().getContentResolver().notifyChange(uri, null);
                     // Return the number of rows deleted
@@ -228,7 +229,7 @@ public class TrackPostProvider extends ContentProvider {
         SQLiteDatabase db = mDbHelper.getWritableDatabase();
 
         // Perform the update on the database and get the number of rows affected
-        int rowsUpdated = db.update(TrackContract.TrackingEntry.TABLE_NAME, values, selection, selectionArgs);
+        int rowsUpdated = db.update(TrackContract.TrackingEntry.TABLE_NAME_POST_TRACKING, values, selection, selectionArgs);
         // If 1 or more rows were updated, then notify all listeners that the data at the
         // given URI has changed
         if (rowsUpdated != 0) {

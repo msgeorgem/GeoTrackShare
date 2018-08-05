@@ -12,8 +12,11 @@ public class TrackContract {
 
 
     public static final String CONTENT_AUTHORITY = "com.example.android.geotrackshare";
+    public static final String CONTENT_AUTHORITY_POST = "com.example.android.geotrackshare.post";
     public static final Uri BASE_CONTENT_URI = Uri.parse("content://" + CONTENT_AUTHORITY);
+    public static final Uri BASE_CONTENT_URI_POST = Uri.parse("content://" + CONTENT_AUTHORITY_POST);
     public static final String PATH_TRACK = "tracking";
+    public static final String PATH_TRACK_POST = "post_tracking";
 
     private TrackContract() {
     }
@@ -22,7 +25,9 @@ public class TrackContract {
 
 
         public static final Uri CONTENT_URI = Uri.withAppendedPath(BASE_CONTENT_URI, PATH_TRACK);
-        public static final String TABLE_NAME = "tracking";
+        public static final Uri CONTENT_URI_POST = Uri.withAppendedPath(BASE_CONTENT_URI_POST, PATH_TRACK_POST);
+        public static final String TABLE_NAME_TRACKING = "tracking";
+        public static final String TABLE_NAME_POST_TRACKING = "post_tracking";
         public static final String COLUMN_RUN_ID = "run";
         public static final String COLUMN_RUNTYPE = "type";
         public static final String COLUMN_TIME = "time";
@@ -39,6 +44,19 @@ public class TrackContract {
         public static final String COLUMN_TOTAL_DISTANCE = "total_distance";
         public static final String COLUMN_MOVE_DISTANCE = "move_distance";
         public static final String COLUMN_MOVE_CLOSE = "move_close";
+        public static final String COLUMN_START_TIME = "start_time";
+        public static final String COLUMN_STOP_TIME = "stop_time";
+
+        public static final String COLUMN_RUN_IDP = "runp";
+        public static final String COLUMN_START_TIMEP = "start_timep";
+        public static final String COLUMN_STOP_TIMEP = "stop_timep";
+        public static final String COLUMN_RUNTYPEP = "typep";
+        public static final String COLUMN_TOTAL_DISTANCEP = "total_distancep";
+        public static final String COLUMN_MAX_ALTP = "max_altp";
+        public static final String COLUMN_MAX_SPEEDP = "max_speedp";
+        public static final String COLUMN_AVR_SPEEDP = "avr_speedp";
+        public static final String COLUMN_TIME_COUNTERP = "count_timerp";
+
 
         /**
          * The MIME type of the {@link #CONTENT_URI} for a list of items.

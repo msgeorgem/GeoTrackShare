@@ -69,7 +69,7 @@ public class SqliteExporter {
     private static void writeCsv(File backupFile, SQLiteDatabase db, int runId) {
         CSVWriter csvWrite = null;
         Cursor curCSV = null;
-        String tableName = TrackContract.TrackingEntry.TABLE_NAME;
+        String tableName = TrackContract.TrackingEntry.TABLE_NAME_TRACKING;
         String mSelectionClause = TrackContract.TrackingEntry.COLUMN_RUN_ID;
         String SELECTION = mSelectionClause + " = '" + runId + "'";
         try {

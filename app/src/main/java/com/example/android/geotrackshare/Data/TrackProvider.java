@@ -67,7 +67,7 @@ public class TrackProvider extends ContentProvider {
                 // For the ITEMS code, query the itmes table directly with the given
                 // projection, selection, selection arguments, and sort order. The cursor
                 // could contain multiple rows of the items table.
-                cursor = database.query(TrackContract.TrackingEntry.TABLE_NAME,
+                cursor = database.query(TrackContract.TrackingEntry.TABLE_NAME_TRACKING,
                         projection,
                         selection,
                         selectionArgs,
@@ -89,7 +89,7 @@ public class TrackProvider extends ContentProvider {
 
                 // This will perform a query on the items table where the _id equals 3 to return a
                 // Cursor containing that row of the table.
-                cursor = database.query(TrackContract.TrackingEntry.TABLE_NAME, projection, selection, selectionArgs,
+                cursor = database.query(TrackContract.TrackingEntry.TABLE_NAME_TRACKING, projection, selection, selectionArgs,
                         null, null, sortOrder);
                 break;
             default:
@@ -130,7 +130,7 @@ public class TrackProvider extends ContentProvider {
         SQLiteDatabase db = mDbHelper.getWritableDatabase();
 
         // Insert a new row for item in the database, returning the ID of that new row.
-        long newRowId = db.insert(TrackContract.TrackingEntry.TABLE_NAME, null, values);
+        long newRowId = db.insert(TrackContract.TrackingEntry.TABLE_NAME_TRACKING, null, values);
 
         // Show a toast message depending on whether or not the insertion was successful
         if (newRowId == -1) {
@@ -162,7 +162,7 @@ public class TrackProvider extends ContentProvider {
         switch (match) {
             case ITEMS:
                 // Delete all rows that match the selection and selection args
-                rowsDeleted = database.delete(TrackContract.TrackingEntry.TABLE_NAME, selection, selectionArgs);
+                rowsDeleted = database.delete(TrackContract.TrackingEntry.TABLE_NAME_TRACKING, selection, selectionArgs);
                 if (rowsDeleted != 0) {
                     getContext().getContentResolver().notifyChange(uri, null);
                     // Return the number of rows deleted
@@ -173,7 +173,7 @@ public class TrackProvider extends ContentProvider {
                 selection = _ID + "=?";
                 selectionArgs = new String[]{String.valueOf(ContentUris.parseId(uri))};
                 // Delete a single row given by the ID in the URI
-                rowsDeleted = database.delete(TrackContract.TrackingEntry.TABLE_NAME, selection, selectionArgs);
+                rowsDeleted = database.delete(TrackContract.TrackingEntry.TABLE_NAME_TRACKING, selection, selectionArgs);
                 if (rowsDeleted != 0) {
                     getContext().getContentResolver().notifyChange(uri, null);
                     // Return the number of rows deleted
@@ -228,7 +228,7 @@ public class TrackProvider extends ContentProvider {
         SQLiteDatabase db = mDbHelper.getWritableDatabase();
 
         // Perform the update on the database and get the number of rows affected
-        int rowsUpdated = db.update(TrackContract.TrackingEntry.TABLE_NAME, values, selection, selectionArgs);
+        int rowsUpdated = db.update(TrackContract.TrackingEntry.TABLE_NAME_TRACKING, values, selection, selectionArgs);
         // If 1 or more rows were updated, then notify all listeners that the data at the
         // given URI has changed
         if (rowsUpdated != 0) {

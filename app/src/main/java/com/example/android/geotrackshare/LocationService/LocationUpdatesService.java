@@ -74,27 +74,38 @@ import java.util.Locale;
 
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_ALTITUDE;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_AVR_SPEED;
+import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_AVR_SPEEDP;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_DISTANCE;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_LATITUDE;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_LONGITUDE;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_MAX_ALT;
+import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_MAX_ALTP;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_MAX_SPEED;
+import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_MAX_SPEEDP;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_MIN_ALT;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_MOVE_CLOSE;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_MOVE_DISTANCE;
+import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_RUNTYPEP;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_RUN_ID;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_RUNTYPE;
+import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_RUN_IDP;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_SPEED;
+import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_START_TIME;
+import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_START_TIMEP;
+import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_STOP_TIME;
+import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_STOP_TIMEP;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_TIME;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_TIME_COUNTER;
+import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_TIME_COUNTERP;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_TOTAL_DISTANCE;
+import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_TOTAL_DISTANCEP;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.CONTENT_URI;
+import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.CONTENT_URI_POST;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry._ID;
 import static com.example.android.geotrackshare.RealTimeFragment.DELETE_LAST_ROWS;
 import static com.example.android.geotrackshare.RealTimeFragment.DISABLE_AUTO_CLOSE;
 import static com.example.android.geotrackshare.RealTimeFragment.NOISEc;
 import static com.example.android.geotrackshare.RealTimeFragment.NOISEd;
-import static com.example.android.geotrackshare.RealTimeFragment.RUN_TYPE_PICTURE;
 import static com.example.android.geotrackshare.RealTimeFragment.RUN_TYPE_PICTURE_KEY;
 import static com.example.android.geotrackshare.RealTimeFragment.RUN_TYPE_VALUE;
 import static com.example.android.geotrackshare.RealTimeFragment.mSharedPrefsRunType;
@@ -149,9 +160,6 @@ public class LocationUpdatesService extends Service implements SensorEventListen
     public static final String EXTRA_LOCATION = PACKAGE_NAME + ".location";
     private static final String TAG = LocationUpdatesService.class.getSimpleName();
     public static final String EXTRA_START_FROM_NOTIFICATION = "EXTRA_START_FROM_NOTIFICATION";
-    public static final String EXTRA_STOP_FROM_ACTIVITY = "EXTRA_STOP_FROM_ACTIVITY";
-    public static final String EXTRA_START_FROM_WIDGET = "EXTRA_START_FROM_WIDGET";
-    public static final String EXTRA_STOP_FROM_WIDGET = "EXTRA_STOP_FROM_WIDGET";
     private static final int NOTIFICATION_ID = 12345678;
 
     public static String UPDATE_INTERVAL_IN_MILLISECONDS_STRING;
@@ -167,7 +175,6 @@ public class LocationUpdatesService extends Service implements SensorEventListen
             UPDATE_INTERVAL_IN_MILLISECONDS / 2;
     private final IBinder mBinder = new LocalBinder();
     private final int GET_GEOLOCATION_LAST_ROWS = 5;
-    long startTime = 0;
     private String CHANNEL_NAME = "GeoTracker Channel";
     private String DESCRIPTION = "GeoTracking";
     /**
@@ -206,7 +213,7 @@ public class LocationUpdatesService extends Service implements SensorEventListen
     private Location mCurrentLocation;
     private Cursor cur;
     private int mMaxId, mCurrentId, mLast_ID, mRunType;
-    private long mLastUpdateTimeMillis, mElapsedTimeMillis;
+    private long mLastUpdateTimeMillis, mElapsedTimeMillis, mStartTimeinMillis, mStopTimeinMillis;
     private double mCurrentLatitude, mCurrentLongitude, mCurrentAltitude, mCurrentSpeed, mMaxSpeed,
             mAverageSpeed, mMaxAltitude, mMinAltitude, mTotalTime, mDistance, mTotalDistance,
             mPreviousLatitude, mPreviousLongitude, mRoundedDistance;
@@ -223,6 +230,8 @@ public class LocationUpdatesService extends Service implements SensorEventListen
     private String mCurrentAddress = "";
     private String mNotificationInformation = "";
     private String mNotificationRunInformation = "";
+    public Cursor mTrackingCursor;
+    public Cursor mPostTrackingCursor;
 
     /**
      * Stores the types of location services the client is interested in using. Used for checking
@@ -427,7 +436,9 @@ public class LocationUpdatesService extends Service implements SensorEventListen
      * Removes location updates from the FusedLocationApi.
      */
     public void stopLocationUpdates() {
-
+        mStopTimeinMillis = System.currentTimeMillis();
+        saveItemPost(mCurrentId, mStartTimeinMillis, mStopTimeinMillis, mRunType, mMaxAltitude, mMaxSpeed, mAverageSpeed,
+                mElapsedTimeMillis, mTotalDistance);
         Log.i(TAG, "Removing location updates");
 //        try {
         mFusedLocationClient.removeLocationUpdates(mLocationCallback);
@@ -442,7 +453,6 @@ public class LocationUpdatesService extends Service implements SensorEventListen
             Log.d(TAG, "stopLocationUpdates: updates never requested, no-op.");
             return;
         }
-
     }
 
     /**
@@ -451,7 +461,7 @@ public class LocationUpdatesService extends Service implements SensorEventListen
      */
     public void startUpdatesButtonHandler() {
         if (!requestingLocationUpdates(this)) {
-            startTime = System.currentTimeMillis();
+            mStartTimeinMillis = System.currentTimeMillis();
             mCurrentId = queryMaxId() + 1;
             mRunType = RUN_TYPE_VALUE;
             startLocationUpdates();
@@ -508,7 +518,6 @@ public class LocationUpdatesService extends Service implements SensorEventListen
         startWidgetIntent.setAction(WIDGET_ELAPSED_TIME_TOTAL_DISTANCE);
         startWidgetIntent.putExtra(EXTRA_TOTAL_TIME, mElapsedTimeMillis);
         startWidgetIntent.putExtra(EXTRA_CURRENT_ID, mCurrentId);
-        startWidgetIntent.putExtra(EXTRA_RUN_TYPE, mRunType);
         startWidgetIntent.putExtra(EXTRA_TOTAL_DISTANCE, mTotalDistance);
         startWidgetIntent.putExtra(EXTRA_TOTAL_DISTANCE, mTotalDistance);
         startWidgetIntent.putExtra(EXTRA_SPEED, mCurrentSpeed);
@@ -596,7 +605,7 @@ public class LocationUpdatesService extends Service implements SensorEventListen
 
         mLastUpdateTimeMillis = System.currentTimeMillis();
         // Get elapsed time in milliseconds
-        mElapsedTimeMillis = mLastUpdateTimeMillis - startTime;
+        mElapsedTimeMillis = mLastUpdateTimeMillis - mStartTimeinMillis;
         if (mElapsedTimeMillis < 0) {
             mElapsedTimeMillis = 0;
         }
@@ -1008,7 +1017,7 @@ public class LocationUpdatesService extends Service implements SensorEventListen
         }
     }
 
-    private void saveItem(final int runId, final int runType, final long currentTime, final double currentLatitude, final double currentLongitude,
+    private void saveItem(final int runId, final long startTimeinMillis, final int runType, final long currentTime, final double currentLatitude, final double currentLongitude,
                           final double currentAltitude, final double currentMaxAlt, final double currentMinAlt,
                           final double currentSpeed, final double currentMaxSpeed, final double currentAvrSpeed,
                           final long currentElapsedTime, final double currentDistance, final double currentTotalDistance,
@@ -1021,6 +1030,7 @@ public class LocationUpdatesService extends Service implements SensorEventListen
             protected Void doInBackground(Void... voids) {
                 ContentValues values = new ContentValues();
                 values.put(COLUMN_RUN_ID, runId);
+                values.put(COLUMN_START_TIME, startTimeinMillis);
                 values.put(COLUMN_RUNTYPE, runType);
                 values.put(COLUMN_TIME, currentTime);
                 values.put(COLUMN_LATITUDE, currentLatitude);
@@ -1041,6 +1051,36 @@ public class LocationUpdatesService extends Service implements SensorEventListen
                 // This is a NEW item, so insert a new item into the provider,
                 // returning the content URI for the item item.
                 getContentResolver().insert(CONTENT_URI, values);
+
+                return null;
+            }
+        };
+        insertItem.execute();
+    }
+
+    private void saveItemPost(final int runId, final long startTimeinMillis, final long stopTimeinMillis, final int runType, final double currentMaxAlt,
+                              final double currentMaxSpeed, final double currentAvrSpeed,
+                              final long currentElapsedTime, final double currentTotalDistance) {
+        Log.e(TAG, "saving" + runId + stopTimeinMillis + runType);
+        // Database operations should not be done on the main thread
+        AsyncTask<Void, Void, Void> insertItem = new AsyncTask<Void, Void, Void>() {
+
+            @Override
+            protected Void doInBackground(Void... voids) {
+                ContentValues values = new ContentValues();
+                values.put(COLUMN_RUN_IDP, runId);
+                values.put(COLUMN_START_TIMEP, startTimeinMillis);
+                values.put(COLUMN_STOP_TIMEP, stopTimeinMillis);
+                values.put(COLUMN_RUNTYPEP, runType);
+                values.put(COLUMN_TOTAL_DISTANCEP, currentTotalDistance);
+                values.put(COLUMN_MAX_ALTP, currentMaxAlt);
+                values.put(COLUMN_MAX_SPEEDP, currentMaxSpeed);
+                values.put(COLUMN_AVR_SPEEDP, currentAvrSpeed);
+                values.put(COLUMN_TIME_COUNTERP, currentElapsedTime);
+
+                // This is a NEW item, so insert a new item into the provider,
+                // returning the content URI for the item item.
+                getContentResolver().insert(CONTENT_URI_POST, values);
 
                 return null;
             }
@@ -1138,7 +1178,7 @@ public class LocationUpdatesService extends Service implements SensorEventListen
                     mCurrentAddress = "";
                 }
 
-                saveItem(mCurrentId, mRunType, mLastUpdateTimeMillis, mCurrentLatitude, mCurrentLongitude,
+                saveItem(mCurrentId, mStartTimeinMillis, mRunType, mLastUpdateTimeMillis, mCurrentLatitude, mCurrentLongitude,
                         mCurrentAltitude, mMaxAltitude, mMinAltitude, mCurrentSpeed, mMaxSpeed,
                         mAverageSpeed, mElapsedTimeMillis, mDistance, mTotalDistance, mMoveDistance,
                         mMoveClose);

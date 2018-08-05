@@ -106,7 +106,7 @@
 
         <provider
             android:name="com.example.android.geotrackshare.Data.TrackPostProvider"
-            android:authorities="com.example.android.geotrackshare"
+            android:authorities="com.example.android.geotrackshare.post"
             android:exported="false" />
 
         <service

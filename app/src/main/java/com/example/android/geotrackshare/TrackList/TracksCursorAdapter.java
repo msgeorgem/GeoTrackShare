@@ -31,15 +31,23 @@ import java.util.concurrent.TimeUnit;
 
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_ALTITUDE;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_AVR_SPEED;
+import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_AVR_SPEEDP;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_DISTANCE;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_MAX_ALT;
+import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_MAX_ALTP;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_MAX_SPEED;
+import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_MAX_SPEEDP;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_MIN_ALT;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_RUNTYPE;
+import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_RUNTYPEP;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_RUN_ID;
+import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_RUN_IDP;
+import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_START_TIME;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_TIME;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_TIME_COUNTER;
+import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_TIME_COUNTERP;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_TOTAL_DISTANCE;
+import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_TOTAL_DISTANCEP;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.CONTENT_URI;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry._ID;
 import static com.example.android.geotrackshare.RealTimeFragment.RUN_TYPE_PICTURE;
@@ -70,7 +78,6 @@ public class TracksCursorAdapter extends CursorRecyclerAdapter<TracksCursorAdapt
 //        super( c, );
         this.fragment = context;
 //        setHasStableIds(true);
-
     }
 
     @Override
@@ -98,94 +105,68 @@ public class TracksCursorAdapter extends CursorRecyclerAdapter<TracksCursorAdapt
 
         final Context context = viewHolder.itemView.getContext();
 
-//        cursor = context.getContentResolver()
-//                .query(CONTENT_URI, null, null, null, null);
-        int numberofcolumns = cursor.getColumnCount();
 
         cursor.getColumnNames();
         Log.e("numberofcolumns", Arrays.toString(cursor.getColumnNames()));
-//        viewHolder.setIsRecyclable(false);
 
-//        if (cursor != null && cursor.moveToFirst()) {
-//            while (cursor.moveToNext()) {
+        // Find the columns of item attributes that we're interested in
+        id = cursor.getLong(cursor.getColumnIndex(_ID));
+        id1 = cursor.getInt(cursor.getColumnIndex(COLUMN_RUN_IDP));
+        int runColumnIndex = cursor.getColumnIndex(COLUMN_RUN_IDP);
+//        int startTimeColumnIndex = cursor.getColumnIndex(COLUMN_START_TIME);
+        int runTypeColumnIndex = cursor.getColumnIndex(COLUMN_RUNTYPEP);
+        int totalDistanceColumnIndex = cursor.getColumnIndex(COLUMN_TOTAL_DISTANCEP);
+        int maxAltitudeColumnIndex = cursor.getColumnIndex(COLUMN_MAX_ALTP);
+        int maxSpeedColumnIndex = cursor.getColumnIndex(COLUMN_MAX_SPEEDP);
+        int avrSpeedColumnIndex = cursor.getColumnIndex(COLUMN_AVR_SPEEDP);
+        int totalTimeColumnIndex = cursor.getColumnIndex(COLUMN_TIME_COUNTERP);
 
-                // Find the columns of item attributes that we're interested in
-                id = cursor.getLong(cursor.getColumnIndex(_ID));
-                id1 = cursor.getInt(cursor.getColumnIndex(COLUMN_RUN_ID));
-                int runColumnIndex = cursor.getColumnIndex(COLUMN_RUN_ID);
-                int runTypeColumnIndex = cursor.getColumnIndex(COLUMN_RUNTYPE);
-                int timeColumnIndex = cursor.getColumnIndex(COLUMN_TIME);
-                int avgSpeedColumnIndex = cursor.getColumnIndex(COLUMN_AVR_SPEED);
-                int timeCountColumnIndex = cursor.getColumnIndex(COLUMN_TIME_COUNTER);
-                int distColumnIndex = cursor.getColumnIndex(COLUMN_TOTAL_DISTANCE);
+        String runID = cursor.getString(runColumnIndex);
+//        Long startTime = cursor.getLong(startTimeColumnIndex);
+//        String mHoursStart = new SimpleDateFormat("HH:mm:ss").format(new Date(startTime));
 
-
-                int maxAltColumnIndex = cursor.getColumnIndex(COLUMN_MAX_ALT);
-                int minAltColumnIndex = cursor.getColumnIndex(COLUMN_MIN_ALT);
-                int maxSpeedColumnIndex = cursor.getColumnIndex(COLUMN_MAX_SPEED);
-                int altColumnIndex = cursor.getColumnIndex(COLUMN_ALTITUDE);
-
-                // Read the item attributes from the Cursor for the current item
-
-                final String itemTitle = cursor.getString(runColumnIndex);
-                long itemTime = cursor.getLong(timeColumnIndex);
-                double itemAvgSpeed = cursor.getDouble(avgSpeedColumnIndex);
-//        String itemAltitude = cursor.getString(altColumnIndex);
-                long itemTimeCount = cursor.getLong(timeCountColumnIndex);
-                double itemDistance = cursor.getDouble(distColumnIndex);
-//        int runType = cursor.getInt(runTypeColumnIndex);
-//        Log.e("Database", String.valueOf(runTypeColumnIndex));
-                int runTypeInt = 1;
-                Log.e("runTypeInt", String.valueOf(runTypeInt));
-                Log.e("runTypeColumnIndex", String.valueOf(runTypeColumnIndex));
-
-//        String itemMaxAlt = cursor.getString(maxAltColumnIndex);
-//        String itemMinAlt = cursor.getString(minAltColumnIndex);
-//        String itemMaxSpeed = cursor.getString(maxSpeedColumnIndex);
-//        mDate = new Date(itemTime).toString();
-                RunTypesAdapterNoUI mAdapter = new RunTypesAdapterNoUI(context, mCategories);
-                RUN_TYPE_PICTURE = mAdapter.getItem(runTypeInt).getPicture();
-                Bitmap icon = BitmapFactory.decodeResource(context.getResources(), RUN_TYPE_PICTURE);
+        int runType = cursor.getInt(runTypeColumnIndex);
+        Double totalDistance = cursor.getDouble(totalDistanceColumnIndex);
+        Double maxAltitude = cursor.getDouble(maxAltitudeColumnIndex);
+        Double maxSpeed = cursor.getDouble(maxSpeedColumnIndex);
+        Double avrSpeed = cursor.getDouble(avrSpeedColumnIndex);
+        Long totalTime = cursor.getLong(totalTimeColumnIndex);
+        String mHoursStop = new SimpleDateFormat("HH:mm:ss").format(new Date(totalTime));
 
 
-                mDate = DateFormat.getDateInstance(DateFormat.LONG).format(itemTime);
-                mHours = new SimpleDateFormat("HH:mm:ss").format(new Date(itemTime));
+        // Read the item attributes from the Cursor for the current item
+
+        RunTypesAdapterNoUI mAdapter = new RunTypesAdapterNoUI(context, mCategories);
+        RUN_TYPE_PICTURE = mAdapter.getItem(runType).getPicture();
+        Bitmap icon = BitmapFactory.decodeResource(context.getResources(), RUN_TYPE_PICTURE);
 
 
-                mmElapsedTime = String.format("%02d:%02d:%02d", TimeUnit.MILLISECONDS.toHours(itemTimeCount),
-                        TimeUnit.MILLISECONDS.toMinutes(itemTimeCount) % TimeUnit.HOURS.toMinutes(1),
-                        TimeUnit.MILLISECONDS.toSeconds(itemTimeCount) % TimeUnit.MINUTES.toSeconds(1));
-
-                viewHolder.runTypeIcon.setImageBitmap(icon);
-                viewHolder.runIdTextView.setText(itemTitle);
-                viewHolder.dateTextView.setText(mDate);
-                viewHolder.hoursTextView.setText(mHours);
-                viewHolder.speedTextView.setText(String.format(Locale.ENGLISH, "%s: %.1f",
-                        "Avg Speed km/h", itemAvgSpeed));
-//        viewHolder.altitude.setText(itemAltitude);
-                viewHolder.timeCounter.setText(String.format(Locale.ENGLISH, "%s: %s",
-                        "Total Time", mmElapsedTime));
-                viewHolder.totalDistance.setText(String.format(Locale.ENGLISH, "%s: %.3f",
-                        "Total Dist. km", itemDistance));
-//        viewHolder.maxAltitude.setText(itemMaxAlt);
-//        viewHolder.minAltitude.setText(itemMinAlt);
-//        viewHolder.maxSpeedTextView.setText(itemMaxSpeed);
+//        mDate = DateFormat.getDateInstance(DateFormat.LONG).format(startTime);
 
 
-                viewHolder.itemView.setTag(id1);
+        mmElapsedTime = String.format("%02d:%02d:%02d", TimeUnit.MILLISECONDS.toHours(totalTime),
+                TimeUnit.MILLISECONDS.toMinutes(totalTime) % TimeUnit.HOURS.toMinutes(1),
+                TimeUnit.MILLISECONDS.toSeconds(totalTime) % TimeUnit.MINUTES.toSeconds(1));
 
-                viewHolder.itemView.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        fragment.onItemClick(id);
-                    }
-                });
-//            }
-//        }
+        viewHolder.runTypeIcon.setImageBitmap(icon);
+        viewHolder.runIdTextView.setText(runID);
+        viewHolder.dateTextView.setText(mDate);
+        viewHolder.hoursTextView.setText(mHoursStop);
+        viewHolder.speedTextView.setText(String.format(Locale.ENGLISH, "%s: %.1f",
+                "Avg Speed km/h", avrSpeed));
+        viewHolder.timeCounter.setText(String.format(Locale.ENGLISH, "%s: %s",
+                "Total Time", mmElapsedTime));
+        viewHolder.totalDistance.setText(String.format(Locale.ENGLISH, "%s: %.3f",
+                "Total Dist. km", totalDistance));
 
-//        if (cursor != null) {
-//            cursor.close();
-//        }
+        viewHolder.itemView.setTag(id1);
+
+        viewHolder.itemView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                fragment.onItemClick(id);
+            }
+        });
 
 
         DetailActivity.favPrefs = context.getSharedPreferences("favourites", Context.MODE_PRIVATE);

@@ -52,7 +52,8 @@ import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_TOTAL_DISTANCE;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.CONTENT_URI;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry._ID;
-import static com.example.android.geotrackshare.TrackList.RunListFragment.EXTRA_TIME;
+import static com.example.android.geotrackshare.TrackList.RunListFragment.EXTRA_START_TIME;
+
 
 /**
  * Created by Marcin on 2017-11-29.
@@ -132,7 +133,7 @@ public class DetailActivity extends AppCompatActivity implements OnMapReadyCallb
 
 
         currentRun = intent.getStringExtra(RunListFragment.EXTRA_RUN_ID);
-        currentTimeStart = intent.getStringExtra(EXTRA_TIME);
+        currentTimeStart = intent.getStringExtra(EXTRA_START_TIME);
 
         mDetailBinding.part2.runId.setText(currentRun);
         mDetailBinding.part2.startTime.setText(currentTimeStart);
