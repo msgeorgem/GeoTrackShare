@@ -145,7 +145,7 @@
     <string name="delete_loops_by_label">Intervals to Auto Stop</string>
 
     <string name="disable_auto_stop_switch_key">auto_stop_switch</string>
-    <string name="disable_auto_stop_switch_label">Disable Auto Stop</string>
+    <string name="disable_auto_stop_switch_label">Enable Auto Stop</string>
     <string name="theme_switch_key">theme_switch</string>
     <string name="theme_switch_label">Dark Mode</string>
     <string name="screen_on_switch_key">screen_on_switch</string>

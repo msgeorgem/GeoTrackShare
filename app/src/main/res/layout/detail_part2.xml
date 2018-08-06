@@ -24,26 +24,40 @@
             android:id="@+id/run_id"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
+            android:layout_marginEnd="8dp"
+            android:layout_marginStart="8dp"
             android:gravity="center_horizontal"
             android:text="Run Id"
             android:textSize="32sp"
-            app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintTop_toBottomOf="parent" />
+            app:layout_constraintEnd_toStartOf="@+id/horizontal_middle"
+            app:layout_constraintStart_toStartOf="parent"
+            tools:layout_editor_absoluteY="56dp" />
 
         <TextView
             android:id="@+id/start_time"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="0dp"
-            android:text="Start time"
+            android:layout_marginEnd="8dp"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="8dp"
+            android:text="Start"
             android:textSize="20sp"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintHorizontal_bias="0.506"
-            app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintRight_toLeftOf="@+id/horizontal_middle"
+            app:layout_constraintEnd_toStartOf="@+id/horizontal_middle"
+            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/run_id" />
+
+        <TextView
+            android:id="@+id/stop_time"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="8dp"
+            android:text="Stop"
+            android:textSize="20sp"
+            app:layout_constraintEnd_toStartOf="@+id/horizontal_middle"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/start_time" />
 
         <ToggleButton
             android:id="@+id/favDetToggleButton"

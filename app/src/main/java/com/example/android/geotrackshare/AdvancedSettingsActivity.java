@@ -101,7 +101,7 @@ public class AdvancedSettingsActivity extends AppCompatActivity {
         private void bindPreferenceSummaryToValue2(Preference preference) {
             preference.setOnPreferenceChangeListener(this);
             SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
-            preferenceBooleanDisableAutoStop = preferences.getBoolean(preference.getKey(), true);
+            preferenceBooleanDisableAutoStop = preferences.getBoolean(preference.getKey(), false);
             onPreferenceChange(preference, preferenceBooleanDisableAutoStop);
         }
 
@@ -115,7 +115,7 @@ public class AdvancedSettingsActivity extends AppCompatActivity {
         private void bindPreferenceSummaryToValue4(Preference preference) {
             preference.setOnPreferenceChangeListener(this);
             SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
-            preferenceBooleanTheme = preferences.getBoolean(preference.getKey(), true);
+            preferenceBooleanTheme = preferences.getBoolean(preference.getKey(), false);
             onPreferenceChange(preference, preferenceBooleanTheme);
         }
 

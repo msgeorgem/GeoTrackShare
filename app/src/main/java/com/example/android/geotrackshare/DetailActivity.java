@@ -29,6 +29,7 @@ import android.widget.ToggleButton;
 
 import com.example.android.geotrackshare.Data.TrackContract;
 import com.example.android.geotrackshare.TrackList.RunListFragment;
+import com.example.android.geotrackshare.TrackingWidget.TrackingWidgetProvider;
 import com.example.android.geotrackshare.databinding.ActivityDetailBinding;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -39,21 +40,31 @@ import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PolylineOptions;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 
 import static com.example.android.geotrackshare.AdvancedSettingsActivity.preferenceBooleanTheme;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_ALTITUDE;
+import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_AVR_SPEEDP;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_LATITUDE;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_LONGITUDE;
+import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_MAX_ALTP;
+import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_MAX_SPEEDP;
+import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_RUNTYPEP;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_RUN_ID;
+import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_RUN_IDP;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_SPEED;
+import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_START_TIMEP;
+import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_STOP_TIMEP;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_TIME;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_TIME_COUNTER;
+import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_TIME_COUNTERP;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_TOTAL_DISTANCE;
+import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_TOTAL_DISTANCEP;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.CONTENT_URI;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry._ID;
-import static com.example.android.geotrackshare.TrackList.RunListFragment.EXTRA_START_TIME;
-import static com.example.android.geotrackshare.TrackList.RunListFragment.EXTRA_TOTAL_TIME;
+import static com.example.android.geotrackshare.TrackList.RunListFragment.PROJECTION_POST;
 
 
 /**
@@ -63,9 +74,11 @@ import static com.example.android.geotrackshare.TrackList.RunListFragment.EXTRA_
 public class DetailActivity extends AppCompatActivity implements OnMapReadyCallback {
 
 
-
     public static final String LOG_TAG = DetailActivity.class.getSimpleName();
     private static final String BUNDLE_RECYCLER_LAYOUT = "DetailActivity.clipsRecyclerView.activity_detail";
+    public static String ACTION_FROM_WIDGET = "ACTION_FROM_WIDGET";
+    public static String ACTION_FROM_RUNLISTFRAGMENT = "ACTION_FROM_RUNLISTFRAGMENT";
+
     //    private static final String API_key = BuildConfig.API_KEY;
     private static final String[] PROJECTION01 = {
             TrackContract.TrackingEntry._ID,
@@ -83,7 +96,7 @@ public class DetailActivity extends AppCompatActivity implements OnMapReadyCallb
     private final String MDB_SHARE_HASHTAG = "IMDB Source";
 
     private String mMovieSummary;
-    private Context context;
+    private Context mContext;
     private ToggleButton FAVtoggleButton;
     private String currentRun, currentTimeStart;
     private long currentRunId;
@@ -130,32 +143,37 @@ public class DetailActivity extends AppCompatActivity implements OnMapReadyCallb
         // Examine the intent that was used to launch this activity,
         // in order to figure out if we're creating a new item or editing an existing one.
         Intent intent = getIntent();
-        mCurrentItemUri = intent.getData();
+//        mCurrentItemUri = intent.getData();
+        String mAction = intent.getAction();
+        if (ACTION_FROM_RUNLISTFRAGMENT.equals(mAction)) {
+            runIdInt = intent.getIntExtra(RunListFragment.EXTRA_RUN_ID, 101);
+            Log.e("ACTION_FROM_RUNLIST", String.valueOf(runIdInt));
 
+        } else if (ACTION_FROM_WIDGET.equals(mAction)) {
+            runIdInt = intent.getIntExtra(TrackingWidgetProvider.EXTRA_RUN_ID_FROM_WIDGET, 1);
+            if (runIdInt == 0) {
+                runIdInt = 1;
+            }
+            Log.e("ACTION_FROM_WIDGET", String.valueOf(runIdInt));
+        }
+        onGetDataFromDataBaseAndDisplay(runIdInt);
 
-        runIdInt = intent.getIntExtra(RunListFragment.EXTRA_RUN_ID,101);
-        currentTimeStart = intent.getStringExtra(EXTRA_TOTAL_TIME);
-
-        currentRun = String.valueOf(runIdInt);
-        mDetailBinding.part2.runId.setText(currentRun);
-        mDetailBinding.part2.startTime.setText(currentTimeStart);
-        Log.e("Detail_Activity_cu_Run", String.valueOf(runIdInt));
 //        currentRunId = Long.parseLong(currentRun);
 //        runIdInt = Integer.parseInt(currentRun);
 
         queryCoordinatesList(runIdInt);
 
-        context = mDetailBinding.part2.favDetToggleButton.getContext();
+        mContext = mDetailBinding.part2.favDetToggleButton.getContext();
         FAVtoggleButton = mDetailBinding.part2.favDetToggleButton;
         FAVtoggleButton.setChecked(true);
 
         Boolean a = checkIfInFavorites();
 
         if (a) {
-            FAVtoggleButton.setBackgroundDrawable(ContextCompat.getDrawable(context, R.drawable.star_star));
+            FAVtoggleButton.setBackgroundDrawable(ContextCompat.getDrawable(mContext, R.drawable.star_star));
             FAVtoggleButton.setChecked(true);
         } else {
-            FAVtoggleButton.setBackgroundDrawable(ContextCompat.getDrawable(context, R.drawable.star_red));
+            FAVtoggleButton.setBackgroundDrawable(ContextCompat.getDrawable(mContext, R.drawable.star_red));
             FAVtoggleButton.setChecked(false);
         }
         FAVtoggleButton.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
@@ -187,6 +205,62 @@ public class DetailActivity extends AppCompatActivity implements OnMapReadyCallb
 
     }
 
+    public void onGetDataFromDataBaseAndDisplay(int id) {
+
+        Log.e("onGetDataFromDataB..", String.valueOf(id));
+        String specificID = String.valueOf(id);
+        String mSelectionClause = TrackContract.TrackingEntry.COLUMN_RUN_IDP;
+        String mSelection = mSelectionClause + " = '" + specificID + "'";
+        try {
+            Cursor cursor = getContentResolver().query(TrackContract.TrackingEntry.CONTENT_URI_POST, PROJECTION_POST, mSelection, null, null);
+            String[] columnnames = cursor.getColumnNames();
+            Log.e("columnnames..", String.valueOf(columnnames));
+
+            if (cursor != null && cursor.moveToFirst()) {
+                do {
+                    int runColumnIndex = cursor.getColumnIndex(COLUMN_RUN_IDP);
+                    int startTimeColumnIndex = cursor.getColumnIndex(COLUMN_START_TIMEP);
+                    int stopTimeColumnIndex = cursor.getColumnIndex(COLUMN_STOP_TIMEP);
+                    int runTypeColumnIndex = cursor.getColumnIndex(COLUMN_RUNTYPEP);
+                    int totalDistanceColumnIndex = cursor.getColumnIndex(COLUMN_TOTAL_DISTANCEP);
+                    int maxAltitudeColumnIndex = cursor.getColumnIndex(COLUMN_MAX_ALTP);
+                    int maxSpeedColumnIndex = cursor.getColumnIndex(COLUMN_MAX_SPEEDP);
+                    int avrSpeedColumnIndex = cursor.getColumnIndex(COLUMN_AVR_SPEEDP);
+                    int totalTimeColumnIndex = cursor.getColumnIndex(COLUMN_TIME_COUNTERP);
+
+                    int runID = cursor.getInt(runColumnIndex);
+                    Log.e("RUN LIsT FRAGMENT", String.valueOf(runID));
+                    Long startTime = cursor.getLong(startTimeColumnIndex);
+                    String mHoursStart = new SimpleDateFormat("HH:mm:ss").format(new Date(startTime));
+                    Long stopTime = cursor.getLong(stopTimeColumnIndex);
+                    String mHoursStop = new SimpleDateFormat("HH:mm:ss").format(new Date(stopTime));
+
+                    int runType = cursor.getInt(runTypeColumnIndex);
+                    Double totalDistance = cursor.getDouble(totalDistanceColumnIndex);
+                    Double maxAltitude = cursor.getDouble(maxAltitudeColumnIndex);
+                    Double maxSpeed = cursor.getDouble(maxSpeedColumnIndex);
+                    Double avrSpeed = cursor.getDouble(avrSpeedColumnIndex);
+                    Long totalTime = cursor.getLong(totalTimeColumnIndex);
+                    String mTotalTime = new SimpleDateFormat("HH:mm:ss").format(new Date(totalTime));
+
+                    String currentRun = String.valueOf(id);
+                    mDetailBinding.part2.runId.setText(currentRun);
+                    mDetailBinding.part2.startTime.setText(mHoursStart);
+                    mDetailBinding.part2.stopTime.setText(mHoursStop);
+
+                } while (cursor.moveToNext());
+            }
+            if (cursor != null) {
+                cursor.close();
+            }
+
+        } catch (Exception e) {
+            Log.e("Path Error", e.toString());
+        }
+
+
+    }
+
     private void switchThemeD() {
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
         boolean themeBoolean = sharedPrefs.getBoolean("theme_switch", preferenceBooleanTheme);
@@ -196,6 +270,7 @@ public class DetailActivity extends AppCompatActivity implements OnMapReadyCallb
             setTheme(R.style.AppThemeDarkTheme);
         }
     }
+
     private boolean checkIfInFavorites() {
         cur = getContentResolver().query(CONTENT_URI, null, null, null, null);
 

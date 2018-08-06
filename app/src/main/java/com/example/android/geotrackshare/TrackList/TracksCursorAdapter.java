@@ -21,6 +21,7 @@ import com.example.android.geotrackshare.R;
 import com.example.android.geotrackshare.RunTypes.RunTypesAdapterNoUI;
 
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
@@ -48,7 +49,7 @@ public class TracksCursorAdapter extends CursorRecyclerAdapter<TracksCursorAdapt
     private RunListFragment fragment = new RunListFragment();
     private long id,id2long;
     private String mmElapsedTime, mDate, mHours;
-    private int id1, id2;
+
     private int mQuantity;
     private String ORDER = " DESC LIMIT 1";
 
@@ -84,14 +85,13 @@ public class TracksCursorAdapter extends CursorRecyclerAdapter<TracksCursorAdapt
 
         final Context context = viewHolder.itemView.getContext();
 
-
+        final int mRunId;
 //        cursor.getColumnNames();
-//        Log.e("numberofcolumns", Arrays.toString(cursor.getColumnNames()));
+        Log.e("numberofcolumns", Arrays.toString(cursor.getColumnNames()));
 
         // Find the columns of item attributes that we're interested in
         id = cursor.getLong(cursor.getColumnIndex(_ID));
-        id1 = cursor.getInt(cursor.getColumnIndex(COLUMN_RUN_IDP));
-        id2long = cursor.getLong(cursor.getColumnIndex(COLUMN_RUN_IDP));
+        mRunId = cursor.getInt(cursor.getColumnIndex(COLUMN_RUN_IDP));
         int runColumnIndex = cursor.getColumnIndex(COLUMN_RUN_IDP);
 //        int startTimeColumnIndex = cursor.getColumnIndex(COLUMN_START_TIME);
         int runTypeColumnIndex = cursor.getColumnIndex(COLUMN_RUNTYPEP);
@@ -139,13 +139,13 @@ public class TracksCursorAdapter extends CursorRecyclerAdapter<TracksCursorAdapt
         viewHolder.totalDistance.setText(String.format(Locale.ENGLISH, "%s: %.3f",
                 "Total Dist. km", totalDistance));
 
-        viewHolder.itemView.setTag(id1);
-        Log.e("itemView.setTag", String.valueOf(id1));
+        viewHolder.itemView.setTag(mRunId);
+        Log.e("itemView.setTag", String.valueOf(mRunId));
         viewHolder.itemView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                fragment.onItemClick(id2long);
-                Log.e("onclick in holder", String.valueOf(id2long));
+                fragment.onItemClick(mRunId);
+                Log.e("onclick in holder", String.valueOf(mRunId));
             }
         });
 
@@ -184,8 +184,8 @@ public class TracksCursorAdapter extends CursorRecyclerAdapter<TracksCursorAdapt
             @Override
             public void onClick(View v) {
 //                long id2 = viewHolder.getItemId();
-                fileName = createBackupFileName(id1);
-                fragment.shareViaEmail(id1);
+                fileName = createBackupFileName(mRunId);
+                fragment.shareViaEmail(mRunId);
             }
         });
     }

@@ -27,16 +27,15 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Build;
 import android.os.Bundle;
-import android.util.Log;
 import android.widget.RemoteViews;
 
+import com.example.android.geotrackshare.DetailActivity;
 import com.example.android.geotrackshare.LocationService.LocationUpdatesService;
-import com.example.android.geotrackshare.MainActivity;
 import com.example.android.geotrackshare.R;
 
+import static com.example.android.geotrackshare.DetailActivity.ACTION_FROM_WIDGET;
 import static com.example.android.geotrackshare.LocationService.LocationServiceConstants.requestingLocationUpdates;
 import static com.example.android.geotrackshare.LocationService.LocationUpdatesService.EXTRA_CURRENT_ID;
-import static com.example.android.geotrackshare.RealTimeFragment.RUN_TYPE_PICTURE;
 import static com.example.android.geotrackshare.RealTimeFragment.RUN_TYPE_PICTURE_KEY;
 import static com.example.android.geotrackshare.RealTimeFragment.mSharedPrefsRunType;
 
@@ -45,8 +44,10 @@ public class TrackingWidgetProvider extends AppWidgetProvider {
 
     private static final String TAG = TrackingWidgetProvider.class.getSimpleName();
 
-    public static String WIDGET_ELAPSED_TIME_TOTAL_DISTANCE = "com.example.android.geotrackshare.WIDGET_ELAPSED_TIME_TOTAL_DISTANCE";
+    public static String ACTION_FROM_SERVICE = "ACTION_FROM_SERVICE";
+    public static String EXTRA_RUN_ID_FROM_WIDGET = "EXTRA_RUN_ID_FROM_WIDGET";
     private RemoteViews mRemoteViews;
+    private int mRunId;
 
     @Override
     public void onReceive(Context context, Intent intent) {
@@ -55,7 +56,7 @@ public class TrackingWidgetProvider extends AppWidgetProvider {
         AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(context);
         ComponentName thisWidget = new ComponentName(context, TrackingWidgetProvider.class);
 
-        if (WIDGET_ELAPSED_TIME_TOTAL_DISTANCE.equals(intent.getAction())) {
+        if (ACTION_FROM_SERVICE.equals(intent.getAction())) {
 
             int RUN_TYPE_PICTURE = mSharedPrefsRunType.getInt(RUN_TYPE_PICTURE_KEY, -1);
             Bitmap icon = BitmapFactory.decodeResource(context.getResources(), RUN_TYPE_PICTURE);
@@ -67,6 +68,7 @@ public class TrackingWidgetProvider extends AppWidgetProvider {
             mRemoteViews.setTextViewText(R.id.tracking_distance_dynamic, mTotalDistanceString);
 
             String runNumber = String.valueOf(intent.getIntExtra(EXTRA_CURRENT_ID, 0));
+            mRunId = Integer.parseInt(runNumber);
             mRemoteViews.setTextViewText(R.id.run_number, runNumber);
 
             Long mElapsedTimeMillis = intent.getLongExtra(LocationUpdatesService.EXTRA_TOTAL_TIME, 0);
@@ -128,7 +130,9 @@ public class TrackingWidgetProvider extends AppWidgetProvider {
 
         for (int widgetId : appWidgetIds) {
             mRemoteViews = new RemoteViews(context.getPackageName(), R.layout.tracking_widget);
-            Intent intentActivity = new Intent(context, MainActivity.class);
+            Intent intentActivity = new Intent(context, DetailActivity.class);
+            intentActivity.setAction(ACTION_FROM_WIDGET);
+            intentActivity.putExtra(EXTRA_RUN_ID_FROM_WIDGET, mRunId);
             PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intentActivity, 0);
             mRemoteViews.setOnClickPendingIntent(R.id.tracking_widget, pendingIntent);
 

@@ -110,7 +110,8 @@ import static com.example.android.geotrackshare.RealTimeFragment.NOISEd;
 import static com.example.android.geotrackshare.RealTimeFragment.RUN_TYPE_PICTURE_KEY;
 import static com.example.android.geotrackshare.RealTimeFragment.RUN_TYPE_VALUE;
 import static com.example.android.geotrackshare.RealTimeFragment.mSharedPrefsRunType;
-import static com.example.android.geotrackshare.TrackingWidget.TrackingWidgetProvider.WIDGET_ELAPSED_TIME_TOTAL_DISTANCE;
+import static com.example.android.geotrackshare.TrackingWidget.TrackingWidgetProvider.ACTION_FROM_SERVICE;
+
 
 /**
  * A bound and started service that is promoted to a foreground service when location updates have
@@ -514,7 +515,7 @@ public class LocationUpdatesService extends Service implements SensorEventListen
 
 
         Intent startWidgetIntent = new Intent(this, TrackingWidgetProvider.class);
-        startWidgetIntent.setAction(WIDGET_ELAPSED_TIME_TOTAL_DISTANCE);
+        startWidgetIntent.setAction(ACTION_FROM_SERVICE);
         startWidgetIntent.putExtra(EXTRA_TOTAL_TIME, mElapsedTimeMillis);
         startWidgetIntent.putExtra(EXTRA_CURRENT_ID, mCurrentId);
         startWidgetIntent.putExtra(EXTRA_TOTAL_DISTANCE, mTotalDistance);
@@ -1089,14 +1090,14 @@ public class LocationUpdatesService extends Service implements SensorEventListen
 
     private void autoStopLocationNoMovement() {
         if (DISABLE_AUTO_CLOSE) {
-            Log.d(TAG, "DISABLE AUTO CLOSE IS ON");
-
-        } else {
-            Log.d(TAG, "DISABLE AUTO CLOSE IS OFF");
+            Log.d(TAG, "AUTO CLOSE IS ON");
             if (mNoMoveClose) {
                 stopLocationUpdates();
                 deletelastNoMoveRows();
             }
+        } else {
+            Log.d(TAG, "AUTO CLOSE IS OFF");
+
         }
     }
 

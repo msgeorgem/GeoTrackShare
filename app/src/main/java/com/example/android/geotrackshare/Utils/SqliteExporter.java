@@ -15,7 +15,7 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.CONTENT_URI;
+import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.CONTENT_URI_POST;
 
 /**
  * Can export an sqlite databse into a csv file.
@@ -69,15 +69,15 @@ public class SqliteExporter {
     private static void writeCsv(File backupFile, SQLiteDatabase db, int runId) {
         CSVWriter csvWrite = null;
         Cursor curCSV = null;
-        String tableName = TrackContract.TrackingEntry.TABLE_NAME_TRACKING;
-        String mSelectionClause = TrackContract.TrackingEntry.COLUMN_RUN_ID;
+        String tableName = TrackContract.TrackingEntry.TABLE_NAME_POST_TRACKING;
+        String mSelectionClause = TrackContract.TrackingEntry.COLUMN_RUN_IDP;
         String SELECTION = mSelectionClause + " = '" + runId + "'";
         try {
             csvWrite = new CSVWriter(new FileWriter(backupFile));
             writeSingleValue(csvWrite, DB_BACKUP_DB_VERSION_KEY + "=" + db.getVersion());
             writeSingleValue(csvWrite, DB_BACKUP_TABLE_NAME + "=" + tableName);
             curCSV = RunListFragment.mContext.getContentResolver()
-                    .query(CONTENT_URI, null, SELECTION, null, null);
+                    .query(CONTENT_URI_POST, null, SELECTION, null, null);
 
             assert curCSV != null;
             csvWrite.writeNext(curCSV.getColumnNames());

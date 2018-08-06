@@ -1,6 +1,5 @@
 package com.example.android.geotrackshare.TrackList;
 
-import android.content.ContentUris;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -35,9 +34,7 @@ import com.example.android.geotrackshare.DetailActivity;
 import com.example.android.geotrackshare.R;
 import com.example.android.geotrackshare.Utils.SqliteExporter;
 
-import java.text.SimpleDateFormat;
 import java.util.Arrays;
-import java.util.Date;
 
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_AVR_SPEED;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_AVR_SPEEDP;
@@ -56,6 +53,7 @@ import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_TIME_COUNTERP;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_TOTAL_DISTANCE;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_TOTAL_DISTANCEP;
+import static com.example.android.geotrackshare.DetailActivity.ACTION_FROM_RUNLISTFRAGMENT;
 
 
 /**
@@ -91,7 +89,7 @@ public class RunListFragment extends Fragment implements LoaderManager.LoaderCal
             COLUMN_TIME_COUNTER
     };
 
-    private static final String[] PROJECTION_POST= {
+    public static final String[] PROJECTION_POST = {
             TrackContract.TrackingEntry._ID,
             COLUMN_RUN_IDP,
             COLUMN_START_TIMEP,
@@ -296,63 +294,13 @@ public class RunListFragment extends Fragment implements LoaderManager.LoaderCal
 //        return dir;
 //    }
 
-    public void onItemClick(long id) {
+    public void onItemClick(int id) {
         Intent intent = new Intent(getActivity(), DetailActivity.class);
-        Log.e("RUN LIsT onItemClick_in", String.valueOf(id));
-        String specificID = String.valueOf(id);
-        String mSelectionClause = TrackContract.TrackingEntry._ID;
-        String mSelection = mSelectionClause + " = '" + specificID + "'";
-        try {
-            Cursor cursor = getActivity().getContentResolver().query(TrackContract.TrackingEntry.CONTENT_URI_POST, PROJECTION_POST, mSelection, null, null);
-            if (cursor != null && cursor.moveToFirst()) {
-                do {
-                    int runColumnIndex = cursor.getColumnIndex(COLUMN_RUN_IDP);
-                    int startTimeColumnIndex = cursor.getColumnIndex(COLUMN_START_TIMEP);
-                    int stopTimeColumnIndex = cursor.getColumnIndex(COLUMN_STOP_TIMEP);
-                    int runTypeColumnIndex = cursor.getColumnIndex(COLUMN_RUNTYPEP);
-                    int totalDistanceColumnIndex = cursor.getColumnIndex(COLUMN_TOTAL_DISTANCEP);
-                    int maxAltitudeColumnIndex = cursor.getColumnIndex(COLUMN_MAX_ALTP);
-                    int maxSpeedColumnIndex = cursor.getColumnIndex(COLUMN_MAX_SPEEDP);
-                    int avrSpeedColumnIndex = cursor.getColumnIndex(COLUMN_AVR_SPEEDP);
-                    int totalTimeColumnIndex = cursor.getColumnIndex(COLUMN_TIME_COUNTERP);
+        intent.setAction(ACTION_FROM_RUNLISTFRAGMENT);
+        intent.putExtra(EXTRA_RUN_ID, id);
 
-                    int runID = cursor.getInt(runColumnIndex);
-                    Log.e("RUN LIsT FRAGMENT", String.valueOf(runID));
-                    Long startTime = cursor.getLong(startTimeColumnIndex);
-                    String mHoursStart = new SimpleDateFormat("HH:mm:ss").format(new Date(startTime));
-                    Long stopTime = cursor.getLong(stopTimeColumnIndex);
-                    String mHoursStop = new SimpleDateFormat("HH:mm:ss").format(new Date(stopTime));
-
-                    int runType = cursor.getInt(runTypeColumnIndex);
-                    Double totalDistance = cursor.getDouble(totalDistanceColumnIndex);
-                    Double maxAltitude = cursor.getDouble(maxAltitudeColumnIndex);
-                    Double maxSpeed = cursor.getDouble(maxSpeedColumnIndex);
-                    Double avrSpeed = cursor.getDouble(avrSpeedColumnIndex);
-                    Long totalTime = cursor.getLong(totalTimeColumnIndex);
-                    String mTotalTime = new SimpleDateFormat("HH:mm:ss").format(new Date(totalTime));
-
-                    intent.putExtra(EXTRA_RUN_ID, runID);
-                    intent.putExtra(EXTRA_START_TIME, mHoursStart);
-                    intent.putExtra(EXTRA_STOP_TIME, mHoursStop);
-                    intent.putExtra(EXTRA_RUNTYPE, runType);
-                    intent.putExtra(EXTRA_TOTAL_DISTANCE, totalDistance);
-                    intent.putExtra(EXTRA_MAX_ALT, maxAltitude);
-                    intent.putExtra(EXTRA_MAX_SPEED, maxSpeed);
-                    intent.putExtra(EXTRA_AVG_SPEED, avrSpeed);
-                    intent.putExtra(EXTRA_TOTAL_TIME, mTotalTime);
-
-                } while (cursor.moveToNext());
-            }
-            if (cursor != null) {
-                cursor.close();
-            }
-
-        } catch (Exception e) {
-            Log.e("Path Error", e.toString());
-        }
-
-        Uri currentProductUri = ContentUris.withAppendedId(TrackContract.TrackingEntry.CONTENT_URI, id);
-        intent.setData(currentProductUri);
+//        Uri currentProductUri = ContentUris.withAppendedId(TrackContract.TrackingEntry.CONTENT_URI, id);
+//        intent.setData(currentProductUri);
         startActivity(intent);
     }
 
