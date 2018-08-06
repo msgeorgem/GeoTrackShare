@@ -53,6 +53,7 @@ import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.CONTENT_URI;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry._ID;
 import static com.example.android.geotrackshare.TrackList.RunListFragment.EXTRA_START_TIME;
+import static com.example.android.geotrackshare.TrackList.RunListFragment.EXTRA_TOTAL_TIME;
 
 
 /**
@@ -132,15 +133,16 @@ public class DetailActivity extends AppCompatActivity implements OnMapReadyCallb
         mCurrentItemUri = intent.getData();
 
 
-        currentRun = intent.getStringExtra(RunListFragment.EXTRA_RUN_ID);
-        currentTimeStart = intent.getStringExtra(EXTRA_START_TIME);
+        runIdInt = intent.getIntExtra(RunListFragment.EXTRA_RUN_ID,101);
+        currentTimeStart = intent.getStringExtra(EXTRA_TOTAL_TIME);
 
+        currentRun = String.valueOf(runIdInt);
         mDetailBinding.part2.runId.setText(currentRun);
         mDetailBinding.part2.startTime.setText(currentTimeStart);
-
+        Log.e("Detail_Activity_cu_Run", String.valueOf(runIdInt));
 //        currentRunId = Long.parseLong(currentRun);
-        runIdInt = Integer.parseInt(currentRun);
-        Log.e("Detail_Activity", String.valueOf(runIdInt));
+//        runIdInt = Integer.parseInt(currentRun);
+
         queryCoordinatesList(runIdInt);
 
         context = mDetailBinding.part2.favDetToggleButton.getContext();

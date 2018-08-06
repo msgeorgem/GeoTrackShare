@@ -46,20 +46,15 @@ public class TracksCursorAdapter extends CursorRecyclerAdapter<TracksCursorAdapt
 
     public static String fileName;
     private RunListFragment fragment = new RunListFragment();
-    private long id;
+    private long id,id2long;
     private String mmElapsedTime, mDate, mHours;
     private int id1, id2;
     private int mQuantity;
     private String ORDER = " DESC LIMIT 1";
 
-    @Override
-    public Cursor getCursor() {
-        return super.getCursor();
-    }
 
     public TracksCursorAdapter(RunListFragment context, Cursor cursor) {
         super(context, cursor);
-
         this.fragment = context;
 //        setHasStableIds(true);
     }
@@ -96,6 +91,7 @@ public class TracksCursorAdapter extends CursorRecyclerAdapter<TracksCursorAdapt
         // Find the columns of item attributes that we're interested in
         id = cursor.getLong(cursor.getColumnIndex(_ID));
         id1 = cursor.getInt(cursor.getColumnIndex(COLUMN_RUN_IDP));
+        id2long = cursor.getLong(cursor.getColumnIndex(COLUMN_RUN_IDP));
         int runColumnIndex = cursor.getColumnIndex(COLUMN_RUN_IDP);
 //        int startTimeColumnIndex = cursor.getColumnIndex(COLUMN_START_TIME);
         int runTypeColumnIndex = cursor.getColumnIndex(COLUMN_RUNTYPEP);
@@ -144,12 +140,12 @@ public class TracksCursorAdapter extends CursorRecyclerAdapter<TracksCursorAdapt
                 "Total Dist. km", totalDistance));
 
         viewHolder.itemView.setTag(id1);
-
+        Log.e("itemView.setTag", String.valueOf(id1));
         viewHolder.itemView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                fragment.onItemClick(id1);
-                Log.e("onclick in holder", String.valueOf(id1));
+                fragment.onItemClick(id2long);
+                Log.e("onclick in holder", String.valueOf(id2long));
             }
         });
 

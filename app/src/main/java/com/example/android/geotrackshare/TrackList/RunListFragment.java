@@ -163,7 +163,7 @@ public class RunListFragment extends Fragment implements LoaderManager.LoaderCal
     }
 
     void deleteOneItem(int runId) {
-        int rowDeleted = getActivity().getContentResolver().delete(TrackContract.TrackingEntry.CONTENT_URI_POST, TrackContract.TrackingEntry.COLUMN_RUN_ID + "=" + runId, null);
+        int rowDeleted = getActivity().getContentResolver().delete(TrackContract.TrackingEntry.CONTENT_URI_POST, TrackContract.TrackingEntry.COLUMN_RUN_IDP + "=" + runId, null);
         Toast.makeText(getActivity(), rowDeleted + " " + getString(R.string.delete_one_item), Toast.LENGTH_SHORT).show();
 
     }
@@ -298,9 +298,9 @@ public class RunListFragment extends Fragment implements LoaderManager.LoaderCal
 
     public void onItemClick(long id) {
         Intent intent = new Intent(getActivity(), DetailActivity.class);
-
+        Log.e("RUN LIsT onItemClick_in", String.valueOf(id));
         String specificID = String.valueOf(id);
-        String mSelectionClause = TrackContract.TrackingEntry.COLUMN_RUN_IDP;
+        String mSelectionClause = TrackContract.TrackingEntry._ID;
         String mSelection = mSelectionClause + " = '" + specificID + "'";
         try {
             Cursor cursor = getActivity().getContentResolver().query(TrackContract.TrackingEntry.CONTENT_URI_POST, PROJECTION_POST, mSelection, null, null);
@@ -316,7 +316,7 @@ public class RunListFragment extends Fragment implements LoaderManager.LoaderCal
                     int avrSpeedColumnIndex = cursor.getColumnIndex(COLUMN_AVR_SPEEDP);
                     int totalTimeColumnIndex = cursor.getColumnIndex(COLUMN_TIME_COUNTERP);
 
-                    String runID = String.valueOf(cursor.getInt(runColumnIndex));
+                    int runID = cursor.getInt(runColumnIndex);
                     Log.e("RUN LIsT FRAGMENT", String.valueOf(runID));
                     Long startTime = cursor.getLong(startTimeColumnIndex);
                     String mHoursStart = new SimpleDateFormat("HH:mm:ss").format(new Date(startTime));
