@@ -6,6 +6,8 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.databinding.DataBindingUtil;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.location.Location;
 import android.net.Uri;
@@ -26,6 +28,7 @@ import android.widget.Toast;
 import android.widget.ToggleButton;
 
 import com.example.android.geotrackshare.Data.TrackContract;
+import com.example.android.geotrackshare.RunTypes.RunTypesAdapterNoUI;
 import com.example.android.geotrackshare.TrackList.RunListFragment;
 import com.example.android.geotrackshare.TrackingWidget.TrackingWidgetProvider;
 import com.example.android.geotrackshare.databinding.ActivityDetailBinding;
@@ -38,6 +41,7 @@ import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PolylineOptions;
 
+import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -62,6 +66,8 @@ import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_TOTAL_DISTANCEP;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.CONTENT_URI;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry._ID;
+import static com.example.android.geotrackshare.RealTimeFragment.RUN_TYPE_PICTURE;
+import static com.example.android.geotrackshare.RealTimeFragment.mCategories;
 import static com.example.android.geotrackshare.TrackList.RunListFragment.PROJECTION_POST;
 
 
@@ -203,6 +209,11 @@ public class DetailActivity extends AppCompatActivity implements OnMapReadyCallb
 
     }
 
+    static String formatDate(long dateInMillis) {
+        Date date = new Date(dateInMillis);
+        return DateFormat.getDateInstance(DateFormat.MEDIUM).format(date);
+    }
+
     public void onGetDataFromDataBaseAndDisplay(int id) {
 
         Log.e("onGetDataFromDataB..", String.valueOf(id));
@@ -242,9 +253,37 @@ public class DetailActivity extends AppCompatActivity implements OnMapReadyCallb
                     String mTotalTime = new SimpleDateFormat("HH:mm:ss").format(new Date(totalTime));
 
                     String currentRun = String.valueOf(id);
-                    mDetailBinding.part2.runId.setText(currentRun);
+                    String currentRunText = getResources().getString(R.string.Run_no) + currentRun;
+
+                    String totlaDistance3Dec = String.format("%.3f", totalDistance);
+                    String totalDistanceString = String.valueOf(totlaDistance3Dec + " km");
+
+                    String maxAltitudeNoDecimal = String.format("%.0f", maxAltitude);
+                    String maxAltitudeString = String.valueOf(maxAltitudeNoDecimal + " m");
+
+                    String maxSpeed1Decimal = String.format("%.1f", maxSpeed);
+                    String maxSpeedString = String.valueOf(maxSpeed1Decimal + " km/h");
+
+                    String avrSpeed1Decimal = String.format("%.1f", avrSpeed);
+                    String avrSpeedString = String.valueOf(avrSpeed1Decimal + " km/h");
+
+
+                    String mDate = formatDate(stopTime);
+                    mDetailBinding.part2.dateValue.setText(mDate);
                     mDetailBinding.part2.startTimeValue.setText(mHoursStart);
+                    mDetailBinding.part2.distanceValue.setText(totalDistanceString);
+                    mDetailBinding.part2.durationValue.setText(mTotalTime);
                     mDetailBinding.part2.stopTimeValue.setText(mHoursStop);
+
+                    mDetailBinding.part2.runId.setText(currentRunText);
+                    mDetailBinding.part2.avgSpeedValue.setText(avrSpeedString);
+                    mDetailBinding.part2.maxSpeedValue.setText(maxSpeedString);
+                    mDetailBinding.part2.maxAltValue.setText(maxAltitudeString);
+
+                    RunTypesAdapterNoUI mAdapter = new RunTypesAdapterNoUI(this, mCategories);
+                    RUN_TYPE_PICTURE = mAdapter.getItem(runType).getPicture();
+                    Bitmap icon = BitmapFactory.decodeResource(getResources(), RUN_TYPE_PICTURE);
+                    mDetailBinding.part2.runType.setImageBitmap(icon);
 
                 } while (cursor.moveToNext());
             }

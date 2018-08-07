@@ -194,4 +194,6 @@
     <string name="Run_type_car_desc">Travel by car with predefined settings specified for car movement</string>
     <string name="Run_type_bike_desc">Travel by bike with predefined settings specified for bike movement </string>
     <string name="Run_type_custom_desc">Travel any way you like with custom settings you can specify on your own</string>
+
+    <string name="Run_no">Run No:</string>
 </resources>
