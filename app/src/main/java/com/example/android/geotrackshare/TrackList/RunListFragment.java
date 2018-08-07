@@ -295,9 +295,10 @@ public class RunListFragment extends Fragment implements LoaderManager.LoaderCal
 //    }
 
     public void onItemClick(int id) {
+        Long idLong = (long) id;
         Intent intent = new Intent(getActivity(), DetailActivity.class);
         intent.setAction(ACTION_FROM_RUNLISTFRAGMENT);
-        intent.putExtra(EXTRA_RUN_ID, id);
+        intent.putExtra(EXTRA_RUN_ID, idLong);
 
 //        Uri currentProductUri = ContentUris.withAppendedId(TrackContract.TrackingEntry.CONTENT_URI, id);
 //        intent.setData(currentProductUri);

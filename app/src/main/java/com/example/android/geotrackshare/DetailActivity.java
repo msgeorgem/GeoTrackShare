@@ -1,81 +1,37 @@
 package com.example.android.geotrackshare;
 
-import android.content.ContentValues;
-import android.content.Context;
+
+import android.app.Fragment;
+import android.app.FragmentManager;
+import android.app.LoaderManager;
 import android.content.Intent;
+import android.content.Loader;
 import android.content.SharedPreferences;
 import android.database.Cursor;
-import android.databinding.DataBindingUtil;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.Color;
-import android.location.Location;
-import android.net.Uri;
+import android.graphics.drawable.ColorDrawable;
+import android.os.Build;
 import android.os.Bundle;
-import android.os.Parcelable;
-import android.preference.PreferenceManager;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
-import android.support.v4.app.NavUtils;
-import android.support.v4.app.ShareCompat;
+import android.support.v13.app.FragmentStatePagerAdapter;
+import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
 import android.util.Log;
-import android.view.Menu;
-import android.view.MenuItem;
+import android.util.TypedValue;
 import android.view.View;
-import android.widget.Toast;
-import android.widget.ToggleButton;
+import android.view.ViewGroup;
+import android.view.WindowInsets;
 
 import com.example.android.geotrackshare.Data.TrackContract;
-import com.example.android.geotrackshare.RunTypes.RunTypesAdapterNoUI;
-import com.example.android.geotrackshare.TrackList.RunListFragment;
-import com.example.android.geotrackshare.TrackingWidget.TrackingWidgetProvider;
-import com.example.android.geotrackshare.databinding.ActivityDetailBinding;
-import com.google.android.gms.maps.CameraUpdateFactory;
-import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.OnMapReadyCallback;
-import com.google.android.gms.maps.SupportMapFragment;
-import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.LatLngBounds;
-import com.google.android.gms.maps.model.MarkerOptions;
-import com.google.android.gms.maps.model.PolylineOptions;
+import com.example.android.geotrackshare.Data.TrackLoader;
 
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-
-import static com.example.android.geotrackshare.AdvancedSettingsActivity.preferenceBooleanTheme;
-import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_ALTITUDE;
-import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_AVR_SPEEDP;
-import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_LATITUDE;
-import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_LONGITUDE;
-import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_MAX_ALTP;
-import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_MAX_SPEEDP;
-import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_RUNTYPEP;
-import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_RUN_ID;
-import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_RUN_IDP;
-import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_SPEED;
-import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_START_TIMEP;
-import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_STOP_TIMEP;
-import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_TIME;
-import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_TIME_COUNTER;
-import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_TIME_COUNTERP;
-import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_TOTAL_DISTANCE;
-import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_TOTAL_DISTANCEP;
-import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.CONTENT_URI;
-import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry._ID;
-import static com.example.android.geotrackshare.RealTimeFragment.RUN_TYPE_PICTURE;
-import static com.example.android.geotrackshare.RealTimeFragment.mCategories;
-import static com.example.android.geotrackshare.TrackList.RunListFragment.PROJECTION_POST;
+import static com.example.android.geotrackshare.TrackList.RunListFragment.EXTRA_RUN_ID;
 
 
 /**
  * Created by Marcin on 2017-11-29.
  */
 
-public class DetailActivity extends AppCompatActivity implements OnMapReadyCallback {
+public class DetailActivity extends AppCompatActivity
+        implements LoaderManager.LoaderCallbacks<Cursor> {
 
 
     public static final String LOG_TAG = DetailActivity.class.getSimpleName();
@@ -84,535 +40,191 @@ public class DetailActivity extends AppCompatActivity implements OnMapReadyCallb
     public static String ACTION_FROM_RUNLISTFRAGMENT = "ACTION_FROM_RUNLISTFRAGMENT";
 
     //    private static final String API_key = BuildConfig.API_KEY;
-    private static final String[] PROJECTION01 = {
-            TrackContract.TrackingEntry._ID,
-            TrackContract.TrackingEntry.COLUMN_TIME,
+    private static final String[] PROJECTIONID = {
+            TrackContract.TrackingEntry.COLUMN_RUN_ID,
     };
-    private static final String[] PROJECTION02 = {
-            _ID,
-            COLUMN_RUN_ID,
-            COLUMN_LATITUDE,
-            COLUMN_LONGITUDE
-    };
+
 
     public static String CURRENT_RUN_ID;
     public static SharedPreferences favPrefs;
     private final String MDB_SHARE_HASHTAG = "IMDB Source";
 
-    private String mMovieSummary;
-    private Context mContext;
-    private ToggleButton FAVtoggleButton;
-    private String currentRun, currentTimeStart;
-    private long currentRunId;
-    private String runId;
-    private int runIdInt;
-    private Uri mCurrentItemUri;
-    private ActivityDetailBinding mDetailBinding;
-    private Cursor cur, cur0, cur1;
-    private GoogleMap mMap;
-    private ArrayList<LatLng> coordinatesList;
-    private Location mCurrentLocation;
-    private LatLng here;
-    private double[] mStartLocation = new double[2];
-    private double[] mStopLocation = new double[2];
+    private Cursor mCursor;
+    private long mStartId;
+    private Intent intent;
+
+    private long mSelectedItemId;
+    private int mSelectedItemUpButtonFloor = Integer.MAX_VALUE;
+    private int mTopInset;
+
+    private ViewPager mPager;
+    private MyPagerAdapter mPagerAdapter;
+    private View mUpButtonContainer;
+    private View mUpButton;
+
+    public DetailActivity() {
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        switchThemeD();
-        mDetailBinding = DataBindingUtil.setContentView(this, R.layout.activity_detail);
+        setContentView(R.layout.activity_detail1);
 
+        intent = getIntent();
+        if (ACTION_FROM_RUNLISTFRAGMENT.equals(intent.getAction())) {
+            mStartId = intent.getLongExtra(EXTRA_RUN_ID, 0);
+        }
 
-        SupportMapFragment fm = (SupportMapFragment) getSupportFragmentManager()
-                .findFragmentById(R.id.map);
+        getLoaderManager().initLoader(0, null, this);
 
-        fm.getMapAsync(this);
+        mPagerAdapter = new MyPagerAdapter(getFragmentManager());
+        mPager = findViewById(R.id.pager);
+        mPager.setAdapter(mPagerAdapter);
+        mPager.setPageMargin((int) TypedValue
+                .applyDimension(TypedValue.COMPLEX_UNIT_DIP, 1, getResources().getDisplayMetrics()));
+        mPager.setPageMarginDrawable(new ColorDrawable(0x22000000));
 
-
-        // Find the toolbar view inside the activity layout
-        Toolbar toolbar = findViewById(R.id.toolbar);
-        // Sets the Toolbar to act as the ActionBar for this Activity window.
-        // Make sure the toolbar exists in the activity and is not null
-        //setSupportActionBar(toolbar);
-
-        FloatingActionButton fab = findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
+        mPager.addOnPageChangeListener(new ViewPager.SimpleOnPageChangeListener() {
             @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
+            public void onPageScrollStateChanged(int state) {
+                super.onPageScrollStateChanged(state);
+                mUpButton.animate()
+                        .alpha((state == ViewPager.SCROLL_STATE_IDLE) ? 1f : 0f)
+                        .setDuration(300);
+            }
+
+            @Override
+            public void onPageSelected(int position) {
+                if (mCursor != null) {
+                    mCursor.moveToPosition(position);
+                }
+                mSelectedItemId = mCursor.getLong(TrackLoader.Query.COLUMN_RUN_IDP);
+                Log.e(LOG_TAG, String.valueOf(mSelectedItemId));
+                updateUpButtonPosition();
             }
         });
 
-        // Examine the intent that was used to launch this activity,
-        // in order to figure out if we're creating a new item or editing an existing one.
-        Intent intent = getIntent();
-//        mCurrentItemUri = intent.getData();
-        String mAction = intent.getAction();
-        if (ACTION_FROM_RUNLISTFRAGMENT.equals(mAction)) {
-            runIdInt = intent.getIntExtra(RunListFragment.EXTRA_RUN_ID, 101);
-            Log.e("ACTION_FROM_RUNLIST", String.valueOf(runIdInt));
-            //below lines not in usage
-        } else if (ACTION_FROM_WIDGET.equals(mAction)) {
-            runIdInt = intent.getIntExtra(TrackingWidgetProvider.EXTRA_RUN_ID_FROM_WIDGET, 1);
-            if (runIdInt == 0) {
-                runIdInt = 1;
+        mUpButtonContainer = findViewById(R.id.up_container);
+
+        mUpButton = findViewById(R.id.action_up);
+        mUpButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                onSupportNavigateUp();
             }
-            Log.e("ACTION_FROM_WIDGET", String.valueOf(runIdInt));
-        }
-        onGetDataFromDataBaseAndDisplay(runIdInt);
+        });
 
-//        currentRunId = Long.parseLong(currentRun);
-//        runIdInt = Integer.parseInt(currentRun);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
 
-        queryCoordinatesList(runIdInt);
-
-//        mContext = mDetailBinding.part2.favDetToggleButton.getContext();
-//        FAVtoggleButton = mDetailBinding.part2.favDetToggleButton;
-//        FAVtoggleButton.setChecked(true);
-
-//        Boolean a = checkIfInFavorites();
-//
-//        if (a) {
-//            FAVtoggleButton.setBackgroundDrawable(ContextCompat.getDrawable(mContext, R.drawable.star_star));
-//            FAVtoggleButton.setChecked(true);
-//        } else {
-//            FAVtoggleButton.setBackgroundDrawable(ContextCompat.getDrawable(mContext, R.drawable.star_red));
-//            FAVtoggleButton.setChecked(false);
-//        }
-//        FAVtoggleButton.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-//            @Override
-//            public void onCheckedChanged(CompoundButton compoundButton, boolean isChecked) {
-//
-//                if (isChecked) {
-////                    try {
-////                        saveItem();
-////                    } catch (IOException e) {
-////                        e.printStackTrace();
-////                    }
-//
-//                    FAVtoggleButton.setBackgroundDrawable(ContextCompat.getDrawable(getApplicationContext(), R.drawable.star_star));
-//                    SharedPreferences.Editor editor = favPrefs.edit();
-//                    editor.putBoolean("On", true);
-//                    editor.apply();
-//
-//                } else {
-//                    FAVtoggleButton.setBackgroundDrawable(ContextCompat.getDrawable(getApplicationContext(), R.drawable.star_red));
-//                    SharedPreferences.Editor editor = favPrefs.edit();
-//                    editor.putBoolean("On", false);
-//                    editor.apply();
-////                    delete(currentRunId);
-//                }
-//            }
-//        });
-
-
-    }
-
-    static String formatDate(long dateInMillis) {
-        Date date = new Date(dateInMillis);
-        return DateFormat.getDateInstance(DateFormat.MEDIUM).format(date);
-    }
-
-    public void onGetDataFromDataBaseAndDisplay(int id) {
-
-        Log.e("onGetDataFromDataB..", String.valueOf(id));
-        String specificID = String.valueOf(id);
-        String mSelectionClause = TrackContract.TrackingEntry.COLUMN_RUN_IDP;
-        String mSelection = mSelectionClause + " = '" + specificID + "'";
-        try {
-            Cursor cursor = getContentResolver().query(TrackContract.TrackingEntry.CONTENT_URI_POST, PROJECTION_POST, mSelection, null, null);
-            String[] columnnames = cursor.getColumnNames();
-            Log.e("columnnames..", String.valueOf(columnnames));
-
-            if (cursor != null && cursor.moveToFirst()) {
-                do {
-                    int runColumnIndex = cursor.getColumnIndex(COLUMN_RUN_IDP);
-                    int startTimeColumnIndex = cursor.getColumnIndex(COLUMN_START_TIMEP);
-                    int stopTimeColumnIndex = cursor.getColumnIndex(COLUMN_STOP_TIMEP);
-                    int runTypeColumnIndex = cursor.getColumnIndex(COLUMN_RUNTYPEP);
-                    int totalDistanceColumnIndex = cursor.getColumnIndex(COLUMN_TOTAL_DISTANCEP);
-                    int maxAltitudeColumnIndex = cursor.getColumnIndex(COLUMN_MAX_ALTP);
-                    int maxSpeedColumnIndex = cursor.getColumnIndex(COLUMN_MAX_SPEEDP);
-                    int avrSpeedColumnIndex = cursor.getColumnIndex(COLUMN_AVR_SPEEDP);
-                    int totalTimeColumnIndex = cursor.getColumnIndex(COLUMN_TIME_COUNTERP);
-
-                    int runID = cursor.getInt(runColumnIndex);
-                    Log.e("RUN LIsT FRAGMENT", String.valueOf(runID));
-                    Long startTime = cursor.getLong(startTimeColumnIndex);
-                    String mHoursStart = new SimpleDateFormat("HH:mm:ss").format(new Date(startTime));
-                    Long stopTime = cursor.getLong(stopTimeColumnIndex);
-                    String mHoursStop = new SimpleDateFormat("HH:mm:ss").format(new Date(stopTime));
-
-                    int runType = cursor.getInt(runTypeColumnIndex);
-                    Double totalDistance = cursor.getDouble(totalDistanceColumnIndex);
-                    Double maxAltitude = cursor.getDouble(maxAltitudeColumnIndex);
-                    Double maxSpeed = cursor.getDouble(maxSpeedColumnIndex);
-                    Double avrSpeed = cursor.getDouble(avrSpeedColumnIndex);
-                    Long totalTime = cursor.getLong(totalTimeColumnIndex);
-                    String mTotalTime = new SimpleDateFormat("HH:mm:ss").format(new Date(totalTime));
-
-                    String currentRun = String.valueOf(id);
-                    String currentRunText = getResources().getString(R.string.Run_no) + currentRun;
-
-                    String totlaDistance3Dec = String.format("%.3f", totalDistance);
-                    String totalDistanceString = String.valueOf(totlaDistance3Dec + " km");
-
-                    String maxAltitudeNoDecimal = String.format("%.0f", maxAltitude);
-                    String maxAltitudeString = String.valueOf(maxAltitudeNoDecimal + " m");
-
-                    String maxSpeed1Decimal = String.format("%.1f", maxSpeed);
-                    String maxSpeedString = String.valueOf(maxSpeed1Decimal + " km/h");
-
-                    String avrSpeed1Decimal = String.format("%.1f", avrSpeed);
-                    String avrSpeedString = String.valueOf(avrSpeed1Decimal + " km/h");
-
-
-                    String mDate = formatDate(stopTime);
-                    mDetailBinding.part2.dateValue.setText(mDate);
-                    mDetailBinding.part2.startTimeValue.setText(mHoursStart);
-                    mDetailBinding.part2.distanceValue.setText(totalDistanceString);
-                    mDetailBinding.part2.durationValue.setText(mTotalTime);
-                    mDetailBinding.part2.stopTimeValue.setText(mHoursStop);
-
-                    mDetailBinding.part2.runId.setText(currentRunText);
-                    mDetailBinding.part2.avgSpeedValue.setText(avrSpeedString);
-                    mDetailBinding.part2.maxSpeedValue.setText(maxSpeedString);
-                    mDetailBinding.part2.maxAltValue.setText(maxAltitudeString);
-
-                    RunTypesAdapterNoUI mAdapter = new RunTypesAdapterNoUI(this, mCategories);
-                    RUN_TYPE_PICTURE = mAdapter.getItem(runType).getPicture();
-                    Bitmap icon = BitmapFactory.decodeResource(getResources(), RUN_TYPE_PICTURE);
-                    mDetailBinding.part2.runType.setImageBitmap(icon);
-
-                } while (cursor.moveToNext());
-            }
-            if (cursor != null) {
-                cursor.close();
-            }
-
-        } catch (Exception e) {
-            Log.e("Path Error", e.toString());
-        }
-
-
-    }
-
-    private void switchThemeD() {
-        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
-        boolean themeBoolean = sharedPrefs.getBoolean("theme_switch", preferenceBooleanTheme);
-        if (!themeBoolean) {
-            setTheme(R.style.AppTheme);
-        } else {
-            setTheme(R.style.AppThemeDarkTheme);
-        }
-    }
-
-    private boolean checkIfInFavorites() {
-        cur = getContentResolver().query(CONTENT_URI, null, null, null, null);
-
-        ArrayList<String> favsTempList = new ArrayList<>();
-        boolean favourite;
-        if (cur != null) {
-            while (cur.moveToNext()) {
-                String i = cur.getString(cur.getColumnIndex(COLUMN_RUN_ID));
-                favsTempList.add(i);
-            }
-        }
-        favourite = favsTempList.contains(runId);
-
-        if (cur != null) {
-            cur.close();
-        }
-        return favourite;
-    }
-
-    public void delete(long id) {
-        int rowDeleted = getContentResolver().delete(CONTENT_URI, TrackContract.TrackingEntry.COLUMN_RUN_ID + "=" + id, null);
-        Toast.makeText(this, rowDeleted + " " + getString(R.string.delete_one_item), Toast.LENGTH_SHORT).show();
-    }
-
-    public ArrayList queryCoordinatesList(int id) {
-        String[] PROJECTION = {
-                COLUMN_RUN_ID,
-                COLUMN_TIME,
-                COLUMN_LATITUDE,
-                COLUMN_LONGITUDE,
-                COLUMN_ALTITUDE,
-                COLUMN_SPEED,
-                COLUMN_TIME_COUNTER,
-                COLUMN_TOTAL_DISTANCE
-        };
-        String specificID = String.valueOf(id);
-        String mSelectionClause = TrackContract.TrackingEntry.COLUMN_RUN_ID;
-        String SELECTION = mSelectionClause + " = '" + specificID + "'";
-        String ORDER = " " + COLUMN_SPEED + " DESC LIMIT 1";
-
-        try {
-            cur = getContentResolver()
-                    .query(CONTENT_URI, null, SELECTION, null, null);
-
-            coordinatesList = new ArrayList<>();
-
-            if (cur != null && cur.moveToFirst()) {
-                while (cur.moveToNext()) {
-                    double latitude = cur.getDouble(cur.getColumnIndex(COLUMN_LATITUDE));
-                    double longitude = cur.getDouble(cur.getColumnIndex(COLUMN_LONGITUDE));
-//                    LatLng latLng = new LatLng(latitude, longitude);
-                    here = new LatLng(latitude, longitude);
-                    Log.i("Print Current Location1", String.valueOf(here));
-                    coordinatesList.add(here);
+            mUpButtonContainer.setOnApplyWindowInsetsListener(new View.OnApplyWindowInsetsListener() {
+                @Override
+                public WindowInsets onApplyWindowInsets(View view, WindowInsets windowInsets) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT_WATCH) {
+                        view.onApplyWindowInsets(windowInsets);
+                    }
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT_WATCH) {
+                        mTopInset = windowInsets.getSystemWindowInsetTop();
+                    }
+                    mUpButtonContainer.setTranslationY(mTopInset);
+                    updateUpButtonPosition();
+                    return windowInsets;
 
                 }
-            }
-            if (cur != null) {
-                cur.close();
-            }
-
-        } catch (Exception e) {
-            Log.e("Path Error", e.toString());
+            });
         }
 
-        return coordinatesList;
+        if (savedInstanceState == null) {
+            Log.e("savedInstanceState", String.valueOf("null"));
+//            if (getIntent() != null && getIntent().getData() != null) {
+//                mStartId = TrackContract.TrackingEntry.getItemId(getIntent().getData());
+//                Log.e("savedInstanceState", String.valueOf(mStartId));
+            mSelectedItemId = mStartId;
+//            } else {Log.e("getData", String.valueOf("null"));}
+        }
+
 
     }
 
-    private double[] startLocation(int id) {
+    private void updateUpButtonPosition() {
+        int upButtonNormalBottom = mTopInset + mUpButton.getHeight();
+        mUpButton.setTranslationY(Math.min(mSelectedItemUpButtonFloor - upButtonNormalBottom, 0));
 
-        String specificID = String.valueOf(id);
-        String mSelectionClause = TrackContract.TrackingEntry.COLUMN_RUN_ID;
-        String SELECTION = mSelectionClause + " = '" + specificID + "'";
-        String ORDERASC = " " + _ID + " ASC LIMIT 1";
+    }
 
-        try {
-            cur = getContentResolver()
-                    .query(CONTENT_URI, PROJECTION02, SELECTION, null, ORDERASC);
 
-            if (cur != null && cur.moveToFirst()) {
-                do {
-                    mStartLocation[0] = cur.getDouble(cur.getColumnIndex(COLUMN_LATITUDE));
-                    mStartLocation[1] = cur.getDouble(cur.getColumnIndex(COLUMN_LONGITUDE));
 
-                    Log.i("Start Location", String.valueOf(mStartLocation[0]) +
-                            " , " + String.valueOf(mStartLocation[1]));
+
+
+    @Override
+    public Loader<Cursor> onCreateLoader(int i, Bundle bundle) {
+        Log.e(LOG_TAG, String.valueOf("onCreateLoader"));
+        return TrackLoader.newAllArticlesInstance(this);
+    }
+
+    @Override
+    public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
+        mCursor = cursor;
+        Log.e(LOG_TAG, String.valueOf("onLoadFinished"));
+        Log.e(LOG_TAG, String.valueOf(mStartId));
+        // Select the start ID
+        if (mStartId > 0) {
+            mCursor.moveToFirst();
+            // TODO: optimize
+            while (!mCursor.isAfterLast()) {
+                if (mCursor.getInt(TrackLoader.Query.COLUMN_RUN_IDP) == mStartId) {
+                    Log.e("Query.COLUMN_RUN_IDP", String.valueOf(TrackLoader.Query.COLUMN_RUN_IDP));
+                    final int position = mCursor.getPosition();
+                    mPagerAdapter.notifyDataSetChanged();
+                    mPager.setCurrentItem(position, false);
+                    break;
                 }
-                while (cur.moveToNext());
+                mCursor.moveToNext();
             }
+            mStartId = 0;
+        }
+    }
 
-            if (cur != null) {
-                cur.close();
+    @Override
+    public void onLoaderReset(Loader<Cursor> loader) {
+        mCursor = null;
+        mPagerAdapter.notifyDataSetChanged();
+    }
+
+//    private Intent createShareMovieIntent() {
+//        Intent shareIntent = ShareCompat.IntentBuilder.from(this)
+//                .setType("text/plain")
+//                .setText(mMovieSummary + MDB_SHARE_HASHTAG)
+//                .getIntent();
+//        shareIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_DOCUMENT);
+//        return shareIntent;
+//    }
+
+    private class MyPagerAdapter extends FragmentStatePagerAdapter {
+        public MyPagerAdapter(FragmentManager fm) {
+            super(fm);
+        }
+
+        @Override
+        public void setPrimaryItem(ViewGroup container, int position, Object object) {
+            super.setPrimaryItem(container, position, object);
+            DetailFragment fragment = (DetailFragment) object;
+            if (fragment != null) {
+//                mSelectedItemUpButtonFloor = fragment.getUpButtonFloor();
+                updateUpButtonPosition();
             }
-
-        } catch (Exception e) {
-            Log.e("Path Error", e.toString());
-        }
-        return mStartLocation;
-    }
-
-    private double[] stopLocation(int id) {
-
-        String specificID = String.valueOf(id);
-        String mSelectionClause = TrackContract.TrackingEntry.COLUMN_RUN_ID;
-        String SELECTION = mSelectionClause + " = '" + specificID + "'";
-        String ORDERDESC = " " + _ID + " DESC LIMIT 1";
-
-
-        try {
-            cur = getContentResolver()
-                    .query(CONTENT_URI, PROJECTION02, SELECTION, null, ORDERDESC);
-
-            if (cur != null && cur.moveToFirst()) {
-                do {
-                    mStopLocation[0] = cur.getDouble(cur.getColumnIndex(COLUMN_LATITUDE));
-                    mStopLocation[1] = cur.getDouble(cur.getColumnIndex(COLUMN_LONGITUDE));
-
-                    Log.i("Stop Location", String.valueOf(mStopLocation[0]) +
-                            " , " + String.valueOf(mStopLocation[1]));
-                }
-                while (cur.moveToNext());
-            }
-
-            if (cur != null) {
-                cur.close();
-            }
-
-        } catch (Exception e) {
-            Log.e("Path Error", e.toString());
-        }
-        return mStopLocation;
-    }
-
-    @Override
-    public void onMapReady(GoogleMap googleMap) {
-        mMap = googleMap;
-        double mStartLatitude = startLocation(runIdInt)[0];
-        double mStartLongitude = startLocation(runIdInt)[1];
-        double mStopLatitude = stopLocation(runIdInt)[0];
-        double mStopLongitude = stopLocation(runIdInt)[1];
-
-        double mSouthLatitude;
-        double mWestLongitude;
-        double mNorthLatitude;
-        double mEastLongitude;
-        if (mStartLatitude > mStopLatitude) {
-            mSouthLatitude = mStopLatitude;
-            mNorthLatitude = mStartLatitude;
-        } else {
-            mSouthLatitude = mStartLatitude;
-            mNorthLatitude = mStopLatitude;
-        }
-        if (mStartLongitude > mStopLongitude) {
-            mEastLongitude = mStartLongitude;
-            mWestLongitude = mStopLongitude;
-        } else {
-            mEastLongitude = mStopLongitude;
-            mWestLongitude = mStartLongitude;
         }
 
-        LatLng mSouthWestPoint = new LatLng(mSouthLatitude, mWestLongitude);
-        LatLng mNorthEastPoint = new LatLng(mNorthLatitude, mEastLongitude);
-
-        LatLng mStartPoint = new LatLng(mStartLatitude, mStartLongitude);
-        LatLng mStopPoint = new LatLng(mStopLatitude, mStopLongitude);
-        LatLng mPoint = new LatLng(0, 0);
-        LatLng poznan = new LatLng(52.406374, 16.9251681);
-//        LatLngBounds(LatLng southwest, LatLng northeast)
-        LatLngBounds TRIP = new LatLngBounds(mSouthWestPoint, mNorthEastPoint);
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(TRIP.getCenter(), 15));
-        // Add a marker in Poznan, Poland, and move the camera.
-        // mMap.addMarker(new MarkerOptions().position(here).title("arker in Poznań"));
-        // mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(here,15));
-        // mMap.clear();  //clears all Markers and Polylines
-        // Instantiates a new Polyline object and adds points to define a rectangle
-        PolylineOptions options = new PolylineOptions().width(10).color(Color.BLUE).geodesic(true);
-
-        PolylineOptions rectOptions = new PolylineOptions()
-                .add(new LatLng(37.35, -122.0))
-                .add(new LatLng(37.45, -122.0))  // North of the previous point, but at the same longitude
-                .add(new LatLng(37.45, -122.2))  // Same latitude, and 30km to the west
-                .add(new LatLng(37.35, -122.2))  // Same longitude, and 16km to the south
-                .add(new LatLng(37.35, -122.0)); // Closes the polyline.
-
-        for (int i = 0; i < coordinatesList.size(); i++) {
-            mPoint = coordinatesList.get(i);
-            options.add(mPoint);
+        @Override
+        public Fragment getItem(int position) {
+            mCursor.moveToPosition(position);
+            int whatever = mCursor.getInt(TrackLoader.Query.COLUMN_RUN_IDP);
+            Log.e(LOG_TAG, String.valueOf(whatever));
+            return DetailFragment.newInstance(mCursor.getInt(TrackLoader.Query.COLUMN_RUN_IDP));
         }
 
-        mMap.addPolyline(options);
-
-        mMap.addMarker(new MarkerOptions().position(mStopPoint).title("You are here")); //add Marker in current position
-        mMap.setMinZoomPreference(1.0f);
-        mMap.setMaxZoomPreference(20.0f);
-
-        // Zoom in, animating the camera.
-        mMap.animateCamera(CameraUpdateFactory.zoomIn());
-
-        // Zoom out to zoom level 10, animating with a duration of 2 seconds.
-        mMap.animateCamera(CameraUpdateFactory.zoomTo(14), 2000, null);
-
-        // Construct a CameraPosition focusing on Mountain View and animate the camera to that position.
-//        CameraPosition cameraPosition = new CameraPosition.Builder()
-//                .target(mStopPoint)               // Sets the center of the map to Mountain View
-//                .zoom(15)                   // Sets the zoom
-//                .bearing(0)                // Sets the orientation of the camera to east
-//                .tilt(30)                   // Sets the tilt of the camera to 30 degrees
-//                .build();                   // Creates a CameraPosition from the builder
-//        mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
-
-    }
-
-
-//    private long checkIfDeleted(Long runId){
-//        long tempId = 0;
-//        if(!(runId == null) || !(runId == 0)){
-//            Log.i(LOG_TAG, "not null or zero");
-//            tempId = runId;
-//        } else tempId = justDeletedMovieId;
-//        return tempId;
-//    };
-
-    // Get user input from editor and save item into database.
-    private void saveItem() {
-
-        ContentValues values = new ContentValues();
-        values.put(COLUMN_RUN_ID, runId);
-        values.put(COLUMN_TIME, currentTimeStart);
-//        values.put(COLUMN_LATITUDE, currentReleaseDate);
-//        values.put(COLUMN_LONGITUDE, currentVote);
-//        values.put(COLUMN_ALTITUDE, currentOverview);
-//        values.put(COLUMN_SPEED currentPoster);
-
-        // This is a NEW item, so insert a new item into the provider,
-        // returning the content URI for the item item.
-        Uri newUri = getContentResolver().insert(CONTENT_URI, values);
-
-        // Show a toast message depending on whether or not the insertion was successful.
-        if (newUri == null) {
-            // If the new content URI is null, then there was an error with insertion.
-            Toast.makeText(this, getString(R.string.editor_insert_item_failed), Toast.LENGTH_SHORT).show();
-        } else {
-            // Otherwise, the insertion was successful and we can display a toast.
-            Toast.makeText(this, getString(R.string.editor_insert_item_success), Toast.LENGTH_SHORT).show();
-        }
-        currentRunId = Long.parseLong(runId);
-    }
-
-    @Override
-    protected void onRestoreInstanceState(Bundle savedInstanceState) {
-        super.onRestoreInstanceState(savedInstanceState);
-        if (savedInstanceState != null) {
-            Parcelable savedRecyclerLayoutState = savedInstanceState.getParcelable(BUNDLE_RECYCLER_LAYOUT);
-//            ClipsFragment.clipsRecyclerView.getLayoutManager().onRestoreInstanceState(savedRecyclerLayoutState);
+        @Override
+        public int getCount() {
+            return (mCursor != null) ? mCursor.getCount() : 0;
         }
     }
-
-    @Override
-    public void onSaveInstanceState(Bundle outState) {
-        super.onSaveInstanceState(outState);
-//        outState.putParcelable(BUNDLE_RECYCLER_LAYOUT, ClipsFragment.clipsRecyclerView.getLayoutManager().onSaveInstanceState());
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        /* Use AppCompatActivity's method getMenuInflater to get a handle on the menu inflater */
-//        MenuInflater inflater = getMenuInflater();
-        /* Use the inflater's inflate method to inflate our menu layout to this menu */
-//        inflater.inflate(R.menu.detail, menu);
-        /* Return true so that the menu is displayed in the Toolbar */
-        return true;
-    }
-
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        int id = item.getItemId();
-
-
-        if (id == android.R.id.home) {
-            NavUtils.navigateUpFromSameTask(DetailActivity.this);
-            return true;
-        }
-        /* Share menu item clicked */
-//        if (id == R.id.action_share_d) {
-//            Intent shareIntent = createShareMovieIntent();
-//            startActivity(shareIntent);
-//            return true;
-//        }
-        return super.onOptionsItemSelected(item);
-    }
-
-    private Intent createShareMovieIntent() {
-        Intent shareIntent = ShareCompat.IntentBuilder.from(this)
-                .setType("text/plain")
-                .setText(mMovieSummary + MDB_SHARE_HASHTAG)
-                .getIntent();
-        shareIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_DOCUMENT);
-        return shareIntent;
-    }
-
-
-    //TODO (4) and get geolocation for first and last position,
-    //TODO (5) show track on map
-    //TODO (5) show speeds on graph
-
 }

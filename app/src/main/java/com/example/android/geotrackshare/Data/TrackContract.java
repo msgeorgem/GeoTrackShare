@@ -70,5 +70,28 @@ public class TrackContract {
                 ContentResolver.CURSOR_ITEM_BASE_TYPE + "/" + CONTENT_AUTHORITY + "/" + PATH_TRACK;
         public static String _ID = BaseColumns._ID;
 
+        public static final String DEFAULT_SORT = COLUMN_RUN_IDP + " DESC";
+
+        /**
+         * Read item ID item detail URI.
+         */
+        public static int getItemId(Uri itemUri) {
+            return Integer.parseInt(itemUri.getPathSegments().get(1));
+        }
+
+        /**
+         * Matches: /items/
+         */
+        public static Uri buildDirUri() {
+            return CONTENT_URI_POST;
+//            return BASE_CONTENT_URI_POST.buildUpon().appendPath(PATH_TRACK_POST).build();
+        }
+
+        /**
+         * Matches: /items/[_id]/
+         */
+        public static Uri buildItemUri(long _id) {
+            return BASE_CONTENT_URI_POST.buildUpon().appendPath(PATH_TRACK_POST).appendPath(Long.toString(_id)).build();
+        }
     }
 }
