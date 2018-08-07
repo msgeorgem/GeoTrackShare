@@ -159,8 +159,7 @@ public class DetailFragment extends Fragment implements OnMapReadyCallback {
 
         onGetDataFromDataBaseAndDisplay(runIdInt);
         queryCoordinatesList(runIdInt);
-
-
+        
         return view;
     }
 
