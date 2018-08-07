@@ -29,11 +29,10 @@ import android.os.Build;
 import android.os.Bundle;
 import android.widget.RemoteViews;
 
-import com.example.android.geotrackshare.DetailActivity;
 import com.example.android.geotrackshare.LocationService.LocationUpdatesService;
+import com.example.android.geotrackshare.MainActivity;
 import com.example.android.geotrackshare.R;
 
-import static com.example.android.geotrackshare.DetailActivity.ACTION_FROM_WIDGET;
 import static com.example.android.geotrackshare.LocationService.LocationServiceConstants.requestingLocationUpdates;
 import static com.example.android.geotrackshare.LocationService.LocationUpdatesService.EXTRA_CURRENT_ID;
 import static com.example.android.geotrackshare.RealTimeFragment.RUN_TYPE_PICTURE_KEY;
@@ -130,9 +129,9 @@ public class TrackingWidgetProvider extends AppWidgetProvider {
 
         for (int widgetId : appWidgetIds) {
             mRemoteViews = new RemoteViews(context.getPackageName(), R.layout.tracking_widget);
-            Intent intentActivity = new Intent(context, DetailActivity.class);
-            intentActivity.setAction(ACTION_FROM_WIDGET);
-            intentActivity.putExtra(EXTRA_RUN_ID_FROM_WIDGET, mRunId);
+            Intent intentActivity = new Intent(context, MainActivity.class);
+//            intentActivity.setAction(ACTION_FROM_WIDGET);
+//            intentActivity.putExtra(EXTRA_RUN_ID_FROM_WIDGET, mRunId);
             PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intentActivity, 0);
             mRemoteViews.setOnClickPendingIntent(R.id.tracking_widget, pendingIntent);
 

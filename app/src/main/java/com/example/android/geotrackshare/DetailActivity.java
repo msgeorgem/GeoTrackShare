@@ -16,14 +16,12 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.NavUtils;
 import android.support.v4.app.ShareCompat;
-import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.CompoundButton;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 
@@ -148,7 +146,7 @@ public class DetailActivity extends AppCompatActivity implements OnMapReadyCallb
         if (ACTION_FROM_RUNLISTFRAGMENT.equals(mAction)) {
             runIdInt = intent.getIntExtra(RunListFragment.EXTRA_RUN_ID, 101);
             Log.e("ACTION_FROM_RUNLIST", String.valueOf(runIdInt));
-
+            //below lines not in usage
         } else if (ACTION_FROM_WIDGET.equals(mAction)) {
             runIdInt = intent.getIntExtra(TrackingWidgetProvider.EXTRA_RUN_ID_FROM_WIDGET, 1);
             if (runIdInt == 0) {
@@ -163,44 +161,44 @@ public class DetailActivity extends AppCompatActivity implements OnMapReadyCallb
 
         queryCoordinatesList(runIdInt);
 
-        mContext = mDetailBinding.part2.favDetToggleButton.getContext();
-        FAVtoggleButton = mDetailBinding.part2.favDetToggleButton;
-        FAVtoggleButton.setChecked(true);
+//        mContext = mDetailBinding.part2.favDetToggleButton.getContext();
+//        FAVtoggleButton = mDetailBinding.part2.favDetToggleButton;
+//        FAVtoggleButton.setChecked(true);
 
-        Boolean a = checkIfInFavorites();
-
-        if (a) {
-            FAVtoggleButton.setBackgroundDrawable(ContextCompat.getDrawable(mContext, R.drawable.star_star));
-            FAVtoggleButton.setChecked(true);
-        } else {
-            FAVtoggleButton.setBackgroundDrawable(ContextCompat.getDrawable(mContext, R.drawable.star_red));
-            FAVtoggleButton.setChecked(false);
-        }
-        FAVtoggleButton.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton compoundButton, boolean isChecked) {
-
-                if (isChecked) {
-//                    try {
-//                        saveItem();
-//                    } catch (IOException e) {
-//                        e.printStackTrace();
-//                    }
-
-                    FAVtoggleButton.setBackgroundDrawable(ContextCompat.getDrawable(getApplicationContext(), R.drawable.star_star));
-                    SharedPreferences.Editor editor = favPrefs.edit();
-                    editor.putBoolean("On", true);
-                    editor.apply();
-
-                } else {
-                    FAVtoggleButton.setBackgroundDrawable(ContextCompat.getDrawable(getApplicationContext(), R.drawable.star_red));
-                    SharedPreferences.Editor editor = favPrefs.edit();
-                    editor.putBoolean("On", false);
-                    editor.apply();
-//                    delete(currentRunId);
-                }
-            }
-        });
+//        Boolean a = checkIfInFavorites();
+//
+//        if (a) {
+//            FAVtoggleButton.setBackgroundDrawable(ContextCompat.getDrawable(mContext, R.drawable.star_star));
+//            FAVtoggleButton.setChecked(true);
+//        } else {
+//            FAVtoggleButton.setBackgroundDrawable(ContextCompat.getDrawable(mContext, R.drawable.star_red));
+//            FAVtoggleButton.setChecked(false);
+//        }
+//        FAVtoggleButton.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+//            @Override
+//            public void onCheckedChanged(CompoundButton compoundButton, boolean isChecked) {
+//
+//                if (isChecked) {
+////                    try {
+////                        saveItem();
+////                    } catch (IOException e) {
+////                        e.printStackTrace();
+////                    }
+//
+//                    FAVtoggleButton.setBackgroundDrawable(ContextCompat.getDrawable(getApplicationContext(), R.drawable.star_star));
+//                    SharedPreferences.Editor editor = favPrefs.edit();
+//                    editor.putBoolean("On", true);
+//                    editor.apply();
+//
+//                } else {
+//                    FAVtoggleButton.setBackgroundDrawable(ContextCompat.getDrawable(getApplicationContext(), R.drawable.star_red));
+//                    SharedPreferences.Editor editor = favPrefs.edit();
+//                    editor.putBoolean("On", false);
+//                    editor.apply();
+////                    delete(currentRunId);
+//                }
+//            }
+//        });
 
 
     }
@@ -245,8 +243,8 @@ public class DetailActivity extends AppCompatActivity implements OnMapReadyCallb
 
                     String currentRun = String.valueOf(id);
                     mDetailBinding.part2.runId.setText(currentRun);
-                    mDetailBinding.part2.startTime.setText(mHoursStart);
-                    mDetailBinding.part2.stopTime.setText(mHoursStop);
+                    mDetailBinding.part2.startTimeValue.setText(mHoursStart);
+                    mDetailBinding.part2.stopTimeValue.setText(mHoursStop);
 
                 } while (cursor.moveToNext());
             }
