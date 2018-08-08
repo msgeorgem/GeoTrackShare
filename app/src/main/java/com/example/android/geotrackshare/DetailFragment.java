@@ -1,11 +1,13 @@
 package com.example.android.geotrackshare;
 
 import android.app.Fragment;
+import android.app.FragmentTransaction;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -17,8 +19,9 @@ import com.example.android.geotrackshare.Data.TrackContract;
 import com.example.android.geotrackshare.RunTypes.RunTypesAdapterNoUI;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.MapFragment;
+import com.google.android.gms.maps.MapView;
 import com.google.android.gms.maps.OnMapReadyCallback;
-import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.MarkerOptions;
@@ -29,6 +32,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.concurrent.TimeUnit;
 
 import butterknife.Unbinder;
 
@@ -70,6 +74,7 @@ public class DetailFragment extends Fragment implements OnMapReadyCallback {
     private static final float PARALLAX_FACTOR = 1.25f;
     //    public static FragmentDetailBinding mDetailBinding;
     View view;
+    private String MAPSTATE = "MAPSTATE";
     private Unbinder mUnbinder;
     private Cursor mCursor;
     private int mItemId;
@@ -92,6 +97,9 @@ public class DetailFragment extends Fragment implements OnMapReadyCallback {
     private TextView stopTimeTextView;
     private TextView runIdTextView;
     private TextView avgSpeedTextView;
+    private MapView mMapView;
+    private MapFragment mapFragment;
+    private Boolean mRecuringBoolean;
 
 
     private SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.sss");
@@ -140,7 +148,7 @@ public class DetailFragment extends Fragment implements OnMapReadyCallback {
                              Bundle savedInstanceState) {
 
         view = inflater.inflate(R.layout.fragment_detail, container, false);
-
+        mRecuringBoolean = false;
         mIconView = view.findViewById(R.id.run_type);
         maxAltTextView = view.findViewById(R.id.max_alt_value);
         maxSpeedTextView = view.findViewById(R.id.max_speed_value);
@@ -153,15 +161,41 @@ public class DetailFragment extends Fragment implements OnMapReadyCallback {
         avgSpeedTextView = view.findViewById(R.id.avg_speed_value);
 
 
-        SupportMapFragment fragment = new SupportMapFragment();
-        getActivityCast().getSupportFragmentManager().beginTransaction()
-                .add(R.id.map, fragment).commit();
+        mapFragment = MapFragment.newInstance();
+        FragmentTransaction transaction = getChildFragmentManager().beginTransaction();
+        transaction.add(R.id.map, mapFragment, "FRAGMENT_TAG")
+                .addToBackStack("FRAGMENT_TAG").commit();
+        getChildFragmentManager().executePendingTransactions();
+
+        mapFragment.getMapAsync(this);
 
         onGetDataFromDataBaseAndDisplay(runIdInt);
         queryCoordinatesList(runIdInt);
-        
+
         return view;
     }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        Log.e("onSaveInstanceState..", String.valueOf("maps"));
+        outState.putBoolean(MAPSTATE, true);
+
+        super.onSaveInstanceState(outState);
+//        mapFragment.onSaveInstanceState(outState);
+    }
+
+    @Override
+    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+        Log.e("onActivityCreated..", String.valueOf("maps"));
+//        mapFragment.onActivityCreated(savedInstanceState);
+        if (savedInstanceState != null) {
+            mRecuringBoolean = savedInstanceState.getBoolean(MAPSTATE);
+        }
+
+
+    }
+
 
     public void onGetDataFromDataBaseAndDisplay(int id) {
 
@@ -200,7 +234,10 @@ public class DetailFragment extends Fragment implements OnMapReadyCallback {
                     Double maxSpeed = cursor.getDouble(maxSpeedColumnIndex);
                     Double avrSpeed = cursor.getDouble(avrSpeedColumnIndex);
                     Long totalTime = cursor.getLong(totalTimeColumnIndex);
-                    String mTotalTime = new SimpleDateFormat("HH:mm:ss").format(new Date(totalTime));
+
+                    String mTotalTime = String.format("%02d:%02d:%02d", TimeUnit.MILLISECONDS.toHours(totalTime),
+                            TimeUnit.MILLISECONDS.toMinutes(totalTime) % TimeUnit.HOURS.toMinutes(1),
+                            TimeUnit.MILLISECONDS.toSeconds(totalTime) % TimeUnit.MINUTES.toSeconds(1));
 
                     String currentRun = String.valueOf(id);
                     String currentRunText = getResources().getString(R.string.Run_no) + currentRun;
@@ -366,6 +403,10 @@ public class DetailFragment extends Fragment implements OnMapReadyCallback {
         double mStartLongitude = startLocation(runIdInt)[1];
         double mStopLatitude = stopLocation(runIdInt)[0];
         double mStopLongitude = stopLocation(runIdInt)[1];
+        Log.e("onMapReady..", String.valueOf(mStartLatitude));
+        Log.e("onMapReady..", String.valueOf(mStartLongitude));
+        Log.e("onMapReady..", String.valueOf(mStopLatitude));
+        Log.e("onMapReady..", String.valueOf(mStopLongitude));
 
         double mSouthLatitude;
         double mWestLongitude;
@@ -395,7 +436,9 @@ public class DetailFragment extends Fragment implements OnMapReadyCallback {
         LatLng poznan = new LatLng(52.406374, 16.9251681);
 //        LatLngBounds(LatLng southwest, LatLng northeast)
         LatLngBounds TRIP = new LatLngBounds(mSouthWestPoint, mNorthEastPoint);
+        LatLngBounds POZNAN = new LatLngBounds(poznan, poznan);
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(TRIP.getCenter(), 15));
+
         // Add a marker in Poznan, Poland, and move the camera.
         // mMap.addMarker(new MarkerOptions().position(here).title("arker in Poznań"));
         // mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(here,15));
@@ -436,5 +479,29 @@ public class DetailFragment extends Fragment implements OnMapReadyCallback {
 //                .build();                   // Creates a CameraPosition from the builder
 //        mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
 
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        mapFragment.onResume();
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        mapFragment.onPause();
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+//        mapFragment.onDestroy();
+    }
+
+    @Override
+    public void onLowMemory() {
+        super.onLowMemory();
+        mapFragment.onLowMemory();
     }
 }
