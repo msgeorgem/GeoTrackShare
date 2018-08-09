@@ -2,18 +2,21 @@ package com.example.android.geotrackshare;
 
 import android.app.Fragment;
 import android.app.FragmentTransaction;
+import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
+import android.graphics.Matrix;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Environment;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
-import android.support.v4.app.ShareCompat;
 import android.support.v4.content.FileProvider;
+import android.support.v7.app.AlertDialog;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -28,7 +31,6 @@ import android.widget.Toast;
 
 import com.example.android.geotrackshare.Data.TrackContract;
 import com.example.android.geotrackshare.RunTypes.RunTypesAdapterNoUI;
-import com.example.android.geotrackshare.ScreenShotUtils.ScreenshotUtils;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
@@ -40,6 +42,7 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PolylineOptions;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -116,15 +119,17 @@ public class DetailFragment extends Fragment implements OnMapReadyCallback {
     private MapFragment mapFragment;
     private Boolean mRecuringBoolean;
     private static GoogleMap mMap;
-    private static Bitmap mMapBitmap;
+    private Bitmap mMapBitmap;
+    private Bitmap mSharedImageBitmap;
     private ScrollView mScreenShotted;
     private String currentRunText;
     private FrameLayout mMapFrame;
     private ImageView mapScreenShottedTemp;
-    private File bmpFile;
     private int mTopInset;
     private FrameLayout mUpButtonContainer;
     private int mSelectedItemUpButtonFloor = Integer.MAX_VALUE;
+    private ImageView mScreenShotPreview;
+
 
     private SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.sss");
     // Use default locale format
@@ -167,42 +172,7 @@ public class DetailFragment extends Fragment implements OnMapReadyCallback {
         return (DetailActivity) getActivity();
     }
 
-    public static void screenshotMap() {
-        final GoogleMap.SnapshotReadyCallback callback = new GoogleMap.SnapshotReadyCallback() {
 
-            @Override
-            public void onSnapshotReady(Bitmap snapshot) {
-                mMapBitmap = snapshot;
-
-                try {
-
-
-//                    getActivityCast().getWindow().getDecorView().findViewById(R.id.mapmap).setDrawingCacheEnabled(true);
-//                    Bitmap backBitmap = getActivityCast().getWindow().getDecorView().findViewById(R.id.mapmap).getDrawingCache();
-//                    mMapBitmap = Bitmap.createBitmap(
-//                            backBitmap.getWidth(), backBitmap.getHeight(),
-//                            backBitmap.getConfig());
-//                    Canvas canvas = new Canvas(mMapBitmap);
-//                    canvas.drawBitmap(snapshot, new Matrix(), null);
-//                    canvas.drawBitmap(backBitmap, 0, 0, null);
-//
-//                    OutputStream fout = null;
-
-//                    String filePath = System.currentTimeMillis() + "map.jpeg";
-//                    Log.e("filepath", filePath);
-//                    File saveFile = ScreenshotUtils.getMainDirectoryName(getActivityCast());//get the path to save screenshot
-//
-//                    bmpFile = ScreenshotUtils.store(snapshot, "screenshot" + filePath, saveFile);//save the screenshot to selected path
-
-
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-        };
-
-        mMap.snapshot(callback);
-    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -226,7 +196,8 @@ public class DetailFragment extends Fragment implements OnMapReadyCallback {
         mapScreenShottedTemp.setVisibility(View.INVISIBLE);
         mapFragment = MapFragment.newInstance();
         mUpButtonContainer = view.findViewById(R.id.up_container);
-
+        mScreenShotPreview = view.findViewById(R.id.screenshotpreview);
+        mScreenShotPreview.setVisibility(View.INVISIBLE);
 
         FragmentTransaction transaction = getChildFragmentManager().beginTransaction();
         transaction.add(R.id.mapmap, mapFragment, "FRAGMENT_TAG")
@@ -245,7 +216,7 @@ public class DetailFragment extends Fragment implements OnMapReadyCallback {
 //                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
 //                        .setAction("Action", null).show();
 //                createShareTrackIntent();
-                screenshotMap();
+
                 takeScreenshot();
             }
         });
@@ -279,10 +250,7 @@ public class DetailFragment extends Fragment implements OnMapReadyCallback {
 
     }
 
-    private void updateUpButtonPosition() {
-        int upButtonNormalBottom = mTopInset + fab.getHeight();
-        fab.setTranslationY(Math.min(mSelectedItemUpButtonFloor - upButtonNormalBottom, 0));
-    }
+
 
     public ArrayList queryCoordinatesList(int id) {
         String[] PROJECTION = {
@@ -569,92 +537,67 @@ public class DetailFragment extends Fragment implements OnMapReadyCallback {
 //            Thread.sleep(2500);
 //        } catch (InterruptedException ex) {
 //            Thread.currentThread().interrupt();
+
 //        }
+        mMap.setOnMapLoadedCallback(new GoogleMap.OnMapLoadedCallback() {
+            @Override
+            public void onMapLoaded() {
+                mMap.snapshot(new GoogleMap.SnapshotReadyCallback() {
+                    @Override
+                    public void onSnapshotReady(Bitmap bitmap) {
+                        Toast.makeText(getActivityCast(), "onMapReady.setOnMapLoadedCallback,onMapLoaded,onSnapshotReady",
+                                Toast.LENGTH_SHORT).show();
+                        mMapBitmap = bitmap;
+//                        mapScreenShottedTemp.setImageBitmap(mMapBitmap);
+                    }
+                });
+
+            }
+        });
 
     }
 
-//    private void takeScreenshotShareViamail() {
-//        Date now = new Date();
-//        android.text.format.DateFormat.format("yyyy-MM-dd_hh:mm:ss", now);
-//
-//        try {
-//
-//            String fileName = "screenShot"+now;
-//            // image naming and path  to include sd card  appending name you choose for file
-//            String mPath = Environment.getExternalStorageDirectory().toString() + "/" + fileName + ".jpg";
-//            Log.e("mPath", String.valueOf(mPath));
-//            // create bitmap screen capture
-//            View screenShotView = getActivity().getWindow().getDecorView().getRootView();
-////            v1.setDrawingCacheEnabled(true);
-////            Bitmap bitmap = Bitmap.createBitmap(v1.getDrawingCache());
-////            v1.setDrawingCacheEnabled(false);
-////
-////            File imageFile = new File(mPath);
-////
-////            FileOutputStream outputStream = new FileOutputStream(imageFile);
-////            int quality = 100;
-////            bitmap.compress(Bitmap.CompressFormat.JPEG, quality, outputStream);
-////            outputStream.flush();
-////            outputStream.close();
-//             Bitmap imageFile = screenShot(screenShotView);
-//
-//
-////            openScreenshot(mPath);
-//            shareScreenshot(fileName,mPath);
-//        } catch (Throwable e) {
-//            // Several error may come out with file handling or DOM
-//            e.printStackTrace();
-//        }
-//    }
-//    private void openScreenshot(String string) {
-//        Uri uri = Uri.parse(string);
-//        Intent intent = new Intent();
-//        intent.setAction(Intent.ACTION_VIEW);
-////        intent.setDataAndType(Uri.parse("file://" + "/sdcard/Pictures/app_images/pro20130429_170323_-1793725321.tmp"), "image/*");
-////        intent.setDataAndType(uri,);
-//        startActivity(intent);
-//    }
-//
-//    private Bitmap screenShot(View view) {
-//        Bitmap bitmap = Bitmap.createBitmap(view.getWidth(),
-//                view.getHeight(), Bitmap.Config.ARGB_8888);
-//        Canvas canvas = new Canvas(bitmap);
-//        view.draw(canvas);
-//        return bitmap;
-//    }
-//
-//    private void shareScreenshot(String fileName, String filelocation) {
-//        Intent intent = new Intent(Intent.ACTION_SENDTO);
-//        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-////            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-//        intent.setType("text/plain");
-//        String message = "File to be shared is " + fileName + ".";
-//        intent.putExtra(Intent.EXTRA_SUBJECT, "Subject");
-//        intent.putExtra(Intent.EXTRA_STREAM, Uri.parse("file://" + filelocation));
-//        intent.putExtra(Intent.EXTRA_TEXT, message);
-//        intent.setData(Uri.parse("mailto:xyz@gmail.com"));
-//    }
 
-    private Intent createShareTrackIntent() {
-        Intent shareIntent = ShareCompat.IntentBuilder.from(getActivity())
-                .setType("text/plain")
-                .setText("bla bla bla")
-                .getIntent();
-        shareIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_DOCUMENT);
-        return shareIntent;
+    public void screenshotMap() {
+//        mMap.setOnMapLoadedCallback(new GoogleMap.OnMapLoadedCallback() {
+//            @Override
+//            public void onMapLoaded() {
+//                mMap.snapshot(new GoogleMap.SnapshotReadyCallback() {
+//                    @Override
+//                    public void onSnapshotReady(Bitmap bitmap) {
+//                        Toast.makeText(getActivityCast(),"screenshotMap.setOnMapLoadedCallback,onMapLoaded,onSnapshotReady",
+//                                Toast.LENGTH_SHORT).show();
+//                        mMapBitmap = bitmap;
+//                        mapScreenShottedTemp.setImageBitmap(mMapBitmap);
+//                    }
+//                });
+//
+//            }
+//        });
+        final GoogleMap.SnapshotReadyCallback callback = new GoogleMap.SnapshotReadyCallback() {
+
+            @Override
+            public void onSnapshotReady(Bitmap snapshot) {
+                mMapBitmap = snapshot;
+
+
+            }
+        };
+        mMap.setOnMapLoadedCallback(new GoogleMap.OnMapLoadedCallback() {
+            @Override
+            public void onMapLoaded() {
+                mMap.snapshot(callback);
+//                mapScreenShottedTemp.setImageBitmap(mMapBitmap);
+            }
+        });
+
+//        mMap.snapshot(callback);
+
     }
-
     /*  Method which will take screenshot on Basis of Screenshot Type ENUM  */
     private void takeScreenshot() {
         Bitmap bitmap = null;
-
-
-//                File sd = Environment.getExternalStorageDirectory();
-//                File image = new File(sd+filePath, imageName);
-
-//                BitmapFactory.Options bmOptions = new BitmapFactory.Options();
-//                bitmap = BitmapFactory.decodeFile(bmpFile.getAbsolutePath(),bmOptions);
-
+        screenshotMap();
 
         mapScreenShottedTemp.setImageBitmap(mMapBitmap);
         mMapFrame.setVisibility(View.INVISIBLE);
@@ -663,26 +606,25 @@ public class DetailFragment extends Fragment implements OnMapReadyCallback {
         dateTextView.setText("ScreenShot");
 
 //                Screenshot taken after map view replaced by bitmap
-        bitmap = ScreenshotUtils.getScreenShot(mScreenShotted);
+        mSharedImageBitmap = getScreenShot(mScreenShotted);
+
 //                After screenshot taken bitmapg oes invisible
-//        mapScreenShottedTemp.setVisibility(View.INVISIBLE);
-//        mMapFrame.setVisibility(View.VISIBLE);
-        //After taking screenshot reset the button and view again
-//                runIdTextView.setVisibility(View.VISIBLE);//set the visibility to VISIBLE of first button again
-//                runIdTextView.setText(currentRunText);//set the visibility to INVISIBLE of hidden text
-
-
-        //NOTE:  You need to use visibility INVISIBLE instead of GONE to remove the view from frame else it wont consider the view in frame and you will not get screenshot as you required.
+        mapScreenShottedTemp.setVisibility(View.INVISIBLE);
+        mMapFrame.setVisibility(View.VISIBLE);
 
 
         //If bitmap is not null
-        if (bitmap != null) {
-            showScreenShotImage(bitmap);//show bitmap over imageview
+        if (mSharedImageBitmap != null) {
+            showScreenShotImage(mSharedImageBitmap);//show bitmap over imageview
 
-            File saveFile = ScreenshotUtils.getMainDirectoryName(getActivityCast());//get the path to save screenshot
+            File saveFile = getMainDirectoryName(getActivityCast());//get the path to save screenshot
 
-            File file = ScreenshotUtils.store(bitmap, "screenshot" + ".jpg", saveFile);//save the screenshot to selected path
-            shareScreenshot(file);//finally share screenshot
+            File sharedFile = store(mSharedImageBitmap, "screenshot" + ".jpg", saveFile);//save the screenshot to selected path
+            Uri uri = FileProvider.getUriForFile(getActivityCast(), BuildConfig.APPLICATION_ID + ".provider", sharedFile);
+            Log.e("shareScreenshot", String.valueOf(uri));
+//            shareScreenshot(file);//finally share screenshot
+            showScreenShotToAccept(sharedFile);
+
         } else
             //If bitmap is null show toast message
             Toast.makeText(getActivityCast(), R.string.screenshot_take_failed, Toast.LENGTH_SHORT).show();
@@ -691,7 +633,8 @@ public class DetailFragment extends Fragment implements OnMapReadyCallback {
 
     /*  Show screenshot Bitmap */
     private void showScreenShotImage(Bitmap bitmap) {
-        mIconView.setImageBitmap(bitmap);
+//        mScreenShotPreview.setImageBitmap(bitmap);
+
     }
 
     /*  Share Screenshot  */
@@ -709,31 +652,106 @@ public class DetailFragment extends Fragment implements OnMapReadyCallback {
         startActivity(Intent.createChooser(intent, getString(R.string.sharing_title)));
     }
 
-    private void screenshotMap0() {
 
-        AsyncTask<Void, Void, Void> SnapshotReady = new AsyncTask<Void, Void, Void>() {
+    public void showScreenShotToAccept(final File sharedFile) {
 
-            @Override
-            protected Void doInBackground(Void... voids) {
-                try {
-                    Thread.sleep(1000);
-                } catch (InterruptedException ex) {
-                    Thread.currentThread().interrupt();
+        ImageView image = null;
+        Uri uri = FileProvider.getUriForFile(getActivityCast(), BuildConfig.APPLICATION_ID + ".provider", sharedFile);
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            View dialogView = getLayoutInflater().inflate(R.layout.dialog_box, null);
+//            View dialogView = getLayoutInflater().inflate(R.layout.dialog_box, null, false);
+            image = dialogView.findViewById(R.id.image1);
+            Bitmap tempSmallerBitmap = getResizedBitmap(mSharedImageBitmap, 400, 800);
+
+            image.setImageBitmap(tempSmallerBitmap);
+//            Picasso.with(getActivityCast()).load(uri).resize(600, 1200).into(image);
+        }
+        // Create an AlertDialog.Builder and set the message, and click listeners
+        // for the positive and negative buttons on the dialog.
+        if (image.getParent() != null)
+            ((ViewGroup) image.getParent()).removeView(image);
+        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+        builder.setMessage(R.string.question_to_accept);
+        builder.setView(image);
+        builder.setPositiveButton(R.string.accept, new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int id) {
+                // User clicked the "Delete" button, so delete the item.
+                //remove from DB
+                shareScreenshot(sharedFile);
+            }
+        });
+        builder.setNegativeButton(R.string.dismiss, new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int id) {
+                // User clicked the "Cancel" button, so dismiss the dialog
+                if (dialog != null) {
+                    dialog.dismiss();
                 }
 
-                final GoogleMap.SnapshotReadyCallback callback = new GoogleMap.SnapshotReadyCallback() {
-
-                    @Override
-                    public void onSnapshotReady(Bitmap snapshot) {
-                        mMapBitmap = snapshot;
-                        mapScreenShottedTemp.setImageBitmap(mMapBitmap);
-                    }
-                };
-
-                mMap.snapshot(callback);
-                return null;
             }
-        };
-        SnapshotReady.execute();
+        });
+        // Create and show the AlertDialog
+        AlertDialog alertDialog = builder.create();
+        alertDialog.show();
+        alertDialog.setCanceledOnTouchOutside(false);
+
+    }
+
+    public Bitmap getResizedBitmap(Bitmap bm, int newWidth, int newHeight) {
+        int width = bm.getWidth();
+        int height = bm.getHeight();
+        float scaleWidth = ((float) newWidth) / width;
+        float scaleHeight = ((float) newHeight) / height;
+        // CREATE A MATRIX FOR THE MANIPULATION
+        Matrix matrix = new Matrix();
+        // RESIZE THE BIT MAP
+        matrix.postScale(scaleWidth, scaleHeight);
+
+        // "RECREATE" THE NEW BITMAP
+        Bitmap resizedBitmap = Bitmap.createBitmap(
+                bm, 0, 0, width, height, matrix, false);
+        bm.recycle();
+        return resizedBitmap;
+    }
+
+    /*  Method which will return Bitmap after taking screenshot. We have to pass the view which we want to take screenshot.  */
+    public Bitmap getScreenShot(View view) {
+        View screenView = view.getRootView();
+        screenView.setDrawingCacheEnabled(true);
+        Bitmap bitmap = Bitmap.createBitmap(screenView.getDrawingCache());
+        screenView.setDrawingCacheEnabled(false);
+        return bitmap;
+    }
+
+
+    /*  Create Directory where screenshot will save for sharing screenshot  */
+    public File getMainDirectoryName(Context context) {
+        //Here we will use getExternalFilesDir and inside that we will make our Demo folder
+        //benefit of getExternalFilesDir is that whenever the app uninstalls the images will get deleted automatically.
+        File mainDir = new File(
+                context.getExternalFilesDir(Environment.DIRECTORY_PICTURES), "Demo");
+
+        //If File is not present create directory
+        if (!mainDir.exists()) {
+            if (mainDir.mkdir())
+                Log.e("Create Directory", "Main Directory Created : " + mainDir);
+        }
+        return mainDir;
+    }
+
+    /*  Store taken screenshot into above created path  */
+    public File store(Bitmap bm, String fileName, File saveFilePath) {
+        File dir = new File(saveFilePath.getAbsolutePath());
+        if (!dir.exists())
+            dir.mkdirs();
+        File file = new File(saveFilePath.getAbsolutePath(), fileName);
+        try {
+            FileOutputStream fOut = new FileOutputStream(file);
+            bm.compress(Bitmap.CompressFormat.JPEG, 100, fOut);
+            fOut.flush();
+            fOut.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return file;
     }
 }

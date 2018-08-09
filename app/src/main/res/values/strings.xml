@@ -201,4 +201,8 @@
     <string name="sharing_text">My track by G-Track</string>
     <string name="sharing_title">My track by G-Track</string>
 
+    <string name="question_to_accept">Do you want to share this picture or take new one?</string>
+    <string name="accept">Share</string>
+    <string name="dismiss">Dismiss</string>
+
 </resources>

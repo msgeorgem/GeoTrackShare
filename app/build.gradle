@@ -36,6 +36,7 @@ dependencies {
     implementation group: 'com.opencsv', name: 'opencsv', version: '4.1'
     implementation 'com.ToxicBakery.viewpager.transforms:view-pager-transforms:1.2.32@aar'
     implementation 'com.jakewharton:butterknife:8.4.0'
+    implementation 'com.squareup.picasso:picasso:2.5.2'
 
 
     testImplementation 'junit:junit:4.12'
