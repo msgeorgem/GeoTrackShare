@@ -33,10 +33,10 @@ import android.widget.Button;
 import android.widget.Spinner;
 import android.widget.TextView;
 
+import com.example.android.geotrackshare.LocationService.LocationServiceConstants;
 import com.example.android.geotrackshare.LocationService.LocationUpdatesService;
 import com.example.android.geotrackshare.RunTypes.RunType;
 import com.example.android.geotrackshare.RunTypes.RunTypesAdapter;
-import com.example.android.geotrackshare.LocationService.LocationServiceConstants;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
@@ -49,8 +49,8 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import static com.example.android.geotrackshare.AdvancedSettingsActivity.preferenceBooleanDisableAutoStop;
-import static com.example.android.geotrackshare.LocationService.LocationUpdatesService.REQUEST_CHECK_SETTINGS;
 import static com.example.android.geotrackshare.LocationService.LocationServiceConstants.requestingLocationUpdates;
+import static com.example.android.geotrackshare.LocationService.LocationUpdatesService.REQUEST_CHECK_SETTINGS;
 
 
 /**
@@ -392,7 +392,6 @@ public class RealTimeFragment extends Fragment implements
             mSpinner.setSelection(RUN_TYPE_VALUE);
         }
 
-
         mRequestLocationUpdatesButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -453,48 +452,7 @@ public class RealTimeFragment extends Fragment implements
      */
     private void updateValuesFromBundle(Bundle savedInstanceState) {
         if (savedInstanceState != null) {
-            // Update the value of mRequestingLocationUpdates from the Bundle, and make sure that
-            // the Start Updates and Stop Updates buttons are correctly enabled or disabled.
-//            if (savedInstanceState.keySet().contains(KEY_REQUESTING_LOCATION_UPDATES)) {
-//                mRequestingLocationUpdates = savedInstanceState.getBoolean(
-//                        KEY_REQUESTING_LOCATION_UPDATES);
-//            }
-//
-//            // Update the value of mCurrentLocation from the Bundle and update the UI to show the
-//            // correct latitude and longitude.
-//            if (savedInstanceState.keySet().contains(KEY_LOCATION)) {
-//                // Since KEY_LOCATION was found in the Bundle, we can be sure that mCurrentLocation
-//                // is not null.
-//                mCurrentLocation = savedInstanceState.getParcelable(KEY_LOCATION);
-//            }
-//            // Update the value of mCurrentLocation from the Bundle and update the UI to show the
-//            // correct latitude and longitude.
-//            if (savedInstanceState.keySet().contains(KEY_ALTITUDE)) {
-//                // Since KEY_ALTITUDE was found in the Bundle, we can be sure that mCurrentLocation
-//                // is not null.
-//                mCurrentLocation = savedInstanceState.getParcelable(KEY_ALTITUDE);
-//            }
-//            if (savedInstanceState.keySet().contains(KEY_SPEED)) {
-//                // Since KEY_SPEED was found in the Bundle, we can be sure that mCurrentLocation
-//                // is not null.
-//                mCurrentLocation = savedInstanceState.getParcelable(KEY_SPEED);
-//            }
-//
-//            // Update the value of mLastUpdateTime from the Bundle and update the UI.
-//            if (savedInstanceState.keySet().contains(KEY_LAST_UPDATED_TIME)) {
-//                mLastUpdateTime = savedInstanceState.getString(KEY_LAST_UPDATED_TIME);
-//            }
-//            // Update the value of mElapsedTime from the Bundle and update the UI.
-//            if (savedInstanceState.keySet().contains(KEY_LAST_UPDATED_ETIME)) {
-//                mElapsedTime = savedInstanceState.getString(KEY_LAST_UPDATED_ETIME);
-//            }
-//
-//            // Update the value of mTotalDistance from the Bundle and update the UI.
-//            if (savedInstanceState.keySet().contains(KEY_LAST_UPDATED_TDISTANCE)) {
-//                mTotalDistance = savedInstanceState.getDouble(KEY_LAST_UPDATED_TDISTANCE);
-//            }
 
-            // Update the value of mTotalDistance from the Bundle and update the UI.
             if (savedInstanceState.keySet().contains(KEY_LAST_RUN)) {
                 mLast_ID = savedInstanceState.getInt(KEY_LAST_RUN);
             }
@@ -558,37 +516,6 @@ public class RealTimeFragment extends Fragment implements
     }
 
 
-    // This callback is called only when there is a saved instance previously saved using
-// onSaveInstanceState(). We restore some state in onCreate() while we can optionally restore
-// other state here, possibly usable after onStart() has completed.
-// The savedInstanceState Bundle is same as the one used in onCreate().
-
-//    @Override
-//    public void onActivityCreated(Bundle savedInstanceState) {
-//        super.onActivityCreated(savedInstanceState);
-//
-//        if (savedInstanceState != null) {
-//            //probably orientation change
-//            savedInstanceState.getBoolean(KEY_REQUESTING_LOCATION_UPDATES, mRequestingLocationUpdates);
-//                onlyUIupdate();
-//                setButtonsEnabledState();
-//                Log.d(TAG, "onActivityCreated savedInstanceState != null");
-//
-//        } else {
-//            if (mFusedLocationClient != null) {
-//                Log.d(TAG, "onActivityCreated mFusedLocationClient != null");
-//                mRequestingLocationUpdates = true;
-////                onlyUIupdate();
-//
-//                //returning from backstack, data is fine, do nothing
-//
-//            } else {
-//                //newly created, compute data
-//
-//            }
-//        }
-//    }
-
     @Override
     public void onViewStateRestored(@Nullable Bundle savedInstanceState) {
         super.onViewStateRestored(savedInstanceState);
@@ -610,9 +537,6 @@ public class RealTimeFragment extends Fragment implements
     public void onSaveInstanceState(Bundle savedInstanceState) {
         super.onSaveInstanceState(savedInstanceState);
         savedInstanceState.putBoolean(KEY_REQUESTING_LOCATION_UPDATES, mRequestingLocationUpdates);
-//        savedInstanceState.putParcelable(KEY_LOCATION, mCurrentLocation);
-//        savedInstanceState.putParcelable(KEY_ALTITUDE, mCurrentLocation);
-//        savedInstanceState.putParcelable(KEY_SPEED, mCurrentLocation);
         savedInstanceState.putInt(KEY_LAST_RUN, mLast_ID);
         // call superclass to save any view hierarchy
 
@@ -649,38 +573,6 @@ public class RealTimeFragment extends Fragment implements
         Log.d(TAG, "onResume");
         LocalBroadcastManager.getInstance(mContext).registerReceiver(myReceiver,
                 new IntentFilter(LocationUpdatesService.ACTION_BROADCAST));
-//        if (mFusedLocationClient != null){
-//
-//        }
-//        // Within {@code onPause()}, we remove location updates. Here, we resume receiving
-//        // location updates if the user has requested them.
-//        Log.d(TAG, "onResume()");
-//        if (ActivityCompat.checkSelfPermission
-//                (mContext, Manifest.permission.ACCESS_FINE_LOCATION)
-//                != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission
-//                (mContext, Manifest.permission.ACCESS_COARSE_LOCATION)
-//                != PackageManager.PERMISSION_GRANTED) {
-//            // TODO: Consider calling
-//            //    ActivityCompat#requestPermissions
-//            // here to request the missing permissions, and then overriding
-//            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-//            //                                          int[] grantResults)
-//            // to handle the case where the user grants the permission. See the documentation
-//            // for ActivityCompat#requestPermissions for more details.
-//            return;
-//        }
-//        Log.d(TAG, "onResume, getLocationAvailability()");
-//
-//        mFusedLocationClient.getLocationAvailability()
-//                .addOnCompleteListener((Activity) mContext, new OnCompleteListener<LocationAvailability>() {
-//                    @Override
-//                    public void onComplete(@NonNull Task<LocationAvailability> task) {
-//                        mRequestingLocationUpdates = LocationAvailability.hasLocationAvailability();
-//
-//                        setButtonsEnabledState();
-//                    }
-//                });
-//    }
 
     }
 

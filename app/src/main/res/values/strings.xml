@@ -197,4 +197,8 @@
 
     <string name="Run_no">Run No:</string>
     <string name="up">Up</string>
+    <string name="screenshot_take_failed">Screenshot take failed</string>
+    <string name="sharing_text">My track by G-Track</string>
+    <string name="sharing_title">My track by G-Track</string>
+
 </resources>

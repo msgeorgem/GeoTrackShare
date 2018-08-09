@@ -54,13 +54,6 @@
             android:value="@integer/google_play_services_version" />
 
         <activity
-            android:name=".MapsActivity"
-            android:label="@string/title_activity_maps"
-            android:theme="@style/AppThemeGTSDark">
-
-        </activity>
-
-        <activity
             android:name=".MainActivity"
             android:configChanges="orientation|screenSize"
             android:noHistory="false"
@@ -124,9 +117,6 @@
 
         <receiver android:name=".TrackingWidget.TrackingWidgetProvider">
             <intent-filter>
-                <action android:name="com.example.android.geotrackshare.WIDGET_BUTTON_ENTER_ACTIVITY" />
-                <action android:name="com.example.android.geotrackshare.WIDGET_BUTTON_START_SERVICE" />
-                <action android:name="com.example.android.geotrackshare.WIDGET_BUTTON_STOP_SERVICE" />
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>
 
@@ -134,8 +124,15 @@
                 android:name="android.appwidget.provider"
                 android:resource="@xml/tracking_widget_info" />
         </receiver>
-
+        <provider
+            android:name="android.support.v4.content.FileProvider"
+            android:authorities="${applicationId}.provider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/provider_paths" />
+        </provider>
 
     </application>
-
 </manifest>

@@ -11,6 +11,7 @@ import android.database.Cursor;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Build;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v13.app.FragmentStatePagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
@@ -23,6 +24,7 @@ import android.view.WindowInsets;
 import com.example.android.geotrackshare.Data.TrackContract;
 import com.example.android.geotrackshare.Data.TrackLoader;
 
+import static com.example.android.geotrackshare.AdvancedSettingsActivity.preferenceBooleanTheme;
 import static com.example.android.geotrackshare.TrackList.RunListFragment.EXTRA_RUN_ID;
 
 
@@ -68,7 +70,8 @@ public class DetailActivity extends AppCompatActivity
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_detail1);
+        switchThemeD();
+        setContentView(R.layout.activity_detail);
 
         intent = getIntent();
         if (ACTION_FROM_RUNLISTFRAGMENT.equals(intent.getAction())) {
@@ -91,6 +94,9 @@ public class DetailActivity extends AppCompatActivity
                 mUpButton.animate()
                         .alpha((state == ViewPager.SCROLL_STATE_IDLE) ? 1f : 0f)
                         .setDuration(300);
+//                DetailFragment.fab.animate()
+//                        .alpha((state == ViewPager.SCROLL_STATE_IDLE) ? 1f : 0f)
+//                        .setDuration(100);
             }
 
             @Override
@@ -135,25 +141,14 @@ public class DetailActivity extends AppCompatActivity
 
         if (savedInstanceState == null) {
             Log.e("savedInstanceState", String.valueOf("null"));
-//            if (getIntent() != null && getIntent().getData() != null) {
-//                mStartId = TrackContract.TrackingEntry.getItemId(getIntent().getData());
-//                Log.e("savedInstanceState", String.valueOf(mStartId));
             mSelectedItemId = mStartId;
-//            } else {Log.e("getData", String.valueOf("null"));}
         }
-
-
     }
 
     private void updateUpButtonPosition() {
         int upButtonNormalBottom = mTopInset + mUpButton.getHeight();
         mUpButton.setTranslationY(Math.min(mSelectedItemUpButtonFloor - upButtonNormalBottom, 0));
-
     }
-
-
-
-
 
     @Override
     public Loader<Cursor> onCreateLoader(int i, Bundle bundle) {
@@ -190,14 +185,6 @@ public class DetailActivity extends AppCompatActivity
         mPagerAdapter.notifyDataSetChanged();
     }
 
-//    private Intent createShareMovieIntent() {
-//        Intent shareIntent = ShareCompat.IntentBuilder.from(this)
-//                .setType("text/plain")
-//                .setText(mMovieSummary + MDB_SHARE_HASHTAG)
-//                .getIntent();
-//        shareIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_DOCUMENT);
-//        return shareIntent;
-//    }
 
     private class MyPagerAdapter extends FragmentStatePagerAdapter {
         public MyPagerAdapter(FragmentManager fm) {
@@ -225,6 +212,16 @@ public class DetailActivity extends AppCompatActivity
         @Override
         public int getCount() {
             return (mCursor != null) ? mCursor.getCount() : 0;
+        }
+    }
+
+    private void switchThemeD() {
+        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
+        boolean themeBoolean = sharedPrefs.getBoolean("theme_switch", preferenceBooleanTheme);
+        if (!themeBoolean) {
+            setTheme(R.style.AppTheme);
+        } else {
+            setTheme(R.style.AppThemeDarkTheme);
         }
     }
 }
