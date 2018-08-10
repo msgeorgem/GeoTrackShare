@@ -188,6 +188,12 @@ public class TracksCursorAdapter extends CursorRecyclerAdapter<TracksCursorAdapt
                 fragment.shareViaEmail(mRunId);
             }
         });
+        viewHolder.shareImage.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                fragment.onShareClick(mRunId);
+            }
+        });
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
@@ -205,6 +211,7 @@ public class TracksCursorAdapter extends CursorRecyclerAdapter<TracksCursorAdapt
         public TextView totalDistance;
         public ToggleButton favToggle;
         public ImageView exportCSV;
+        public ImageView shareImage;
 
 
         public ViewHolder(View view) {
@@ -220,6 +227,7 @@ public class TracksCursorAdapter extends CursorRecyclerAdapter<TracksCursorAdapt
             totalDistance = view.findViewById(R.id.current_total_distance);
             favToggle = view.findViewById(R.id.favListToggleButton);
             exportCSV = view.findViewById(R.id.csv);
+            shareImage = view.findViewById(R.id.share);
         }
     }
 }

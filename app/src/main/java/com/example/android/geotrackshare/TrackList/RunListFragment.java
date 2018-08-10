@@ -32,6 +32,7 @@ import com.example.android.geotrackshare.Data.TrackContract;
 import com.example.android.geotrackshare.Data.TrackDbHelper;
 import com.example.android.geotrackshare.DetailActivity;
 import com.example.android.geotrackshare.R;
+import com.example.android.geotrackshare.ScreenShotActivity;
 import com.example.android.geotrackshare.Utils.SqliteExporter;
 
 import java.util.Arrays;
@@ -299,6 +300,16 @@ public class RunListFragment extends Fragment implements LoaderManager.LoaderCal
         Intent intent = new Intent(getActivity(), DetailActivity.class);
         intent.setAction(ACTION_FROM_RUNLISTFRAGMENT);
         intent.putExtra(EXTRA_RUN_ID, idLong);
+
+//        Uri currentProductUri = ContentUris.withAppendedId(TrackContract.TrackingEntry.CONTENT_URI, id);
+//        intent.setData(currentProductUri);
+        startActivity(intent);
+    }
+
+    public void onShareClick(int id) {
+        Intent intent = new Intent(getActivity(), ScreenShotActivity.class);
+        intent.setAction(ACTION_FROM_RUNLISTFRAGMENT);
+        intent.putExtra(EXTRA_RUN_ID, id);
 
 //        Uri currentProductUri = ContentUris.withAppendedId(TrackContract.TrackingEntry.CONTENT_URI, id);
 //        intent.setData(currentProductUri);
