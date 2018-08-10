@@ -201,6 +201,8 @@
     <string name="sharing_text">My track by G-Track</string>
     <string name="sharing_title">My track by G-Track</string>
 
+    <string name="map_is_loaded">Map is loaded!</string>
+    <string name="map_is_loaded_01">Map is loaded! You can screenshot via share button!</string>
     <string name="question_to_accept">Do you want to share this picture or take new one?</string>
     <string name="accept">Share</string>
     <string name="dismiss">Dismiss</string>

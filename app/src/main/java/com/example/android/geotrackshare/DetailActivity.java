@@ -207,6 +207,7 @@ public class DetailActivity extends AppCompatActivity
             int whatever = mCursor.getInt(TrackLoader.Query.COLUMN_RUN_IDP);
             Log.e(LOG_TAG, String.valueOf(whatever));
             return DetailFragment.newInstance(mCursor.getInt(TrackLoader.Query.COLUMN_RUN_IDP));
+
         }
 
         @Override

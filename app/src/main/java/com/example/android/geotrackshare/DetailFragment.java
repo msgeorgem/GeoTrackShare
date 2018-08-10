@@ -71,6 +71,7 @@ import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_TOTAL_DISTANCEP;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.CONTENT_URI;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry._ID;
+import static com.example.android.geotrackshare.MapFragmentII.ARG_BITMAP;
 import static com.example.android.geotrackshare.RealTimeFragment.RUN_TYPE_PICTURE;
 import static com.example.android.geotrackshare.RealTimeFragment.mCategories;
 import static com.example.android.geotrackshare.TrackList.RunListFragment.PROJECTION_POST;
@@ -80,6 +81,7 @@ import static com.example.android.geotrackshare.TrackList.RunListFragment.PROJEC
  */
 public class DetailFragment extends Fragment implements OnMapReadyCallback {
     public static final String ARG_ITEM_ID = "item_id";
+    public static final String ARG_PARAM1 = "ARG_PARAM1";
     private static final String TAG = "DetailFragment";
 
 
@@ -119,7 +121,7 @@ public class DetailFragment extends Fragment implements OnMapReadyCallback {
     private MapFragment mapFragment;
     private Boolean mRecuringBoolean;
     private static GoogleMap mMap;
-    private Bitmap mMapBitmap;
+    private static Bitmap mMapBitmap;
     private Bitmap mSharedImageBitmap;
     private ScrollView mScreenShotted;
     private String currentRunText;
@@ -128,7 +130,8 @@ public class DetailFragment extends Fragment implements OnMapReadyCallback {
     private int mTopInset;
     private FrameLayout mUpButtonContainer;
     private int mSelectedItemUpButtonFloor = Integer.MAX_VALUE;
-    private ImageView mScreenShotPreview;
+    private MapFragmentII mapFragmentII;
+
 
 
     private SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.sss");
@@ -147,6 +150,15 @@ public class DetailFragment extends Fragment implements OnMapReadyCallback {
     public static DetailFragment newInstance(int itemId) {
         Bundle arguments = new Bundle();
         arguments.putInt(ARG_ITEM_ID, itemId);
+        DetailFragment fragment = new DetailFragment();
+        fragment.setArguments(arguments);
+        return fragment;
+    }
+
+    public static DetailFragment newInstance1(Bitmap bitmap) {
+        mMapBitmap = bitmap;
+        Bundle arguments = new Bundle();
+        arguments.putParcelable(ARG_BITMAP, bitmap);
         DetailFragment fragment = new DetailFragment();
         fragment.setArguments(arguments);
         return fragment;
@@ -191,20 +203,30 @@ public class DetailFragment extends Fragment implements OnMapReadyCallback {
         runIdTextView = view.findViewById(R.id.run_id);
         avgSpeedTextView = view.findViewById(R.id.avg_speed_value);
         mScreenShotted = view.findViewById(R.id.scrollScreenShotted);
-        mMapFrame = view.findViewById(R.id.mapmap);
+        mMapFrame = view.findViewById(R.id.map_container);
         mapScreenShottedTemp = view.findViewById(R.id.mapImageView);
         mapScreenShottedTemp.setVisibility(View.INVISIBLE);
-        mapFragment = MapFragment.newInstance();
+//        mapFragment = MapFragment.newInstance();
         mUpButtonContainer = view.findViewById(R.id.up_container);
-        mScreenShotPreview = view.findViewById(R.id.screenshotpreview);
-        mScreenShotPreview.setVisibility(View.INVISIBLE);
 
-        FragmentTransaction transaction = getChildFragmentManager().beginTransaction();
-        transaction.add(R.id.mapmap, mapFragment, "FRAGMENT_TAG")
-                .addToBackStack("FRAGMENT_TAG").commit();
-        getChildFragmentManager().executePendingTransactions();
+//        FragmentTransaction transaction = getChildFragmentManager().beginTransaction();
+//        transaction.add(R.id.mapmap, mapFragment, "FRAGMENT_TAG")
+//                .addToBackStack("FRAGMENT_TAG").commit();
+//        getChildFragmentManager().executePendingTransactions();
+//
+//        mapFragment.getMapAsync(this);
 
-        mapFragment.getMapAsync(this);
+//        mapFragmentII = new MapFragmentII();
+//        FragmentManager manager = getFragmentManager();
+//        manager.beginTransaction()
+//                .replace(R.id.map_container, mapFragmentII, mapFragmentII.getTag())
+//                .commitAllowingStateLoss();
+
+//        Fragment childFragment = new ChildFragment();
+//        FragmentTransaction transaction = getChildFragmentManager().beginTransaction();
+//        transaction.replace(R.id.map_container, childFragment).commit();
+
+
 
         onGetDataFromDataBaseAndDisplay(runIdInt);
         queryCoordinatesList(runIdInt);
@@ -216,7 +238,10 @@ public class DetailFragment extends Fragment implements OnMapReadyCallback {
 //                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
 //                        .setAction("Action", null).show();
 //                createShareTrackIntent();
-
+                if (getArguments().containsKey(ARG_BITMAP)) {
+                    mMapBitmap = getArguments().getParcelable(ARG_BITMAP);
+//                    Log.e(TAG, String.valueOf(runIdInt));
+                }
                 takeScreenshot();
             }
         });
@@ -227,6 +252,17 @@ public class DetailFragment extends Fragment implements OnMapReadyCallback {
         fab.startAnimation(animation);
 
         return view;
+    }
+
+
+    @Override
+    public void onViewCreated(View view, Bundle savedInstanceState) {
+        Fragment childFragment = new MapFragmentII();
+        Bundle args = new Bundle();
+        args.putInt(ARG_ITEM_ID, runIdInt);
+        childFragment.setArguments(args);
+        FragmentTransaction transaction = getChildFragmentManager().beginTransaction();
+        transaction.replace(R.id.map_container, childFragment).commit();
     }
 
     @Override
@@ -545,7 +581,7 @@ public class DetailFragment extends Fragment implements OnMapReadyCallback {
                 mMap.snapshot(new GoogleMap.SnapshotReadyCallback() {
                     @Override
                     public void onSnapshotReady(Bitmap bitmap) {
-                        Toast.makeText(getActivityCast(), "onMapReady.setOnMapLoadedCallback,onMapLoaded,onSnapshotReady",
+                        Toast.makeText(getActivityCast(), getResources().getString(R.string.map_is_loaded),
                                 Toast.LENGTH_SHORT).show();
                         mMapBitmap = bitmap;
 //                        mapScreenShottedTemp.setImageBitmap(mMapBitmap);
@@ -597,7 +633,7 @@ public class DetailFragment extends Fragment implements OnMapReadyCallback {
     /*  Method which will take screenshot on Basis of Screenshot Type ENUM  */
     private void takeScreenshot() {
         Bitmap bitmap = null;
-        screenshotMap();
+        MapFragmentII.screenshotMap();
 
         mapScreenShottedTemp.setImageBitmap(mMapBitmap);
         mMapFrame.setVisibility(View.INVISIBLE);
@@ -609,8 +645,8 @@ public class DetailFragment extends Fragment implements OnMapReadyCallback {
         mSharedImageBitmap = getScreenShot(mScreenShotted);
 
 //                After screenshot taken bitmapg oes invisible
-        mapScreenShottedTemp.setVisibility(View.INVISIBLE);
-        mMapFrame.setVisibility(View.VISIBLE);
+//        mapScreenShottedTemp.setVisibility(View.INVISIBLE);
+//        mMapFrame.setVisibility(View.VISIBLE);
 
 
         //If bitmap is not null
@@ -636,22 +672,6 @@ public class DetailFragment extends Fragment implements OnMapReadyCallback {
 //        mScreenShotPreview.setImageBitmap(bitmap);
 
     }
-
-    /*  Share Screenshot  */
-    private void shareScreenshot(File fileImagePath) {
-//        Uri uri = Uri.fromFile(file);//Convert file path into Uri for sharing
-        Uri uri = FileProvider.getUriForFile(getActivityCast(), BuildConfig.APPLICATION_ID + ".provider", fileImagePath);
-        Log.e("shareScreenshot", String.valueOf(uri));
-        Intent intent = new Intent();
-//        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-        intent.setAction(Intent.ACTION_SEND);
-        intent.setType("image/*");
-        intent.putExtra(android.content.Intent.EXTRA_SUBJECT, R.string.sharing_title);
-        intent.putExtra(android.content.Intent.EXTRA_TEXT, getString(R.string.sharing_text));
-        intent.putExtra(Intent.EXTRA_STREAM, uri);//pass uri here
-        startActivity(Intent.createChooser(intent, getString(R.string.sharing_title)));
-    }
-
 
     public void showScreenShotToAccept(final File sharedFile) {
 
@@ -695,6 +715,22 @@ public class DetailFragment extends Fragment implements OnMapReadyCallback {
         alertDialog.setCanceledOnTouchOutside(false);
 
     }
+
+    /*  Share Screenshot  */
+    private void shareScreenshot(File fileImagePath) {
+//        Uri uri = Uri.fromFile(file);//Convert file path into Uri for sharing
+        Uri uri = FileProvider.getUriForFile(getActivityCast(), BuildConfig.APPLICATION_ID + ".provider", fileImagePath);
+        Log.e("shareScreenshot", String.valueOf(uri));
+        Intent intent = new Intent();
+//        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        intent.setAction(Intent.ACTION_SEND);
+        intent.setType("image/*");
+        intent.putExtra(android.content.Intent.EXTRA_SUBJECT, R.string.sharing_title);
+        intent.putExtra(android.content.Intent.EXTRA_TEXT, getString(R.string.sharing_text));
+        intent.putExtra(Intent.EXTRA_STREAM, uri);//pass uri here
+        startActivity(Intent.createChooser(intent, getString(R.string.sharing_title)));
+    }
+
 
     public Bitmap getResizedBitmap(Bitmap bm, int newWidth, int newHeight) {
         int width = bm.getWidth();

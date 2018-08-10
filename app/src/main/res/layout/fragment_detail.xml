@@ -34,7 +34,7 @@
                     android:layout_height="420dp">
 
                     <FrameLayout
-                        android:id="@+id/mapmap"
+                        android:id="@+id/map_container"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent" />
 
@@ -286,18 +286,6 @@
                             app:layout_constraintHorizontal_bias="0.0"
                             app:layout_constraintStart_toStartOf="parent"
                             app:layout_constraintTop_toBottomOf="@+id/run_type" />
-
-                        <ImageView
-                            android:id="@+id/screenshotpreview"
-                            android:layout_width="188dp"
-                            android:layout_height="159dp"
-                            android:layout_marginEnd="8dp"
-                            android:layout_marginStart="8dp"
-                            android:src="@android:drawable/screen_background_dark_transparent"
-                            app:layout_constraintEnd_toStartOf="@+id/horizontal_middle"
-                            app:layout_constraintHorizontal_bias="0.942"
-                            app:layout_constraintStart_toStartOf="parent"
-                            tools:layout_editor_absoluteY="0dp" />
 
                     </android.support.constraint.ConstraintLayout>
 

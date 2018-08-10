@@ -15,9 +15,14 @@
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.ACCESS_NOTIFICATION_POLICY" />
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+
     <uses-feature android:name="android.hardware.camera" />
-    <uses-feature android:name="android.hardware.location" android:required="true" />
-    <uses-feature android:name="android.hardware.location.gps" android:required="false" />
+    <uses-feature
+        android:name="android.hardware.location"
+        android:required="true" />
+    <uses-feature
+        android:name="android.hardware.location.gps"
+        android:required="false" />
 
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
@@ -25,6 +30,7 @@
     <permission
         android:name="your.package.name.permission.MAPS_RECEIVE"
         android:protectionLevel="signature" />
+
     <uses-permission android:name="your.package.name.permission.MAPS_RECEIVE" />
 
     <application
@@ -37,8 +43,8 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
 
-
-        <!--android:grantUriPermissions="true"
+        <!--
+            android:grantUriPermissions="true"
              The API key for Google Maps-based APIs is defined as a string resource.
              (See the file "res/values/google_maps_api.xml").
              Note that the API key is linked to the encryption key used to sign the APK.
@@ -58,15 +64,13 @@
             android:configChanges="orientation|screenSize"
             android:noHistory="false"
             android:theme="@style/AppTheme.NoActionBar">
-
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-
         </activity>
-        <!--The manifest entry for our DetailActivity. Each Activity requires a manifest entry-->
+        <!-- The manifest entry for our DetailActivity. Each Activity requires a manifest entry -->
 
         <activity
             android:name=".DetailActivity"
@@ -75,24 +79,24 @@
             android:theme="@style/AppTheme">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
+
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
+
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".MainActivity" />
         </activity>
-
         <activity
-            android:name="com.example.android.geotrackshare.SettingsActivity"
+            android:name=".SettingsActivity"
             android:label="@string/title_activity_settings"
             android:theme="@style/AppTheme">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.example.android.geotrackshare.MainActivity" />
         </activity>
-
         <activity
-            android:name="com.example.android.geotrackshare.AdvancedSettingsActivity"
+            android:name=".AdvancedSettingsActivity"
             android:label="@string/title_advanced_settings"
             android:theme="@style/AppThemeSettings">
             <meta-data
@@ -101,12 +105,11 @@
         </activity>
 
         <provider
-            android:name="com.example.android.geotrackshare.Data.TrackProvider"
+            android:name=".Data.TrackProvider"
             android:authorities="com.example.android.geotrackshare"
             android:exported="false" />
-
         <provider
-            android:name="com.example.android.geotrackshare.Data.TrackPostProvider"
+            android:name=".Data.TrackPostProvider"
             android:authorities="com.example.android.geotrackshare.post"
             android:exported="false" />
 
@@ -124,6 +127,7 @@
                 android:name="android.appwidget.provider"
                 android:resource="@xml/tracking_widget_info" />
         </receiver>
+
         <provider
             android:name="android.support.v4.content.FileProvider"
             android:authorities="${applicationId}.provider"
@@ -134,5 +138,7 @@
                 android:resource="@xml/provider_paths" />
         </provider>
 
+        <activity android:name=".ScreenShotActivity"></activity>
     </application>
+
 </manifest>
