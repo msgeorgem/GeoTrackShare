@@ -49,6 +49,8 @@ import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.CONTENT_URI;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry._ID;
 import static com.example.android.geotrackshare.DetailActivity.ACTION_FROM_RUNLISTFRAGMENT;
+import static com.example.android.geotrackshare.DetailFragment.ACTION_FROM_DETAILFRAGMENT;
+import static com.example.android.geotrackshare.DetailFragment.ARG_ITEM_ID;
 import static com.example.android.geotrackshare.TrackList.RunListFragment.EXTRA_RUN_ID;
 
 public class ScreenShotActivity extends AppCompatActivity implements OnMapReadyCallback {
@@ -61,7 +63,7 @@ public class ScreenShotActivity extends AppCompatActivity implements OnMapReadyC
             COLUMN_LONGITUDE
     };
     private static GoogleMap mMap;
-    public FloatingActionButton fab, fab2;
+    public FloatingActionButton fabShare, fabScreenShot;
     private Bitmap mMapBitmap, mSharredBitmap;
     private Cursor cur;
     private int runIdInt;
@@ -73,6 +75,7 @@ public class ScreenShotActivity extends AppCompatActivity implements OnMapReadyC
     private double[] mStopLocation = new double[2];
     private FrameLayout mScreenShotted;
     private Intent intent;
+    private Animation animationApear, animationDisapear;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -82,6 +85,8 @@ public class ScreenShotActivity extends AppCompatActivity implements OnMapReadyC
         intent = getIntent();
         if (ACTION_FROM_RUNLISTFRAGMENT.equals(intent.getAction())) {
             runIdInt = intent.getIntExtra(EXTRA_RUN_ID, 0);
+        } else if (ACTION_FROM_DETAILFRAGMENT.equals(intent.getAction())) {
+            runIdInt = intent.getIntExtra(ARG_ITEM_ID, 0);
         }
 
         mMapFrame = findViewById(R.id.mapmap);
@@ -89,7 +94,17 @@ public class ScreenShotActivity extends AppCompatActivity implements OnMapReadyC
         mapScreenShottedTemp.setVisibility(View.INVISIBLE);
         mapFragmentInside = MapFragment.newInstance();
         mScreenShotted = findViewById(R.id.screenShotted);
+
+        animationApear = new AlphaAnimation(0.0f, 1.0f);
+        animationApear.setDuration(1000);
+        animationApear.setStartOffset(2000);
+
+        animationDisapear = new AlphaAnimation(1.0f, 0.0f);
+        animationDisapear.setDuration(1000);
+        animationDisapear.setStartOffset(0);
+
         queryCoordinatesList(runIdInt);
+
 
         FragmentTransaction transaction = getFragmentManager().beginTransaction();
         transaction.add(R.id.mapmap, mapFragmentInside, "FRAGMENT_TAG")
@@ -97,8 +112,9 @@ public class ScreenShotActivity extends AppCompatActivity implements OnMapReadyC
         getFragmentManager().executePendingTransactions();
         mapFragmentInside.getMapAsync(this);
 
-        fab = findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
+        fabShare = findViewById(R.id.fab);
+        fabShare.setVisibility(View.INVISIBLE);
+        fabShare.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
 
@@ -106,22 +122,20 @@ public class ScreenShotActivity extends AppCompatActivity implements OnMapReadyC
             }
         });
 
-        fab2 = findViewById(R.id.fab2);
-        fab2.setOnClickListener(new View.OnClickListener() {
+        fabScreenShot = findViewById(R.id.fab2);
+        fabScreenShot.setAnimation(animationApear);
+        fabScreenShot.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
 
                 mMapBitmap = screenshotMap();
+                fabShare.setVisibility(View.VISIBLE);
+                fabShare.startAnimation(animationApear);
+                fabScreenShot.startAnimation(animationDisapear);
+                fabScreenShot.setVisibility(View.INVISIBLE);
+
             }
         });
-
-        Animation animation = new AlphaAnimation(0.0f, 1.0f);
-        animation.setDuration(3000);
-        animation.setStartOffset(5000);
-        fab.startAnimation(animation);
-        fab2.startAnimation(animation);
-
-
     }
 
     @Override
@@ -349,7 +363,7 @@ public class ScreenShotActivity extends AppCompatActivity implements OnMapReadyC
                         Toast.makeText(getApplication(), "snap taken",
                                 Toast.LENGTH_SHORT).show();
                         mMapBitmap = bitmap;
-                        mapScreenShottedTemp.setImageBitmap(mMapBitmap);
+//                        mapScreenShottedTemp.setImageBitmap(mMapBitmap);
                     }
                 });
             }
@@ -430,6 +444,11 @@ public class ScreenShotActivity extends AppCompatActivity implements OnMapReadyC
                 // User clicked the "Delete" button, so delete the item.
                 //remove from DB
                 shareScreenshot(sharedFile);
+                fabShare.startAnimation(animationDisapear);
+                fabShare.setVisibility(View.INVISIBLE);
+                fabScreenShot.startAnimation(animationApear);
+                fabScreenShot.setVisibility(View.VISIBLE);
+
             }
         });
         builder.setNegativeButton(R.string.dismiss, new DialogInterface.OnClickListener() {
@@ -438,7 +457,10 @@ public class ScreenShotActivity extends AppCompatActivity implements OnMapReadyC
                 if (dialog != null) {
                     dialog.dismiss();
                 }
-
+                fabShare.startAnimation(animationDisapear);
+                fabShare.setVisibility(View.INVISIBLE);
+                fabScreenShot.startAnimation(animationApear);
+                fabScreenShot.setVisibility(View.VISIBLE);
             }
         });
         // Create and show the AlertDialog

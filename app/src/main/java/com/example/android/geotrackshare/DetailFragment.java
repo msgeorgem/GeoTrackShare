@@ -81,6 +81,7 @@ import static com.example.android.geotrackshare.TrackList.RunListFragment.PROJEC
  */
 public class DetailFragment extends Fragment implements OnMapReadyCallback {
     public static final String ARG_ITEM_ID = "item_id";
+    public static final String ACTION_FROM_DETAILFRAGMENT = "ACTION_FROM_DETAILFRAGMENT";
     public static final String ARG_PARAM1 = "ARG_PARAM1";
     private static final String TAG = "DetailFragment";
 
@@ -242,13 +243,16 @@ public class DetailFragment extends Fragment implements OnMapReadyCallback {
                     mMapBitmap = getArguments().getParcelable(ARG_BITMAP);
 //                    Log.e(TAG, String.valueOf(runIdInt));
                 }
-                takeScreenshot();
+                Intent intent = new Intent(getActivity(), ScreenShotActivity.class);
+                intent.setAction(ACTION_FROM_DETAILFRAGMENT);
+                intent.putExtra(ARG_ITEM_ID, runIdInt);
+                startActivity(intent);
             }
         });
 
         Animation animation = new AlphaAnimation(0.0f, 1.0f);
-        animation.setDuration(3000);
-        animation.setStartOffset(5000);
+        animation.setDuration(1000);
+        animation.setStartOffset(1000);
         fab.startAnimation(animation);
 
         return view;
@@ -790,4 +794,6 @@ public class DetailFragment extends Fragment implements OnMapReadyCallback {
         }
         return file;
     }
+
+
 }
