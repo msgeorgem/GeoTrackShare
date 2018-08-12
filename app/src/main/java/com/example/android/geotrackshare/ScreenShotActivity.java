@@ -6,6 +6,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.Matrix;
 import android.net.Uri;
@@ -22,9 +23,11 @@ import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.android.geotrackshare.Data.TrackContract;
+import com.example.android.geotrackshare.RunTypes.RunTypesAdapterNoUI;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
@@ -50,8 +53,13 @@ import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry._ID;
 import static com.example.android.geotrackshare.DetailActivity.ACTION_FROM_RUNLISTFRAGMENT;
 import static com.example.android.geotrackshare.DetailFragment.ACTION_FROM_DETAILFRAGMENT;
-import static com.example.android.geotrackshare.DetailFragment.ARG_ITEM_ID;
+import static com.example.android.geotrackshare.RealTimeFragment.RUN_TYPE_PICTURE;
+import static com.example.android.geotrackshare.RealTimeFragment.mCategories;
+import static com.example.android.geotrackshare.TrackList.RunListFragment.EXTRA_AVG_SPEED;
+import static com.example.android.geotrackshare.TrackList.RunListFragment.EXTRA_RUNTYPE;
 import static com.example.android.geotrackshare.TrackList.RunListFragment.EXTRA_RUN_ID;
+import static com.example.android.geotrackshare.TrackList.RunListFragment.EXTRA_TOTAL_DISTANCE;
+import static com.example.android.geotrackshare.TrackList.RunListFragment.EXTRA_TOTAL_TIME;
 
 public class ScreenShotActivity extends AppCompatActivity implements OnMapReadyCallback {
     public static final String ARG_BITMAP = "ARG_BITMAP";
@@ -66,9 +74,10 @@ public class ScreenShotActivity extends AppCompatActivity implements OnMapReadyC
     public FloatingActionButton fabShare, fabScreenShot;
     private Bitmap mMapBitmap, mSharredBitmap;
     private Cursor cur;
-    private int runIdInt;
+    private int runIdInt, mRunType;
     private ArrayList<LatLng> coordinatesList;
-    private ImageView mapScreenShottedTemp;
+    private ImageView mapScreenShottedTemp, mRunTypeIcon;
+    private TextView mTimeTextView, mDistanceTextView, mAvgSpeedTextView;
     private FrameLayout mMapFrame;
     private MapFragment mapFragmentInside;
     private double[] mStartLocation = new double[2];
@@ -76,24 +85,61 @@ public class ScreenShotActivity extends AppCompatActivity implements OnMapReadyC
     private FrameLayout mScreenShotted;
     private Intent intent;
     private Animation animationApear, animationDisapear;
+    private String mTime;
+    private Double mDistance, mAvgSpeed;
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_screen_shot);
 
-        intent = getIntent();
-        if (ACTION_FROM_RUNLISTFRAGMENT.equals(intent.getAction())) {
-            runIdInt = intent.getIntExtra(EXTRA_RUN_ID, 0);
-        } else if (ACTION_FROM_DETAILFRAGMENT.equals(intent.getAction())) {
-            runIdInt = intent.getIntExtra(ARG_ITEM_ID, 0);
-        }
-
         mMapFrame = findViewById(R.id.mapmap);
         mapScreenShottedTemp = findViewById(R.id.mapImageView);
         mapScreenShottedTemp.setVisibility(View.INVISIBLE);
         mapFragmentInside = MapFragment.newInstance();
         mScreenShotted = findViewById(R.id.screenShotted);
+        mTimeTextView = findViewById(R.id.total_time);
+        mDistanceTextView = findViewById(R.id.total_distance);
+        mAvgSpeedTextView = findViewById(R.id.speed);
+        mRunTypeIcon = findViewById(R.id.run_type_icon);
+
+
+        intent = getIntent();
+        if (ACTION_FROM_RUNLISTFRAGMENT.equals(intent.getAction())) {
+            runIdInt = intent.getIntExtra(EXTRA_RUN_ID, 0);
+
+        } else if (ACTION_FROM_DETAILFRAGMENT.equals(intent.getAction())) {
+
+        }
+
+        runIdInt = intent.getIntExtra(EXTRA_RUN_ID, 0);
+        mTime = intent.getStringExtra(EXTRA_TOTAL_TIME);
+        mDistance = intent.getDoubleExtra(EXTRA_TOTAL_DISTANCE, 0);
+        mAvgSpeed = intent.getDoubleExtra(EXTRA_AVG_SPEED, 0);
+        mRunType = intent.getIntExtra(EXTRA_RUNTYPE, 0);
+
+        String totlaDistance3Dec = String.format("%.3f", mDistance);
+        String totalDistanceString = String.valueOf(totlaDistance3Dec + " km");
+
+//        String maxAltitudeNoDecimal = String.format("%.0f", maxAltitude);
+//        String maxAltitudeString = String.valueOf(maxAltitudeNoDecimal + " m");
+
+//        String maxSpeed1Decimal = String.format("%.1f", maxSpeed);
+//        String maxSpeedString = String.valueOf(maxSpeed1Decimal + " km/h");
+
+        String avrSpeed1Decimal = String.format("%.1f", mAvgSpeed);
+        String avrSpeedString = String.valueOf(avrSpeed1Decimal + " km/h");
+
+        RunTypesAdapterNoUI mAdapter = new RunTypesAdapterNoUI(this, mCategories);
+        RUN_TYPE_PICTURE = mAdapter.getItem(mRunType).getPicture();
+        Bitmap icon = BitmapFactory.decodeResource(getResources(), RUN_TYPE_PICTURE);
+
+        mTimeTextView.setText(mTime);
+        mDistanceTextView.setText(totalDistanceString);
+        mAvgSpeedTextView.setText(avrSpeedString);
+        mRunTypeIcon.setImageBitmap(icon);
 
         animationApear = new AlphaAnimation(0.0f, 1.0f);
         animationApear.setDuration(1000);
@@ -104,7 +150,6 @@ public class ScreenShotActivity extends AppCompatActivity implements OnMapReadyC
         animationDisapear.setStartOffset(0);
 
         queryCoordinatesList(runIdInt);
-
 
         FragmentTransaction transaction = getFragmentManager().beginTransaction();
         transaction.add(R.id.mapmap, mapFragmentInside, "FRAGMENT_TAG")
@@ -381,7 +426,7 @@ public class ScreenShotActivity extends AppCompatActivity implements OnMapReadyC
 //            e.printStackTrace();
 //        }
         mapScreenShottedTemp.setImageBitmap(mMapBitmap);
-
+        fabShare.setVisibility(View.INVISIBLE);
         mMapFrame.setVisibility(View.INVISIBLE);
         mapScreenShottedTemp.setVisibility(View.VISIBLE);
 //        runIdTextView.setText("  G-Track");
@@ -393,6 +438,7 @@ public class ScreenShotActivity extends AppCompatActivity implements OnMapReadyC
 //                After screenshot taken bitmapg oes invisible
         mapScreenShottedTemp.setVisibility(View.INVISIBLE);
         mMapFrame.setVisibility(View.VISIBLE);
+        fabShare.setVisibility(View.VISIBLE);
 
 
         //If bitmap is not null
@@ -405,7 +451,8 @@ public class ScreenShotActivity extends AppCompatActivity implements OnMapReadyC
             Uri uri = FileProvider.getUriForFile(getApplication(), BuildConfig.APPLICATION_ID + ".provider", sharedFile);
             Log.e("shareScreenshot", String.valueOf(uri));
 //            shareScreenshot(file);//finally share screenshot
-            showScreenShotToAccept(sharedFile);
+//            showScreenShotToAccept(sharedFile);
+            shareScreenshot(sharedFile);
 
         } else
             //If bitmap is null show toast message
@@ -543,5 +590,11 @@ public class ScreenShotActivity extends AppCompatActivity implements OnMapReadyC
             e.printStackTrace();
         }
         return file;
+    }
+
+    @Override
+    public void onBackPressed() {
+        Intent intent = new Intent(getApplication(), MainActivity.class);
+        startActivity(intent);
     }
 }

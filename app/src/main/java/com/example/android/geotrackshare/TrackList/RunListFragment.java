@@ -306,10 +306,14 @@ public class RunListFragment extends Fragment implements LoaderManager.LoaderCal
         startActivity(intent);
     }
 
-    public void onShareClick(int id) {
+    public void onShareClick(int id, String time, Double distance, Double speed, int runType) {
         Intent intent = new Intent(getActivity(), ScreenShotActivity.class);
         intent.setAction(ACTION_FROM_RUNLISTFRAGMENT);
         intent.putExtra(EXTRA_RUN_ID, id);
+        intent.putExtra(EXTRA_TOTAL_TIME, time);
+        intent.putExtra(EXTRA_TOTAL_DISTANCE, distance);
+        intent.putExtra(EXTRA_AVG_SPEED, speed);
+        intent.putExtra(EXTRA_RUNTYPE, runType);
 
 //        Uri currentProductUri = ContentUris.withAppendedId(TrackContract.TrackingEntry.CONTENT_URI, id);
 //        intent.setData(currentProductUri);

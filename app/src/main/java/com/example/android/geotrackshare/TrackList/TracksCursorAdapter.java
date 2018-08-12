@@ -49,8 +49,9 @@ public class TracksCursorAdapter extends CursorRecyclerAdapter<TracksCursorAdapt
     private RunListFragment fragment = new RunListFragment();
     private long id,id2long;
     private String mmElapsedTime, mDate, mHours;
+    private Double totalDistance, avrSpeed;
 
-    private int mQuantity;
+    private int mQuantity, mRunType;
     private String ORDER = " DESC LIMIT 1";
 
 
@@ -105,11 +106,11 @@ public class TracksCursorAdapter extends CursorRecyclerAdapter<TracksCursorAdapt
 //        Long startTime = cursor.getLong(startTimeColumnIndex);
 //        String mHoursStart = new SimpleDateFormat("HH:mm:ss").format(new Date(startTime));
 
-        int runType = cursor.getInt(runTypeColumnIndex);
-        Double totalDistance = cursor.getDouble(totalDistanceColumnIndex);
+        mRunType = cursor.getInt(runTypeColumnIndex);
+        totalDistance = cursor.getDouble(totalDistanceColumnIndex);
         Double maxAltitude = cursor.getDouble(maxAltitudeColumnIndex);
         Double maxSpeed = cursor.getDouble(maxSpeedColumnIndex);
-        Double avrSpeed = cursor.getDouble(avrSpeedColumnIndex);
+        avrSpeed = cursor.getDouble(avrSpeedColumnIndex);
         Long totalTime = cursor.getLong(totalTimeColumnIndex);
         String mHoursStop = new SimpleDateFormat("HH:mm:ss").format(new Date(totalTime));
 
@@ -117,7 +118,7 @@ public class TracksCursorAdapter extends CursorRecyclerAdapter<TracksCursorAdapt
         // Read the item attributes from the Cursor for the current item
 
         RunTypesAdapterNoUI mAdapter = new RunTypesAdapterNoUI(context, mCategories);
-        RUN_TYPE_PICTURE = mAdapter.getItem(runType).getPicture();
+        RUN_TYPE_PICTURE = mAdapter.getItem(mRunType).getPicture();
         Bitmap icon = BitmapFactory.decodeResource(context.getResources(), RUN_TYPE_PICTURE);
 
 
@@ -191,7 +192,7 @@ public class TracksCursorAdapter extends CursorRecyclerAdapter<TracksCursorAdapt
         viewHolder.shareImage.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                fragment.onShareClick(mRunId);
+                fragment.onShareClick(mRunId, mmElapsedTime, totalDistance, avrSpeed, mRunType);
             }
         });
     }

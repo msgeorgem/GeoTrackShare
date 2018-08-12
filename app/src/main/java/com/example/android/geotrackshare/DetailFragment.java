@@ -74,6 +74,11 @@ import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry
 import static com.example.android.geotrackshare.MapFragmentII.ARG_BITMAP;
 import static com.example.android.geotrackshare.RealTimeFragment.RUN_TYPE_PICTURE;
 import static com.example.android.geotrackshare.RealTimeFragment.mCategories;
+import static com.example.android.geotrackshare.TrackList.RunListFragment.EXTRA_AVG_SPEED;
+import static com.example.android.geotrackshare.TrackList.RunListFragment.EXTRA_RUNTYPE;
+import static com.example.android.geotrackshare.TrackList.RunListFragment.EXTRA_RUN_ID;
+import static com.example.android.geotrackshare.TrackList.RunListFragment.EXTRA_TOTAL_DISTANCE;
+import static com.example.android.geotrackshare.TrackList.RunListFragment.EXTRA_TOTAL_TIME;
 import static com.example.android.geotrackshare.TrackList.RunListFragment.PROJECTION_POST;
 
 /**
@@ -98,7 +103,7 @@ public class DetailFragment extends Fragment implements OnMapReadyCallback {
     private String MAPSTATE = "MAPSTATE";
     private Unbinder mUnbinder;
     private Cursor mCursor;
-    private int mItemId;
+    public FloatingActionButton fabShare, fabScreenShot;
     private View mRootView;
     private int mMutedColor = 0xFF333333;
     private Cursor cur;
@@ -107,6 +112,7 @@ public class DetailFragment extends Fragment implements OnMapReadyCallback {
     private LatLng here;
     private double[] mStartLocation = new double[2];
     private double[] mStopLocation = new double[2];
+    private int mItemId, mRunType;
     private int runIdInt;
     private ImageView mIconView;
     private TextView maxAltTextView;
@@ -125,13 +131,15 @@ public class DetailFragment extends Fragment implements OnMapReadyCallback {
     private static Bitmap mMapBitmap;
     private Bitmap mSharedImageBitmap;
     private ScrollView mScreenShotted;
-    private String currentRunText;
+    private double mTotalDistance, mAvgSpeed;
     private FrameLayout mMapFrame;
     private ImageView mapScreenShottedTemp;
     private int mTopInset;
     private FrameLayout mUpButtonContainer;
     private int mSelectedItemUpButtonFloor = Integer.MAX_VALUE;
     private MapFragmentII mapFragmentII;
+    private String currentRunText, mTotalTime;
+    private Animation animationApear, animationDisapear;
 
 
 
@@ -210,6 +218,7 @@ public class DetailFragment extends Fragment implements OnMapReadyCallback {
 //        mapFragment = MapFragment.newInstance();
         mUpButtonContainer = view.findViewById(R.id.up_container);
 
+
 //        FragmentTransaction transaction = getChildFragmentManager().beginTransaction();
 //        transaction.add(R.id.mapmap, mapFragment, "FRAGMENT_TAG")
 //                .addToBackStack("FRAGMENT_TAG").commit();
@@ -232,28 +241,63 @@ public class DetailFragment extends Fragment implements OnMapReadyCallback {
         onGetDataFromDataBaseAndDisplay(runIdInt);
         queryCoordinatesList(runIdInt);
 
-        fab = view.findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
+//        fab = view.findViewById(R.id.fab);
+//        fab.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View view) {
+////                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
+////                        .setAction("Action", null).show();
+////                createShareTrackIntent();
+//                if (getArguments().containsKey(ARG_BITMAP)) {
+//                    mMapBitmap = getArguments().getParcelable(ARG_BITMAP);
+////                    Log.e(TAG, String.valueOf(runIdInt));
+//                }
+//                Intent intent = new Intent(getActivity(), ScreenShotActivity.class);
+//                intent.setAction(ACTION_FROM_DETAILFRAGMENT);
+//                intent.putExtra(ARG_ITEM_ID, runIdInt);
+//                startActivity(intent);
+//            }
+//        });
+        animationApear = new AlphaAnimation(0.0f, 1.0f);
+        animationApear.setDuration(1500);
+        animationApear.setStartOffset(500);
+
+        animationDisapear = new AlphaAnimation(1.0f, 0.0f);
+        animationDisapear.setDuration(1000);
+        animationDisapear.setStartOffset(0);
+
+
+//        Animation animation = new AlphaAnimation(0.0f, 1.0f);
+//        animation.setDuration(1000);
+//        animation.setStartOffset(1000);
+//        fab.startAnimation(animation);
+
+        fabShare = view.findViewById(R.id.fab2);
+        fabShare.startAnimation(animationApear);
+        fabShare.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-//                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-//                        .setAction("Action", null).show();
-//                createShareTrackIntent();
-                if (getArguments().containsKey(ARG_BITMAP)) {
-                    mMapBitmap = getArguments().getParcelable(ARG_BITMAP);
-//                    Log.e(TAG, String.valueOf(runIdInt));
-                }
-                Intent intent = new Intent(getActivity(), ScreenShotActivity.class);
-                intent.setAction(ACTION_FROM_DETAILFRAGMENT);
-                intent.putExtra(ARG_ITEM_ID, runIdInt);
-                startActivity(intent);
+                onShareClick(runIdInt, mTotalTime, mTotalDistance, mAvgSpeed, mRunType);
+//                takeScreenshot();
             }
         });
 
-        Animation animation = new AlphaAnimation(0.0f, 1.0f);
-        animation.setDuration(1000);
-        animation.setStartOffset(1000);
-        fab.startAnimation(animation);
+
+//        fabScreenShot = view.findViewById(R.id.fab2);
+//        fabScreenShot.setAnimation(animationApear);
+//        fabScreenShot.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View view) {
+//                MapFragmentII.screenshotMap();
+////                mMapBitmap = screenshotMap();
+//                fabShare.setVisibility(View.VISIBLE);
+//                fabShare.startAnimation(animationApear);
+//                fabScreenShot.startAnimation(animationDisapear);
+//                fabScreenShot.setVisibility(View.INVISIBLE);
+//
+//            }
+//        });
+
 
         return view;
     }
@@ -287,9 +331,7 @@ public class DetailFragment extends Fragment implements OnMapReadyCallback {
             mRecuringBoolean = savedInstanceState.getBoolean(MAPSTATE);
         }
 
-
     }
-
 
 
     public ArrayList queryCoordinatesList(int id) {
@@ -433,21 +475,21 @@ public class DetailFragment extends Fragment implements OnMapReadyCallback {
                     Long stopTime = cursor.getLong(stopTimeColumnIndex);
                     String mHoursStop = new SimpleDateFormat("HH:mm:ss").format(new Date(stopTime));
 
-                    int runType = cursor.getInt(runTypeColumnIndex);
-                    Double totalDistance = cursor.getDouble(totalDistanceColumnIndex);
+                    mRunType = cursor.getInt(runTypeColumnIndex);
+                    mTotalDistance = cursor.getDouble(totalDistanceColumnIndex);
                     Double maxAltitude = cursor.getDouble(maxAltitudeColumnIndex);
                     Double maxSpeed = cursor.getDouble(maxSpeedColumnIndex);
-                    Double avrSpeed = cursor.getDouble(avrSpeedColumnIndex);
+                    mAvgSpeed = cursor.getDouble(avrSpeedColumnIndex);
                     Long totalTime = cursor.getLong(totalTimeColumnIndex);
 
-                    String mTotalTime = String.format("%02d:%02d:%02d", TimeUnit.MILLISECONDS.toHours(totalTime),
+                    mTotalTime = String.format("%02d:%02d:%02d", TimeUnit.MILLISECONDS.toHours(totalTime),
                             TimeUnit.MILLISECONDS.toMinutes(totalTime) % TimeUnit.HOURS.toMinutes(1),
                             TimeUnit.MILLISECONDS.toSeconds(totalTime) % TimeUnit.MINUTES.toSeconds(1));
 
                     String currentRun = String.valueOf(id);
                     currentRunText = getResources().getString(R.string.Run_no) + currentRun;
 
-                    String totlaDistance3Dec = String.format("%.3f", totalDistance);
+                    String totlaDistance3Dec = String.format("%.3f", mTotalDistance);
                     String totalDistanceString = String.valueOf(totlaDistance3Dec + " km");
 
                     String maxAltitudeNoDecimal = String.format("%.0f", maxAltitude);
@@ -456,10 +498,10 @@ public class DetailFragment extends Fragment implements OnMapReadyCallback {
                     String maxSpeed1Decimal = String.format("%.1f", maxSpeed);
                     String maxSpeedString = String.valueOf(maxSpeed1Decimal + " km/h");
 
-                    String avrSpeed1Decimal = String.format("%.1f", avrSpeed);
+                    String avrSpeed1Decimal = String.format("%.1f", mAvgSpeed);
                     String avrSpeedString = String.valueOf(avrSpeed1Decimal + " km/h");
 
-                    Log.e("RUN LIsT FRAGMENrunType", String.valueOf(runType));
+                    Log.e("RUN LIsT FRAGMENrunType", String.valueOf(mRunType));
                     String mDate = formatDate(stopTime);
                     dateTextView.setText(mDate);
                     startTimeTextView.setText(mHoursStart);
@@ -473,7 +515,7 @@ public class DetailFragment extends Fragment implements OnMapReadyCallback {
                     maxAltTextView.setText(maxAltitudeString);
 
                     RunTypesAdapterNoUI mAdapter = new RunTypesAdapterNoUI(getActivityCast(), mCategories);
-                    RUN_TYPE_PICTURE = mAdapter.getItem(runType).getPicture();
+                    RUN_TYPE_PICTURE = mAdapter.getItem(mRunType).getPicture();
                     Log.e("RUN RUN_TYPE_PICTURE", String.valueOf(RUN_TYPE_PICTURE));
                     Bitmap icon = BitmapFactory.decodeResource(getResources(), RUN_TYPE_PICTURE);
                     mIconView.setImageBitmap(icon);
@@ -598,7 +640,7 @@ public class DetailFragment extends Fragment implements OnMapReadyCallback {
     }
 
 
-    public void screenshotMap() {
+    //    public Bitmap screenshotMap() {
 //        mMap.setOnMapLoadedCallback(new GoogleMap.OnMapLoadedCallback() {
 //            @Override
 //            public void onMapLoaded() {
@@ -608,36 +650,38 @@ public class DetailFragment extends Fragment implements OnMapReadyCallback {
 //                        Toast.makeText(getActivityCast(),"screenshotMap.setOnMapLoadedCallback,onMapLoaded,onSnapshotReady",
 //                                Toast.LENGTH_SHORT).show();
 //                        mMapBitmap = bitmap;
-//                        mapScreenShottedTemp.setImageBitmap(mMapBitmap);
+////                        mapScreenShottedTemp.setImageBitmap(mMapBitmap);
 //                    }
 //                });
 //
 //            }
 //        });
-        final GoogleMap.SnapshotReadyCallback callback = new GoogleMap.SnapshotReadyCallback() {
-
-            @Override
-            public void onSnapshotReady(Bitmap snapshot) {
-                mMapBitmap = snapshot;
-
-
-            }
-        };
-        mMap.setOnMapLoadedCallback(new GoogleMap.OnMapLoadedCallback() {
-            @Override
-            public void onMapLoaded() {
-                mMap.snapshot(callback);
-//                mapScreenShottedTemp.setImageBitmap(mMapBitmap);
-            }
-        });
-
-//        mMap.snapshot(callback);
-
-    }
+////        final GoogleMap.SnapshotReadyCallback callback = new GoogleMap.SnapshotReadyCallback() {
+////
+////            @Override
+////            public void onSnapshotReady(Bitmap snapshot) {
+////                mMapBitmap = snapshot;
+////
+////
+////            }
+////        };
+////        mMap.setOnMapLoadedCallback(new GoogleMap.OnMapLoadedCallback() {
+////            @Override
+////            public void onMapLoaded() {
+////                mMap.snapshot(callback);
+//////                mapScreenShottedTemp.setImageBitmap(mMapBitmap);
+////            }
+////        });
+//        return mMapBitmap;
+//
+//
+//    }
     /*  Method which will take screenshot on Basis of Screenshot Type ENUM  */
     private void takeScreenshot() {
         Bitmap bitmap = null;
-        MapFragmentII.screenshotMap();
+//        MapFragmentII.screenshotMap();
+//        mMapBitmap = screenshotMap();
+
 
         mapScreenShottedTemp.setImageBitmap(mMapBitmap);
         mMapFrame.setVisibility(View.INVISIBLE);
@@ -795,5 +839,17 @@ public class DetailFragment extends Fragment implements OnMapReadyCallback {
         return file;
     }
 
+    public void onShareClick(int id, String time, Double distance, Double speed, int runType) {
+        Intent intent = new Intent(getActivity(), ScreenShotActivity.class);
+        intent.setAction(ACTION_FROM_DETAILFRAGMENT);
+        intent.putExtra(EXTRA_RUN_ID, id);
+        intent.putExtra(EXTRA_TOTAL_TIME, time);
+        intent.putExtra(EXTRA_TOTAL_DISTANCE, distance);
+        intent.putExtra(EXTRA_AVG_SPEED, speed);
+        intent.putExtra(EXTRA_RUNTYPE, runType);
 
+//        Uri currentProductUri = ContentUris.withAppendedId(TrackContract.TrackingEntry.CONTENT_URI, id);
+//        intent.setData(currentProductUri);
+        startActivity(intent);
+    }
 }
