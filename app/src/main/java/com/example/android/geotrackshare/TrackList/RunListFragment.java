@@ -75,6 +75,7 @@ public class RunListFragment extends Fragment implements LoaderManager.LoaderCal
     public static final String EXTRA_TOTAL_TIME = "EXTRA_TOTAL_TIME";
 
 
+
     //   Just a rough idea how to sort in query
     public static final String SORT_ORDER_ID = TrackContract.TrackingEntry._ID + " DESC";
     private static final int FAV_LOADER = 0;
@@ -306,14 +307,10 @@ public class RunListFragment extends Fragment implements LoaderManager.LoaderCal
         startActivity(intent);
     }
 
-    public void onShareClick(int id, String time, Double distance, Double speed, int runType) {
+    public void onShareClick(int id) {
         Intent intent = new Intent(getActivity(), ScreenShotActivity.class);
         intent.setAction(ACTION_FROM_RUNLISTFRAGMENT);
         intent.putExtra(EXTRA_RUN_ID, id);
-        intent.putExtra(EXTRA_TOTAL_TIME, time);
-        intent.putExtra(EXTRA_TOTAL_DISTANCE, distance);
-        intent.putExtra(EXTRA_AVG_SPEED, speed);
-        intent.putExtra(EXTRA_RUNTYPE, runType);
 
 //        Uri currentProductUri = ContentUris.withAppendedId(TrackContract.TrackingEntry.CONTENT_URI, id);
 //        intent.setData(currentProductUri);

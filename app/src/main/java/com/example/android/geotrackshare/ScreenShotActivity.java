@@ -19,6 +19,8 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
+import android.view.WindowManager;
 import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
 import android.widget.FrameLayout;
@@ -40,15 +42,25 @@ import com.google.android.gms.maps.model.PolylineOptions;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.util.ArrayList;
+import java.util.concurrent.TimeUnit;
 
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_ALTITUDE;
+import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_AVR_SPEEDP;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_LATITUDE;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_LONGITUDE;
+import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_MAX_ALTP;
+import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_MAX_SPEEDP;
+import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_RUNTYPEP;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_RUN_ID;
+import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_RUN_IDP;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_SPEED;
+import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_START_TIMEP;
+import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_STOP_TIMEP;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_TIME;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_TIME_COUNTER;
+import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_TIME_COUNTERP;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_TOTAL_DISTANCE;
+import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_TOTAL_DISTANCEP;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.CONTENT_URI;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry._ID;
 import static com.example.android.geotrackshare.DetailActivity.ACTION_FROM_RUNLISTFRAGMENT;
@@ -60,6 +72,7 @@ import static com.example.android.geotrackshare.TrackList.RunListFragment.EXTRA_
 import static com.example.android.geotrackshare.TrackList.RunListFragment.EXTRA_RUN_ID;
 import static com.example.android.geotrackshare.TrackList.RunListFragment.EXTRA_TOTAL_DISTANCE;
 import static com.example.android.geotrackshare.TrackList.RunListFragment.EXTRA_TOTAL_TIME;
+import static com.example.android.geotrackshare.TrackList.RunListFragment.PROJECTION_POST;
 
 public class ScreenShotActivity extends AppCompatActivity implements OnMapReadyCallback {
     public static final String ARG_BITMAP = "ARG_BITMAP";
@@ -87,12 +100,25 @@ public class ScreenShotActivity extends AppCompatActivity implements OnMapReadyC
     private Animation animationApear, animationDisapear;
     private String mTime;
     private Double mDistance, mAvgSpeed;
+    private View mUpButtonContainer;
+    private View mUpButton;
+    private long mStartId;
 
+
+    private long mSelectedItemId;
+    private int mSelectedItemUpButtonFloor = Integer.MAX_VALUE;
+    private int mTopInset;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        //Remove title bar
+        this.requestWindowFeature(Window.FEATURE_NO_TITLE);
+
+        //Remove notification bar
+        this.getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
         setContentView(R.layout.activity_screen_shot);
 
         mMapFrame = findViewById(R.id.mapmap);
@@ -109,16 +135,18 @@ public class ScreenShotActivity extends AppCompatActivity implements OnMapReadyC
         intent = getIntent();
         if (ACTION_FROM_RUNLISTFRAGMENT.equals(intent.getAction())) {
             runIdInt = intent.getIntExtra(EXTRA_RUN_ID, 0);
+            onGetDataFromDataBaseAndDisplay(runIdInt);
 
         } else if (ACTION_FROM_DETAILFRAGMENT.equals(intent.getAction())) {
-
+            runIdInt = intent.getIntExtra(EXTRA_RUN_ID, 0);
+            mTime = intent.getStringExtra(EXTRA_TOTAL_TIME);
+            mDistance = intent.getDoubleExtra(EXTRA_TOTAL_DISTANCE, 0);
+            mAvgSpeed = intent.getDoubleExtra(EXTRA_AVG_SPEED, 0);
+            mRunType = intent.getIntExtra(EXTRA_RUNTYPE, 0);
         }
 
-        runIdInt = intent.getIntExtra(EXTRA_RUN_ID, 0);
-        mTime = intent.getStringExtra(EXTRA_TOTAL_TIME);
-        mDistance = intent.getDoubleExtra(EXTRA_TOTAL_DISTANCE, 0);
-        mAvgSpeed = intent.getDoubleExtra(EXTRA_AVG_SPEED, 0);
-        mRunType = intent.getIntExtra(EXTRA_RUNTYPE, 0);
+        mStartId = runIdInt;
+
 
         String totlaDistance3Dec = String.format("%.3f", mDistance);
         String totalDistanceString = String.valueOf(totlaDistance3Dec + " km");
@@ -178,9 +206,10 @@ public class ScreenShotActivity extends AppCompatActivity implements OnMapReadyC
                 fabShare.startAnimation(animationApear);
                 fabScreenShot.startAnimation(animationDisapear);
                 fabScreenShot.setVisibility(View.INVISIBLE);
-
             }
         });
+
+
     }
 
     @Override
@@ -413,7 +442,6 @@ public class ScreenShotActivity extends AppCompatActivity implements OnMapReadyC
                 });
             }
         });
-
         return mMapBitmap;
     }
 
@@ -457,7 +485,6 @@ public class ScreenShotActivity extends AppCompatActivity implements OnMapReadyC
         } else
             //If bitmap is null show toast message
             Toast.makeText(getApplication(), R.string.screenshot_take_failed, Toast.LENGTH_SHORT).show();
-
     }
 
     /*  Show screenshot Bitmap */
@@ -596,5 +623,91 @@ public class ScreenShotActivity extends AppCompatActivity implements OnMapReadyC
     public void onBackPressed() {
         Intent intent = new Intent(getApplication(), MainActivity.class);
         startActivity(intent);
+    }
+
+    public void onGetDataFromDataBaseAndDisplay(int id) {
+
+        Log.e("onGetDataFromDataB..", String.valueOf(id));
+        String specificID = String.valueOf(id);
+        String mSelectionClause = TrackContract.TrackingEntry.COLUMN_RUN_IDP;
+        String mSelection = mSelectionClause + " = '" + specificID + "'";
+        try {
+            Cursor cursor = getContentResolver().query(TrackContract.TrackingEntry.CONTENT_URI_POST, PROJECTION_POST, mSelection, null, null);
+
+            String[] columnnames = cursor.getColumnNames();
+//            Log.e("columnnames..", Arrays.toString(columnnames));
+
+            if (cursor != null && cursor.moveToFirst()) {
+                do {
+                    int runColumnIndex = cursor.getColumnIndex(COLUMN_RUN_IDP);
+                    int startTimeColumnIndex = cursor.getColumnIndex(COLUMN_START_TIMEP);
+                    int stopTimeColumnIndex = cursor.getColumnIndex(COLUMN_STOP_TIMEP);
+                    int runTypeColumnIndex = cursor.getColumnIndex(COLUMN_RUNTYPEP);
+                    int totalDistanceColumnIndex = cursor.getColumnIndex(COLUMN_TOTAL_DISTANCEP);
+                    int maxAltitudeColumnIndex = cursor.getColumnIndex(COLUMN_MAX_ALTP);
+                    int maxSpeedColumnIndex = cursor.getColumnIndex(COLUMN_MAX_SPEEDP);
+                    int avrSpeedColumnIndex = cursor.getColumnIndex(COLUMN_AVR_SPEEDP);
+                    int totalTimeColumnIndex = cursor.getColumnIndex(COLUMN_TIME_COUNTERP);
+
+                    runIdInt = cursor.getInt(runColumnIndex);
+
+                    mRunType = cursor.getInt(runTypeColumnIndex);
+                    mDistance = cursor.getDouble(totalDistanceColumnIndex);
+                    Double maxAltitude = cursor.getDouble(maxAltitudeColumnIndex);
+                    Double maxSpeed = cursor.getDouble(maxSpeedColumnIndex);
+                    mAvgSpeed = cursor.getDouble(avrSpeedColumnIndex);
+                    Long totalTime = cursor.getLong(totalTimeColumnIndex);
+
+                    mTime = String.format("%02d:%02d:%02d", TimeUnit.MILLISECONDS.toHours(totalTime),
+                            TimeUnit.MILLISECONDS.toMinutes(totalTime) % TimeUnit.HOURS.toMinutes(1),
+                            TimeUnit.MILLISECONDS.toSeconds(totalTime) % TimeUnit.MINUTES.toSeconds(1));
+
+
+//                    String totlaDistance3Dec = String.format("%.3f",mDistance);
+//                    String totalDistanceString = String.valueOf(totlaDistance3Dec + " km");
+//
+//                    String maxAltitudeNoDecimal = String.format("%.0f", maxAltitude);
+//                    String maxAltitudeString = String.valueOf(maxAltitudeNoDecimal + " m");
+//
+//                    String maxSpeed1Decimal = String.format("%.1f", maxSpeed);
+//                    String maxSpeedString = String.valueOf(maxSpeed1Decimal + " km/h");
+//
+//                    String avrSpeed1Decimal = String.format("%.1f", mAvgSpeed);
+//                    String avrSpeedString = String.valueOf(avrSpeed1Decimal + " km/h");
+//
+//                    Log.e("RUN LIsT FRAGMENrunType", String.valueOf(mRunType));
+//                    String mDate = formatDate(stopTime);
+//                    dateTextView.setText(mDate);
+//                    startTimeTextView.setText(mHoursStart);
+//                    distanceTextView.setText(totalDistanceString);
+//                    durationTextView.setText(mTotalTime);
+//                    stopTimeTextView.setText(mHoursStop);
+//
+//                    runIdTextView.setText(currentRunText);
+//                    avgSpeedTextView.setText(avrSpeedString);
+//                    maxSpeedTextView.setText(maxSpeedString);
+//                    maxAltTextView.setText(maxAltitudeString);
+//
+//                    RunTypesAdapterNoUI mAdapter = new RunTypesAdapterNoUI(this, mCategories);
+//                    RUN_TYPE_PICTURE = mAdapter.getItem(mRunType).getPicture();
+//                    Log.e("RUN RUN_TYPE_PICTURE", String.valueOf(RUN_TYPE_PICTURE));
+//                    Bitmap icon = BitmapFactory.decodeResource(getResources(), RUN_TYPE_PICTURE);
+//                    mIconView.setImageBitmap(icon);
+
+                } while (cursor.moveToNext());
+            }
+            if (cursor != null) {
+                cursor.close();
+            }
+
+        } catch (Exception e) {
+            Log.e("Path Error123", e.toString());
+        }
+
+    }
+
+    private void updateUpButtonPosition() {
+        int upButtonNormalBottom = mTopInset + mUpButton.getHeight();
+        mUpButton.setTranslationY(Math.min(mSelectedItemUpButtonFloor - upButtonNormalBottom, 0));
     }
 }

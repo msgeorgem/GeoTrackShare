@@ -34,7 +34,6 @@ import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_TIME_COUNTERP;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_TOTAL_DISTANCEP;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry._ID;
-import static com.example.android.geotrackshare.RealTimeFragment.RUN_TYPE_PICTURE;
 import static com.example.android.geotrackshare.RealTimeFragment.mCategories;
 import static com.example.android.geotrackshare.Utils.SqliteExporter.createBackupFileName;
 
@@ -48,7 +47,7 @@ public class TracksCursorAdapter extends CursorRecyclerAdapter<TracksCursorAdapt
     public static String fileName;
     private RunListFragment fragment = new RunListFragment();
     private long id,id2long;
-    private String mmElapsedTime, mDate, mHours;
+    private String mmElapsedTime, mDate, mHours, mRunTypeString;
     private Double totalDistance, avrSpeed;
 
     private int mQuantity, mRunType;
@@ -118,8 +117,8 @@ public class TracksCursorAdapter extends CursorRecyclerAdapter<TracksCursorAdapt
         // Read the item attributes from the Cursor for the current item
 
         RunTypesAdapterNoUI mAdapter = new RunTypesAdapterNoUI(context, mCategories);
-        RUN_TYPE_PICTURE = mAdapter.getItem(mRunType).getPicture();
-        Bitmap icon = BitmapFactory.decodeResource(context.getResources(), RUN_TYPE_PICTURE);
+        int mRType = mAdapter.getItem(mRunType).getPicture();
+        Bitmap icon = BitmapFactory.decodeResource(context.getResources(), mRType);
 
 
 //        mDate = DateFormat.getDateInstance(DateFormat.LONG).format(startTime);
@@ -192,7 +191,8 @@ public class TracksCursorAdapter extends CursorRecyclerAdapter<TracksCursorAdapt
         viewHolder.shareImage.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                fragment.onShareClick(mRunId, mmElapsedTime, totalDistance, avrSpeed, mRunType);
+                fragment.onShareClick(mRunId);
+                Log.e("viewHolder.shareImage", String.valueOf(mRunId));
             }
         });
     }
@@ -213,6 +213,7 @@ public class TracksCursorAdapter extends CursorRecyclerAdapter<TracksCursorAdapt
         public ToggleButton favToggle;
         public ImageView exportCSV;
         public ImageView shareImage;
+        private View clickView;
 
 
         public ViewHolder(View view) {
@@ -229,6 +230,7 @@ public class TracksCursorAdapter extends CursorRecyclerAdapter<TracksCursorAdapt
             favToggle = view.findViewById(R.id.favListToggleButton);
             exportCSV = view.findViewById(R.id.csv);
             shareImage = view.findViewById(R.id.share);
+            clickView = view.findViewById(R.id.click_view);
         }
     }
 }

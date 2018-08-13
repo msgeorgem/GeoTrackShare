@@ -7,6 +7,7 @@
     android:layout_height="match_parent"
     tools:context=".ScreenShotActivity">
 
+
     <FrameLayout
         android:id="@+id/map"
         android:layout_width="match_parent"
@@ -33,11 +34,10 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent">
 
-
             <ImageView
                 android:id="@+id/distance_icon"
-                android:layout_width="60dp"
-                android:layout_height="60dp"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
                 android:layout_marginBottom="16dp"
                 android:layout_marginStart="16dp"
                 android:contentDescription="time_icon"
@@ -48,8 +48,8 @@
 
             <ImageView
                 android:id="@+id/speed_icon"
-                android:layout_width="60dp"
-                android:layout_height="60dp"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
                 android:layout_marginBottom="32dp"
                 android:layout_marginEnd="8dp"
                 android:layout_marginStart="16dp"
@@ -62,8 +62,8 @@
 
             <ImageView
                 android:id="@+id/time_icon2"
-                android:layout_width="60dp"
-                android:layout_height="60dp"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
                 android:layout_marginBottom="16dp"
                 android:layout_marginStart="16dp"
                 android:layout_marginTop="8dp"
@@ -82,7 +82,6 @@
                 android:layout_marginStart="180dp"
                 android:layout_marginTop="16dp"
                 android:contentDescription="run_type_icon"
-                android:src="@drawable/ic_timer"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintHorizontal_bias="0.041"
                 app:layout_constraintStart_toStartOf="parent"
@@ -96,8 +95,10 @@
                 android:layout_marginEnd="8dp"
                 android:layout_marginStart="8dp"
                 android:layout_marginTop="24dp"
+                android:background="#20000000"
                 android:text="00.0 km/h"
-                android:textSize="36sp"
+                android:textColor="#000"
+                android:textSize="24sp"
                 android:textStyle="bold"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintHorizontal_bias="0.031"
@@ -118,6 +119,7 @@
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintHorizontal_bias="0.145"
                 app:layout_constraintStart_toEndOf="@+id/run_type_icon"
+                android:textColor="#000"
                 app:layout_constraintTop_toTopOf="parent" />
 
             <TextView
@@ -128,8 +130,10 @@
                 android:layout_marginBottom="24dp"
                 android:layout_marginEnd="8dp"
                 android:layout_marginStart="8dp"
+                android:background="#20000000"
                 android:text="00:00:00"
-                android:textSize="34sp"
+                android:textColor="#000"
+                android:textSize="24sp"
                 android:textStyle="bold"
                 app:layout_constraintBottom_toTopOf="@+id/distance_icon"
                 app:layout_constraintEnd_toEndOf="parent"
@@ -144,14 +148,15 @@
                 android:layout_marginBottom="24dp"
                 android:layout_marginEnd="8dp"
                 android:layout_marginStart="8dp"
+                android:background="#20000000"
                 android:text="0,000 km"
-                android:textSize="36sp"
+                android:textColor="#000"
+                android:textSize="24sp"
                 android:textStyle="bold"
                 app:layout_constraintBottom_toTopOf="@+id/speed_icon"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintHorizontal_bias="0.027"
                 app:layout_constraintStart_toEndOf="@+id/distance_icon" />
-
 
         </android.support.constraint.ConstraintLayout>
 
