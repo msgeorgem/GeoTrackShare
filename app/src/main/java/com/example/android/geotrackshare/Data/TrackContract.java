@@ -56,6 +56,7 @@ public class TrackContract {
         public static final String COLUMN_MAX_SPEEDP = "max_speedp";
         public static final String COLUMN_AVR_SPEEDP = "avr_speedp";
         public static final String COLUMN_TIME_COUNTERP = "count_timerp";
+        public static final String COLUMN_FAVORITEP = "is_favourite";
 
 
         /**

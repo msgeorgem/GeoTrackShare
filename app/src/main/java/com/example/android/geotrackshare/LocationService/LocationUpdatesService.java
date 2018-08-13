@@ -76,6 +76,7 @@ import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_AVR_SPEED;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_AVR_SPEEDP;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_DISTANCE;
+import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_FAVORITEP;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_LATITUDE;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_LONGITUDE;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_MAX_ALT;
@@ -1077,6 +1078,7 @@ public class LocationUpdatesService extends Service implements SensorEventListen
                 values.put(COLUMN_MAX_SPEEDP, currentMaxSpeed);
                 values.put(COLUMN_AVR_SPEEDP, currentAvrSpeed);
                 values.put(COLUMN_TIME_COUNTERP, currentElapsedTime);
+                values.put(COLUMN_FAVORITEP, 0);
 
                 // This is a NEW item, so insert a new item into the provider,
                 // returning the content URI for the item item.

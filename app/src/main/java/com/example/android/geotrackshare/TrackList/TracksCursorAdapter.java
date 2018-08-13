@@ -27,6 +27,7 @@ import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_AVR_SPEEDP;
+import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_FAVORITEP;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_MAX_ALTP;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_MAX_SPEEDP;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_RUNTYPEP;
@@ -35,6 +36,7 @@ import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_TOTAL_DISTANCEP;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry._ID;
 import static com.example.android.geotrackshare.RealTimeFragment.mCategories;
+import static com.example.android.geotrackshare.TrackList.RunListFragment.updateFavouritePost;
 import static com.example.android.geotrackshare.Utils.SqliteExporter.createBackupFileName;
 
 
@@ -84,7 +86,7 @@ public class TracksCursorAdapter extends CursorRecyclerAdapter<TracksCursorAdapt
     public void onBindViewHolder(final ViewHolder viewHolder, Cursor cursor) {
 
         final Context context = viewHolder.itemView.getContext();
-
+        final int mFavourite;
         final int mRunId;
 //        cursor.getColumnNames();
         Log.e("numberofcolumns", Arrays.toString(cursor.getColumnNames()));
@@ -100,6 +102,7 @@ public class TracksCursorAdapter extends CursorRecyclerAdapter<TracksCursorAdapt
         int maxSpeedColumnIndex = cursor.getColumnIndex(COLUMN_MAX_SPEEDP);
         int avrSpeedColumnIndex = cursor.getColumnIndex(COLUMN_AVR_SPEEDP);
         int totalTimeColumnIndex = cursor.getColumnIndex(COLUMN_TIME_COUNTERP);
+        int favouriteColumnIndex = cursor.getColumnIndex(COLUMN_FAVORITEP);
 
         String runID = cursor.getString(runColumnIndex);
 //        Long startTime = cursor.getLong(startTimeColumnIndex);
@@ -112,7 +115,7 @@ public class TracksCursorAdapter extends CursorRecyclerAdapter<TracksCursorAdapt
         avrSpeed = cursor.getDouble(avrSpeedColumnIndex);
         Long totalTime = cursor.getLong(totalTimeColumnIndex);
         String mHoursStop = new SimpleDateFormat("HH:mm:ss").format(new Date(totalTime));
-
+        mFavourite = cursor.getInt(favouriteColumnIndex);
 
         // Read the item attributes from the Cursor for the current item
 
@@ -149,28 +152,29 @@ public class TracksCursorAdapter extends CursorRecyclerAdapter<TracksCursorAdapt
             }
         });
 
-
         DetailActivity.favPrefs = context.getSharedPreferences("favourites", Context.MODE_PRIVATE);
         Boolean a = DetailActivity.favPrefs.getBoolean("On" + context, true);
+
+
         if (a) {
-            viewHolder.favToggle.setBackgroundDrawable(ContextCompat.getDrawable(context, R.drawable.trashcan01));
-            viewHolder.favToggle.setChecked(true);
+            viewHolder.trashToggle.setBackgroundDrawable(ContextCompat.getDrawable(context, R.drawable.trashcan01));
+            viewHolder.trashToggle.setChecked(true);
         } else {
 //            !!!IMPORTANT!!! THESE LINES ARE NOT NECESSARY IN THE FOLLOWING CODE SINCE FAVOURITES ARE ALWAYS trashcan02
 //            AND TRUE UNLESS DELETED. IF DELETED THEY DO NOT APPEAR IN THE FAVOURITES TABLE ANYWAY
 //            viewHolder.favToggle.setBackgroundDrawable(ContextCompat.getDrawable(context, R.drawable.trashcan02));
 //            viewHolder.favToggle.setChecked(false);
         }
-        viewHolder.favToggle.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+        viewHolder.trashToggle.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean isChecked) {
                 if (isChecked) {
-                    viewHolder.favToggle.setBackgroundDrawable(ContextCompat.getDrawable(context, R.drawable.trashcan01));
+                    viewHolder.trashToggle.setBackgroundDrawable(ContextCompat.getDrawable(context, R.drawable.trashcan01));
                     SharedPreferences.Editor editor = DetailActivity.favPrefs.edit();
                     editor.putBoolean("On" + context, true);
                     editor.apply();
                 } else {
-                    viewHolder.favToggle.setBackgroundDrawable(ContextCompat.getDrawable(context, R.drawable.trashcan02));
+                    viewHolder.trashToggle.setBackgroundDrawable(ContextCompat.getDrawable(context, R.drawable.trashcan02));
 //                    STAR GREY IS ONLY TEMPORARY STATE BETWEEN CLICK AND SHOWDELETECONFIRMATIONDIALOG AND CANCEL BUTTON
 //                    SO WE DO NOT SAVE GREY STAR STATE IN THIS CASE
 //                    SharedPreferences.Editor editor = DetailActivity.favPrefs.edit();
@@ -180,6 +184,7 @@ public class TracksCursorAdapter extends CursorRecyclerAdapter<TracksCursorAdapt
                 }
             }
         });
+
         viewHolder.exportCSV.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -193,6 +198,34 @@ public class TracksCursorAdapter extends CursorRecyclerAdapter<TracksCursorAdapt
             public void onClick(View v) {
                 fragment.onShareClick(mRunId);
                 Log.e("viewHolder.shareImage", String.valueOf(mRunId));
+            }
+        });
+
+
+        switch (mFavourite) {
+            case (1):
+                viewHolder.favToggle.setBackgroundDrawable(ContextCompat.getDrawable(context, R.drawable.if_star_black));
+//                viewHolder.favToggle.setChecked(true);
+
+
+            case (0):
+                viewHolder.favToggle.setBackgroundDrawable(ContextCompat.getDrawable(context, R.drawable.if_star_white));
+//                viewHolder.favToggle.setChecked(false);
+
+        }
+
+
+        viewHolder.favToggle.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean isChecked) {
+
+                if (isChecked) {
+                    viewHolder.favToggle.setBackgroundDrawable(ContextCompat.getDrawable(context, R.drawable.if_star_black));
+                    updateFavouritePost(1, mRunId, context);
+                } else {
+                    viewHolder.favToggle.setBackgroundDrawable(ContextCompat.getDrawable(context, R.drawable.if_star_white));
+                    updateFavouritePost(0, mRunId, context);
+                }
             }
         });
     }
@@ -210,10 +243,9 @@ public class TracksCursorAdapter extends CursorRecyclerAdapter<TracksCursorAdapt
         public TextView maxAltitude;
         public TextView timeCounter;
         public TextView totalDistance;
-        public ToggleButton favToggle;
+        public ToggleButton trashToggle, favToggle;
         public ImageView exportCSV;
         public ImageView shareImage;
-        private View clickView;
 
 
         public ViewHolder(View view) {
@@ -227,10 +259,12 @@ public class TracksCursorAdapter extends CursorRecyclerAdapter<TracksCursorAdapt
             maxAltitude = view.findViewById(R.id.max_alt);
             timeCounter = view.findViewById(R.id.current_total_time);
             totalDistance = view.findViewById(R.id.current_total_distance);
-            favToggle = view.findViewById(R.id.favListToggleButton);
+            trashToggle = view.findViewById(R.id.trashToggleButton);
             exportCSV = view.findViewById(R.id.csv);
             shareImage = view.findViewById(R.id.share);
-            clickView = view.findViewById(R.id.click_view);
+            favToggle = view.findViewById(R.id.favListToggleButton);
         }
     }
+
+
 }

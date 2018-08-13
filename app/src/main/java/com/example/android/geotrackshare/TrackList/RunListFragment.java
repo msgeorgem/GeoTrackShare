@@ -1,5 +1,6 @@
 package com.example.android.geotrackshare.TrackList;
 
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -8,6 +9,7 @@ import android.content.res.Configuration;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Parcelable;
@@ -37,8 +39,10 @@ import com.example.android.geotrackshare.Utils.SqliteExporter;
 
 import java.util.Arrays;
 
+import static android.support.constraint.Constraints.TAG;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_AVR_SPEED;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_AVR_SPEEDP;
+import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_FAVORITEP;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_MAX_ALT;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_MAX_ALTP;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_MAX_SPEED;
@@ -54,6 +58,7 @@ import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_TIME_COUNTERP;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_TOTAL_DISTANCE;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_TOTAL_DISTANCEP;
+import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.CONTENT_URI_POST;
 import static com.example.android.geotrackshare.DetailActivity.ACTION_FROM_RUNLISTFRAGMENT;
 
 
@@ -101,7 +106,8 @@ public class RunListFragment extends Fragment implements LoaderManager.LoaderCal
             COLUMN_MAX_ALTP,
             COLUMN_MAX_SPEEDP,
             COLUMN_AVR_SPEEDP,
-            COLUMN_TIME_COUNTERP
+            COLUMN_TIME_COUNTERP,
+            COLUMN_FAVORITEP
     };
     private static final String BUNDLE_RECYCLER_LAYOUT = "TrackListFragment.tracksRecyclerView";
     public static Context mContext;
@@ -307,14 +313,28 @@ public class RunListFragment extends Fragment implements LoaderManager.LoaderCal
         startActivity(intent);
     }
 
-    public void onShareClick(int id) {
-        Intent intent = new Intent(getActivity(), ScreenShotActivity.class);
-        intent.setAction(ACTION_FROM_RUNLISTFRAGMENT);
-        intent.putExtra(EXTRA_RUN_ID, id);
+    public static void updateFavouritePost(final int favourite, final int id, final Context context) {
+        Log.e(TAG, "saving" + favourite);
+        String specificID = String.valueOf(id);
+        final String mSelectionClause = TrackContract.TrackingEntry.COLUMN_RUN_IDP;
+        final String mSelection = mSelectionClause + " = '" + specificID + "'";
 
-//        Uri currentProductUri = ContentUris.withAppendedId(TrackContract.TrackingEntry.CONTENT_URI, id);
-//        intent.setData(currentProductUri);
-        startActivity(intent);
+
+        // Database operations should not be done on the main thread
+        AsyncTask<Void, Void, Void> insertItem = new AsyncTask<Void, Void, Void>() {
+
+            @Override
+            protected Void doInBackground(Void... voids) {
+                ContentValues values = new ContentValues();
+                values.put(COLUMN_FAVORITEP, favourite);
+                // This is a NEW item, so insert a new item into the provider,
+                // returning the content URI for the item item.
+                context.getContentResolver().update(CONTENT_URI_POST, values, mSelection, null);
+
+                return null;
+            }
+        };
+        insertItem.execute();
     }
 
 //    /* Checks if external storage is available to at least read */
@@ -341,11 +361,21 @@ public class RunListFragment extends Fragment implements LoaderManager.LoaderCal
             intent.putExtra(Intent.EXTRA_TEXT, message);
             intent.setData(Uri.parse("mailto:xyz@gmail.com"));
 
-
             startActivityForResult(intent, 1);
         } catch (Exception e) {
             System.out.println("is exception raises during sending mail" + e);
         }
+    }
+
+    public void onShareClick(int id) {
+        Intent intent = new Intent(getActivity(), ScreenShotActivity.class);
+        intent.setFlags(intent.getFlags() | Intent.FLAG_ACTIVITY_NO_HISTORY);
+        intent.setAction(ACTION_FROM_RUNLISTFRAGMENT);
+        intent.putExtra(EXTRA_RUN_ID, id);
+
+//        Uri currentProductUri = ContentUris.withAppendedId(TrackContract.TrackingEntry.CONTENT_URI, id);
+//        intent.setData(currentProductUri);
+        startActivity(intent);
     }
 
 }

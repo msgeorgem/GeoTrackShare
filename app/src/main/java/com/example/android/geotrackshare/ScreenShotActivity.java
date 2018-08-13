@@ -76,6 +76,8 @@ import static com.example.android.geotrackshare.TrackList.RunListFragment.PROJEC
 
 public class ScreenShotActivity extends AppCompatActivity implements OnMapReadyCallback {
     public static final String ARG_BITMAP = "ARG_BITMAP";
+    public static final String COMES_FROM_SCREENSHOT = "COMES_FROM_SCREENSHOT";
+    public static final String EXTRASS_RUN_ID = "EXTRASS_RUN_ID";
     private static final String TAG = "MapFragmentII";
     private static final String[] PROJECTION02 = {
             _ID,
@@ -103,6 +105,7 @@ public class ScreenShotActivity extends AppCompatActivity implements OnMapReadyC
     private View mUpButtonContainer;
     private View mUpButton;
     private long mStartId;
+    private boolean mComesFromDetailFragment = false;
 
 
     private long mSelectedItemId;
@@ -134,16 +137,18 @@ public class ScreenShotActivity extends AppCompatActivity implements OnMapReadyC
 
         intent = getIntent();
         if (ACTION_FROM_RUNLISTFRAGMENT.equals(intent.getAction())) {
+            mComesFromDetailFragment = false;
             runIdInt = intent.getIntExtra(EXTRA_RUN_ID, 0);
             onGetDataFromDataBaseAndDisplay(runIdInt);
 
         } else if (ACTION_FROM_DETAILFRAGMENT.equals(intent.getAction())) {
+            mComesFromDetailFragment = true;
             runIdInt = intent.getIntExtra(EXTRA_RUN_ID, 0);
             mTime = intent.getStringExtra(EXTRA_TOTAL_TIME);
             mDistance = intent.getDoubleExtra(EXTRA_TOTAL_DISTANCE, 0);
             mAvgSpeed = intent.getDoubleExtra(EXTRA_AVG_SPEED, 0);
             mRunType = intent.getIntExtra(EXTRA_RUNTYPE, 0);
-        }
+        } else
 
         mStartId = runIdInt;
 
@@ -180,8 +185,7 @@ public class ScreenShotActivity extends AppCompatActivity implements OnMapReadyC
         queryCoordinatesList(runIdInt);
 
         FragmentTransaction transaction = getFragmentManager().beginTransaction();
-        transaction.add(R.id.mapmap, mapFragmentInside, "FRAGMENT_TAG")
-                .addToBackStack("FRAGMENT_TAG").commit();
+        transaction.add(R.id.mapmap, mapFragmentInside, "FRAGMENT_TAG").commit();
         getFragmentManager().executePendingTransactions();
         mapFragmentInside.getMapAsync(this);
 
@@ -298,22 +302,22 @@ public class ScreenShotActivity extends AppCompatActivity implements OnMapReadyC
 //        mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
 
 
-        mMap.setOnMapLoadedCallback(new GoogleMap.OnMapLoadedCallback() {
-            @Override
-            public void onMapLoaded() {
-                mMap.snapshot(new GoogleMap.SnapshotReadyCallback() {
-                    @Override
-                    public void onSnapshotReady(Bitmap bitmap) {
-                        Toast.makeText(getApplication(), getResources().getString(R.string.map_is_loaded),
-                                Toast.LENGTH_SHORT).show();
-//                        mMapBitmap = bitmap;
-
-//                        mapScreenShottedTemp.setImageBitmap(mMapBitmap);
-                    }
-                });
-
-            }
-        });
+//        mMap.setOnMapLoadedCallback(new GoogleMap.OnMapLoadedCallback() {
+//            @Override
+//            public void onMapLoaded() {
+//                mMap.snapshot(new GoogleMap.SnapshotReadyCallback() {
+//                    @Override
+//                    public void onSnapshotReady(Bitmap bitmap) {
+//                        Toast.makeText(getApplication(), getResources().getString(R.string.map_is_loaded),
+//                                Toast.LENGTH_SHORT).show();
+////                        mMapBitmap = bitmap;
+//
+////                        mapScreenShottedTemp.setImageBitmap(mMapBitmap);
+//                    }
+//                });
+//
+//            }
+//        });
 
     }
 
@@ -621,8 +625,7 @@ public class ScreenShotActivity extends AppCompatActivity implements OnMapReadyC
 
     @Override
     public void onBackPressed() {
-        Intent intent = new Intent(getApplication(), MainActivity.class);
-        startActivity(intent);
+        super.onBackPressed();
     }
 
     public void onGetDataFromDataBaseAndDisplay(int id) {

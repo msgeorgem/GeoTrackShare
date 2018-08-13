@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="300dp"
+    android:layout_height="320dp"
     android:background="?android:attr/selectableItemBackground"
     android:orientation="horizontal"
     android:clickable="true"
@@ -87,7 +87,7 @@
         android:orientation="vertical">
 
         <ToggleButton
-            android:id="@+id/favListToggleButton"
+            android:id="@+id/trashToggleButton"
             android:layout_width="60dp"
             android:layout_height="70dp"
             android:layout_gravity="center|right"
@@ -118,5 +118,19 @@
             android:clickable="true"
             android:focusable="true"
             android:src="@drawable/ic_share" />
+
+        <ToggleButton
+            android:id="@+id/favListToggleButton"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:layout_gravity="center|right"
+            android:layout_margin="4dp"
+            android:background="@drawable/if_star_white"
+            android:checked="true"
+            android:clickable="true"
+            android:focusable="true"
+            android:textOff=""
+            android:textOn="" />
+
     </LinearLayout>
 </LinearLayout>
