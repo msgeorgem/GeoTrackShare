@@ -67,8 +67,7 @@ public class RealTimeFragment extends Fragment implements
 
     public static final String MY_PREFERENCE_KEY = "mili";
     //    leaving these constants here in case of shared prefs need
-    public static final double NOISEd = 0.04;
-    public static final double NOISEc = 0.02;
+
     private static final String TAG = MainActivity.class.getSimpleName();
     /**
      * Code used in requesting runtime permissions.
@@ -104,8 +103,14 @@ public class RealTimeFragment extends Fragment implements
     public static String RUN_TYPE_TTTLE_KEY = "RUN_TYPE_TTTLE_KEY";
     public static String RUN_TYPE_PICTURE_KEY = "RUN_TYPE_PICTURE_KEY";
     public static String RUN_TYPE_DESCRIPTION_KEY = "RUN_TYPE_DESCRIPTION_KEY";
+    public static String RUN_TYPE_INTERVAL_KEY = "RUN_TYPE_INTERVAL_KEY";
+    public static String RUN_TYPE_NOISE_KEY = "RUN_TYPE_NOISE_KEY";
     public static String RUN_TYPE_TITLE;
     public static String RUN_TYPE_DESCRIPTION;
+    public static long RUN_TYPE_INTERVAL;
+    public static double RUN_TYPE_NOISE;
+
+
     public static int RUN_TYPE_PICTURE;
     public static int DELETE_LAST_ROWS = 15;
     public static boolean DISABLE_AUTO_CLOSE;
@@ -236,22 +241,41 @@ public class RealTimeFragment extends Fragment implements
                 requestPermissions();
             }
         }
+        // Inflate the layout for this fragment
+        try {
+            if (mView == null) {
+                mView = inflater.inflate(R.layout.fragment_real_time, container, false);
+            }
 
-        DELETE_LAST_ROWS_STRING = sharedPrefs.getString(
-                getString(R.string.delete_loops_by_key),
-                getString(R.string.delete_loops_by_default_ultimate)
-        );
-        DELETE_LAST_ROWS = Integer.parseInt((DELETE_LAST_ROWS_STRING));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        // Spinner element
+        mSpinner = mView.findViewById(R.id.run_type_spinner);
 
-        Log.i("delete rows", String.valueOf(DELETE_LAST_ROWS));
+        // Spinner click listener
+        mSpinner.setOnItemSelectedListener(this);
 
-        UPDATE_INTERVAL_IN_MILLISECONDS_STRING = sharedPrefs.getString(
-                getString(R.string.update_interval_by_key),
-                getString(R.string.update_interval_by_default_ultimate)
-        );
+        // Spinner Drop down elements
+        mCategories = new ArrayList<RunType>();
+        mCategories.add(new RunType(R.drawable.ic_directions_walk_black_24dp,
+                R.string.Run_type_walk, R.string.Run_type_walk_desc, 5000, 0.4));
+        mCategories.add(new RunType(R.drawable.ic_directions_bike_black_24dp,
+                R.string.Run_type_bike, R.string.Run_type_bike_desc, 6000, 0.4));
+        mCategories.add(new RunType(R.drawable.ic_directions_car_black_24dp,
+                R.string.Run_type_car, R.string.Run_type_car_desc, 10000, 0.2));
+        mCategories.add(new RunType(R.drawable.ic_developer_board_black_48dp,
+                R.string.Run_type_custom, R.string.Run_type_custom_desc, 9999, 0.4));
 
-        UPDATE_INTERVAL_IN_MILLISECONDS = Long.parseLong(UPDATE_INTERVAL_IN_MILLISECONDS_STRING);
-        Log.i("update interval", String.valueOf(UPDATE_INTERVAL_IN_MILLISECONDS));
+        // Creating adapter for spinner
+        mAdapter = new RunTypesAdapter(getActivity(), R.layout.list_run_type, mCategories);
+
+        // Setting a Custom Adapter to the Spinner
+        mSpinner.setAdapter(mAdapter);
+        updateConstants();
+
+
+//        Log.i("update interval", String.valueOf(UPDATE_INTERVAL_IN_MILLISECONDS));
 
 //        Integer i = R.string.update_interval_by_default_ultimate;
 //        String numberAsString = "1234";
@@ -265,15 +289,7 @@ public class RealTimeFragment extends Fragment implements
 //                MY_PREFERENCE_KEY,
 //                number
 //        );
-        // Inflate the layout for this fragment
-        try {
-            if (mView == null) {
-                mView = inflater.inflate(R.layout.fragment_real_time, container, false);
-            }
 
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
         // Locate the UI widgets.
         mRunNumber = mView.findViewById(R.id.run_number);
         mLocation = mView.findViewById(R.id.locate_on_map);
@@ -351,10 +367,15 @@ public class RealTimeFragment extends Fragment implements
         mIntervalTextView.setText(String.format(Locale.ENGLISH, "%s: %s", mIntervalLabel,
                 mIntervalll));
 
-        int mDeleteLoop = DELETE_LAST_ROWS;
-        String mDeleteloopp = String.valueOf(mDeleteLoop);
-        mDeleteTextView.setText(String.format(Locale.ENGLISH, "%s: %s", mDeleteLabel,
-                mDeleteloopp));
+        if (DISABLE_AUTO_CLOSE) {
+            int mDeleteLoop = DELETE_LAST_ROWS;
+            String mDeleteloopp = String.valueOf(mDeleteLoop);
+            mDeleteTextView.setText(String.format(Locale.ENGLISH, "%s: %s", mDeleteLabel,
+                    mDeleteloopp));
+        } else {
+            mDeleteTextView.setText(String.format(Locale.ENGLISH, "%s: %s", mDeleteLabel,
+                    "OFF"));
+        }
 
         mLocation.setOnClickListener(new View.OnClickListener() {
 
@@ -367,31 +388,6 @@ public class RealTimeFragment extends Fragment implements
         });
 
 
-        // Spinner element
-        mSpinner = mView.findViewById(R.id.run_type_spinner);
-
-        // Spinner click listener
-        mSpinner.setOnItemSelectedListener(this);
-
-        // Spinner Drop down elements
-        mCategories = new ArrayList<RunType>();
-        mCategories.add(new RunType(R.drawable.ic_directions_walk_black_24dp, R.string.Run_type_walk, R.string.Run_type_walk_desc));
-        mCategories.add(new RunType(R.drawable.ic_directions_bike_black_24dp, R.string.Run_type_bike, R.string.Run_type_bike_desc));
-        mCategories.add(new RunType(R.drawable.ic_directions_car_black_24dp, R.string.Run_type_car, R.string.Run_type_car_desc));
-        mCategories.add(new RunType(R.drawable.ic_developer_board_black_48dp, R.string.Run_type_custom, R.string.Run_type_custom_desc));
-
-        // Creating adapter for spinner
-        mAdapter = new RunTypesAdapter(getActivity(), R.layout.list_run_type, mCategories);
-
-        // Setting a Custom Adapter to the Spinner
-        mSpinner.setAdapter(mAdapter);
-
-        RUN_TYPE_VALUE = mSharedPrefsRunType.getInt(RUN_TYPE_KEY, -1);
-        if (RUN_TYPE_VALUE != -1) {
-            // set the selected value of the spinner
-            mSpinner.setSelection(RUN_TYPE_VALUE);
-        }
-
         mRequestLocationUpdatesButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -401,15 +397,12 @@ public class RealTimeFragment extends Fragment implements
                     mService.startUpdatesButtonHandler();
                 }
 
+                updateConstants();
+
                 long mIntervall = UPDATE_INTERVAL_IN_MILLISECONDS / 1000;
                 String mIntervalll = String.valueOf(mIntervall) + " s";
                 mIntervalTextView.setText(String.format(Locale.ENGLISH, "%s: %s", mIntervalLabel,
                         mIntervalll));
-
-                int mDeleteLoop = DELETE_LAST_ROWS;
-                String mDeleteloopp = String.valueOf(mDeleteLoop);
-                mDeleteTextView.setText(String.format(Locale.ENGLISH, "%s: %s", mDeleteLabel,
-                        mDeleteloopp));
 
             }
         });
@@ -432,6 +425,36 @@ public class RealTimeFragment extends Fragment implements
         mContext.getApplicationContext().bindService(new Intent(mContext, LocationUpdatesService.class), mServiceConnection,
                 Context.BIND_AUTO_CREATE);
         return mView;
+    }
+
+    private void updateConstants() {
+        RUN_TYPE_VALUE = mSharedPrefsRunType.getInt(RUN_TYPE_KEY, -1);
+        if (RUN_TYPE_VALUE != -1) {
+            // set the selected value of the spinner
+            mSpinner.setSelection(RUN_TYPE_VALUE);
+        }
+        RUN_TYPE_INTERVAL = mSharedPrefsRunType.getLong(RUN_TYPE_INTERVAL_KEY, 20000);
+        RUN_TYPE_NOISE = mSharedPrefsRunType.getLong(RUN_TYPE_NOISE_KEY, (long) 0.4);
+
+        DELETE_LAST_ROWS_STRING = sharedPrefs.getString(
+                getString(R.string.delete_loops_by_key),
+                getString(R.string.delete_loops_by_default_ultimate)
+        );
+
+        DELETE_LAST_ROWS = Integer.parseInt((DELETE_LAST_ROWS_STRING));
+
+        Log.i("delete rows", String.valueOf(DELETE_LAST_ROWS));
+
+        if (RUN_TYPE_VALUE == 3) {
+
+            UPDATE_INTERVAL_IN_MILLISECONDS_STRING = sharedPrefs.getString(
+                    getString(R.string.update_interval_by_key),
+                    getString(R.string.update_interval_by_default_ultimate)
+            );
+            UPDATE_INTERVAL_IN_MILLISECONDS = Long.parseLong(UPDATE_INTERVAL_IN_MILLISECONDS_STRING);
+        } else {
+            UPDATE_INTERVAL_IN_MILLISECONDS = RUN_TYPE_INTERVAL;
+        }
     }
 
     private double[] createNewLocation() {
@@ -483,6 +506,7 @@ public class RealTimeFragment extends Fragment implements
                 break;
         }
     }
+
     /**
      * Updates all UI fields.
      */
@@ -719,7 +743,6 @@ public class RealTimeFragment extends Fragment implements
         }
     }
 
-
     /**
      * Returns the current state of the permissions needed.
      */
@@ -815,13 +838,18 @@ public class RealTimeFragment extends Fragment implements
         RUN_TYPE_TITLE = getString(mAdapter.getItem(RUN_TYPE_VALUE).getTitle());
         RUN_TYPE_PICTURE = mAdapter.getItem(RUN_TYPE_VALUE).getPicture();
         RUN_TYPE_DESCRIPTION = getString(mAdapter.getItem(RUN_TYPE_VALUE).getDescription());
+        RUN_TYPE_INTERVAL = Long.parseLong(String.valueOf(mAdapter.getItem(RUN_TYPE_VALUE).getIntervalPreset()));
+        RUN_TYPE_NOISE = Double.parseDouble(String.valueOf(mAdapter.getItem(RUN_TYPE_VALUE).getNoisePreset()));
 
-        Log.e("RUN_TYPE_VALUE_onItemse", String.valueOf(RUN_TYPE_VALUE));
+        Log.e("RUN_TYPE_NOISE", String.valueOf(RUN_TYPE_NOISE));
+        Log.e("RUN_TYPE_INTERVAL", String.valueOf(RUN_TYPE_INTERVAL));
         SharedPreferences.Editor preferEditor = mSharedPrefsRunType.edit();
         preferEditor.putInt(RUN_TYPE_KEY, RUN_TYPE_VALUE);
         preferEditor.putString(RUN_TYPE_TTTLE_KEY, RUN_TYPE_TITLE);
         preferEditor.putInt(RUN_TYPE_PICTURE_KEY, RUN_TYPE_PICTURE);
         preferEditor.putString(RUN_TYPE_DESCRIPTION_KEY, RUN_TYPE_DESCRIPTION);
+        preferEditor.putLong(RUN_TYPE_INTERVAL_KEY, RUN_TYPE_INTERVAL);
+        preferEditor.putLong(RUN_TYPE_NOISE_KEY, (long) RUN_TYPE_NOISE);
         preferEditor.apply();
 
     }

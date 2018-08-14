@@ -106,8 +106,8 @@ import static com.example.android.geotrackshare.LocationService.LocationServiceC
 import static com.example.android.geotrackshare.LocationService.LocationServiceConstants.setRequestingLocationUpdates;
 import static com.example.android.geotrackshare.RealTimeFragment.DELETE_LAST_ROWS;
 import static com.example.android.geotrackshare.RealTimeFragment.DISABLE_AUTO_CLOSE;
-import static com.example.android.geotrackshare.RealTimeFragment.NOISEc;
-import static com.example.android.geotrackshare.RealTimeFragment.NOISEd;
+import static com.example.android.geotrackshare.RealTimeFragment.RUN_TYPE_INTERVAL;
+import static com.example.android.geotrackshare.RealTimeFragment.RUN_TYPE_NOISE;
 import static com.example.android.geotrackshare.RealTimeFragment.RUN_TYPE_PICTURE_KEY;
 import static com.example.android.geotrackshare.RealTimeFragment.RUN_TYPE_VALUE;
 import static com.example.android.geotrackshare.RealTimeFragment.mSharedPrefsRunType;
@@ -162,6 +162,8 @@ public class LocationUpdatesService extends Service implements SensorEventListen
     private static final String TAG = LocationUpdatesService.class.getSimpleName();
     public static final String EXTRA_START_FROM_NOTIFICATION = "EXTRA_START_FROM_NOTIFICATION";
     private static final int NOTIFICATION_ID = 12345678;
+    public static final double NOISEc = 0.02;
+    public static double NOISEd = 0.04;
 
     public static String UPDATE_INTERVAL_IN_MILLISECONDS_STRING;
     /**
@@ -465,6 +467,7 @@ public class LocationUpdatesService extends Service implements SensorEventListen
             mStartTimeinMillis = System.currentTimeMillis();
             mCurrentId = queryMaxId() + 1;
             mRunType = RUN_TYPE_VALUE;
+            NOISEd = RUN_TYPE_NOISE;
             startLocationUpdates();
             mNotificationInformation = getResources().getString(R.string.Tracking_started_at) + getFormatedTimeInString() + "      STARTED...";
             mNotificationRunInformation = getResources().getString(R.string.Current_run) + mCurrentId;
@@ -1209,12 +1212,17 @@ public class LocationUpdatesService extends Service implements SensorEventListen
      * updates.
      */
     private void createLocationRequest() {
-        RealTimeFragment.sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-        UPDATE_INTERVAL_IN_MILLISECONDS_STRING = RealTimeFragment.sharedPrefs.getString(
-                getString(R.string.update_interval_by_key),
-                getString(R.string.update_interval_by_default_ultimate)
-        );
-        UPDATE_INTERVAL_IN_MILLISECONDS = Long.parseLong(UPDATE_INTERVAL_IN_MILLISECONDS_STRING);
+
+        if (RUN_TYPE_VALUE == 3) {
+            RealTimeFragment.sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+            UPDATE_INTERVAL_IN_MILLISECONDS_STRING = RealTimeFragment.sharedPrefs.getString(
+                    getString(R.string.update_interval_by_key),
+                    getString(R.string.update_interval_by_default_ultimate)
+            );
+            UPDATE_INTERVAL_IN_MILLISECONDS = Long.parseLong(UPDATE_INTERVAL_IN_MILLISECONDS_STRING);
+        } else {
+            UPDATE_INTERVAL_IN_MILLISECONDS = RUN_TYPE_INTERVAL;
+        }
         mLocationRequest = new LocationRequest();
 
         // Sets the desired interval for active location updates. This interval is

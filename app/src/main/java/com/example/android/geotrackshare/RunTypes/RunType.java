@@ -10,12 +10,16 @@ public class RunType {
     private int mPicture = NO_IMAGE_PROVIDED;
     private int mTitle;
     private int mDescription;
+    private long mInterval;
+    private double mNoise;
 
 
-    public RunType(int picture, int title, int description) {
+    public RunType(int picture, int title, int description, long interval, double noise) {
         mPicture = picture;
         mTitle = title;
         mDescription = description;
+        mInterval = interval;
+        mNoise = noise;
     }
 
 
@@ -30,6 +34,15 @@ public class RunType {
     public int getDescription() {
         return mDescription;
     }
+
+    public long getIntervalPreset() {
+        return mInterval;
+    }
+
+    public double getNoisePreset() {
+        return mNoise;
+    }
+
 
     /**
      * Returns whether or not there is an image for this item.
