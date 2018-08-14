@@ -169,7 +169,7 @@
                     android:id="@+id/speed_text"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Current speed 0.00km/h"
+                    android:text="Speed 0.00km/h"
                     android:textSize="@dimen/bold_text_size"
                     android:textStyle="bold" />
 
@@ -178,7 +178,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
 
-                    android:text="Total Distance 0.000"
+                    android:text="Distance 0.000"
                     android:textSize="30sp"
                     android:textStyle="bold" />
 
@@ -187,7 +187,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
 
-                    android:text="Total time 00:00:00"
+                    android:text="Time 00:00:00"
                     android:textSize="30sp"
                     android:textStyle="bold" />
 
@@ -212,7 +212,17 @@
                     android:layout_height="wrap_content"
                     android:layout_marginLeft="@dimen/small_margin"
                     android:layout_marginStart="@dimen/small_margin"
-                    android:text="Current altitude 000m"
+                    android:text="Current alt 000m"
+                    android:textSize="18sp"
+                    android:textStyle="italic" />
+
+                <TextView
+                    android:id="@+id/max_alt"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="@dimen/small_margin"
+                    android:layout_marginStart="@dimen/small_margin"
+                    android:text="Max alt 000m"
                     android:textSize="18sp"
                     android:textStyle="italic" />
 
@@ -236,16 +246,6 @@
                     android:textSize="18sp"
                     android:textStyle="italic" />
 
-
-                <TextView
-                    android:id="@+id/max_alt"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginLeft="@dimen/small_margin"
-                    android:layout_marginStart="@dimen/small_margin"
-                    android:text="Max alt 000m"
-                    android:textSize="18sp"
-                    android:textStyle="italic" />
 
                 <TextView
                     android:id="@+id/last_update_time_text"

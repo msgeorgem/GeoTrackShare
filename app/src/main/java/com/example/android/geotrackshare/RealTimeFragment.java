@@ -330,8 +330,8 @@ public class RealTimeFragment extends Fragment implements
         mAvgSpeedLabel = "Avg Speed";
         mMinAltitudeLabel = "Minimum Altitude";
         mMaxAltitudeLabel = "Maximum Altitude";
-        mElapsedTimeLabel = "Elapsed Time";
-        mDistanceLabel = "Total distance";
+        mElapsedTimeLabel = "Time";
+        mDistanceLabel = "Distance";
         mAndroid_idLabel = "Android ID";
         mIntervalLabel = "Interval";
         mDeleteLabel = "Delete loops";
