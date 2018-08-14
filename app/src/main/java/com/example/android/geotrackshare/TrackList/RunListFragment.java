@@ -20,7 +20,6 @@ import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.DefaultItemAnimator;
-import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -130,42 +129,26 @@ public class RunListFragment extends Fragment implements LoaderManager.LoaderCal
 //        return getActivity().getContentResolver().query(TrackContract.TrackingEntry.CONTENT_URI, null, null, null, SORT_ORDER_ID);
 //    }
 
-    @Override
-    public View onCreateView(final LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
-        view = inflater.inflate(R.layout.fragment_run_list, container, false);
-        Log.i(LOG_TAG, "initLoader");
+    public static void updateFavouritePost(final int favourite, final int id, final Context context) {
+        Log.e(TAG, "saving " + favourite);
+        String specificID = String.valueOf(id);
+        final String mSelectionClause = TrackContract.TrackingEntry.COLUMN_RUN_IDP;
+        final String mSelection = mSelectionClause + " = '" + specificID + "'";
 
-        // Find a reference to the {@link ListView} in the layout
-        tracksRecyclerView = view.findViewById(R.id.list_runs);
+        // Database operations should not be done on the main thread
+        AsyncTask<Void, Void, Void> insertItem = new AsyncTask<Void, Void, Void>() {
 
-        if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT) {
-            tracksRecyclerView.setLayoutManager(new GridLayoutManager(getActivity(), 1));
-        } else {
-            tracksRecyclerView.setLayoutManager(new GridLayoutManager(getActivity(), 2));
-        }
-
-        mTracksAdapter = new TracksCursorAdapter(this, null);
-
-        // Set the adapter on the {@link ListView}
-        // so the list can be populated in the user interface
-        tracksRecyclerView.setAdapter(mTracksAdapter);
-        tracksRecyclerView.addItemDecoration(new DividerItemDecoration(getActivity(), DividerItemDecoration.VERTICAL));
-        tracksRecyclerView.addItemDecoration(new DividerItemDecoration(getActivity(), DividerItemDecoration.HORIZONTAL));
-        tracksRecyclerView.setItemAnimator(new DefaultItemAnimator());
-
-        mEmptyStateTextView = view.findViewById(R.id.empty_view_runs);
-        mEmptyStateTextView.setText(R.string.no_runs);
-
-        mloadingIndicator = view.findViewById(R.id.loading_indicator_runs);
-        //kick off the loader
-        getLoaderManager().initLoader(FAV_LOADER, null, this);
-        mDbHelper = new TrackDbHelper(getActivity());
-        mContext = getActivity();
-//        fileName = createBackupFileName(runID);
-
-        return view;
+            @Override
+            protected Void doInBackground(Void... voids) {
+                ContentValues values = new ContentValues();
+                values.put(COLUMN_FAVORITEP, favourite);
+                // This is a NEW item, so insert a new item into the provider,
+                // returning the content URI for the item item.
+                context.getContentResolver().update(CONTENT_URI_POST, values, mSelection, null);
+                return null;
+            }
+        };
+        insertItem.execute();
     }
 
     void deleteOneItem(int runId) {
@@ -313,28 +296,42 @@ public class RunListFragment extends Fragment implements LoaderManager.LoaderCal
         startActivity(intent);
     }
 
-    public static void updateFavouritePost(final int favourite, final int id, final Context context) {
-        Log.e(TAG, "saving" + favourite);
-        String specificID = String.valueOf(id);
-        final String mSelectionClause = TrackContract.TrackingEntry.COLUMN_RUN_IDP;
-        final String mSelection = mSelectionClause + " = '" + specificID + "'";
+    @Override
+    public View onCreateView(final LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
+        // Inflate the layout for this fragment
+        view = inflater.inflate(R.layout.fragment_run_list, container, false);
+        Log.i(LOG_TAG, "initLoader");
 
+        // Find a reference to the {@link ListView} in the layout
+        tracksRecyclerView = view.findViewById(R.id.list_runs);
 
-        // Database operations should not be done on the main thread
-        AsyncTask<Void, Void, Void> insertItem = new AsyncTask<Void, Void, Void>() {
+        if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT) {
+            tracksRecyclerView.setLayoutManager(new GridLayoutManager(getActivity(), 1));
+        } else {
+            tracksRecyclerView.setLayoutManager(new GridLayoutManager(getActivity(), 2));
+        }
 
-            @Override
-            protected Void doInBackground(Void... voids) {
-                ContentValues values = new ContentValues();
-                values.put(COLUMN_FAVORITEP, favourite);
-                // This is a NEW item, so insert a new item into the provider,
-                // returning the content URI for the item item.
-                context.getContentResolver().update(CONTENT_URI_POST, values, mSelection, null);
+        mTracksAdapter = new TracksCursorAdapter(this, null);
 
-                return null;
-            }
-        };
-        insertItem.execute();
+        // Set the adapter on the {@link ListView}
+        // so the list can be populated in the user interface
+        tracksRecyclerView.setAdapter(mTracksAdapter);
+//        tracksRecyclerView.addItemDecoration(new DividerItemDecoration(getActivity(), DividerItemDecoration.VERTICAL));
+//        tracksRecyclerView.addItemDecoration(new DividerItemDecoration(getActivity(), DividerItemDecoration.HORIZONTAL));
+        tracksRecyclerView.setItemAnimator(new DefaultItemAnimator());
+
+        mEmptyStateTextView = view.findViewById(R.id.empty_view_runs);
+        mEmptyStateTextView.setText(R.string.no_runs);
+
+        mloadingIndicator = view.findViewById(R.id.loading_indicator_runs);
+        //kick off the loader
+        getLoaderManager().initLoader(FAV_LOADER, null, this);
+        mDbHelper = new TrackDbHelper(getActivity());
+        mContext = getActivity();
+//        fileName = createBackupFileName(runID);
+
+        return view;
     }
 
 //    /* Checks if external storage is available to at least read */

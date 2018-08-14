@@ -469,7 +469,7 @@ public class DetailFragment extends Fragment implements OnMapReadyCallback {
                     int totalTimeColumnIndex = cursor.getColumnIndex(COLUMN_TIME_COUNTERP);
 
                     int runID = cursor.getInt(runColumnIndex);
-                    Log.e("RUN LIsT FRAGMENT", String.valueOf(runID));
+//                    Log.e("RUN LIsT FRAGMENT", String.valueOf(runID));
                     Long startTime = cursor.getLong(startTimeColumnIndex);
                     String mHoursStart = new SimpleDateFormat("HH:mm:ss").format(new Date(startTime));
                     Long stopTime = cursor.getLong(stopTimeColumnIndex);
@@ -501,7 +501,7 @@ public class DetailFragment extends Fragment implements OnMapReadyCallback {
                     String avrSpeed1Decimal = String.format("%.1f", mAvgSpeed);
                     String avrSpeedString = String.valueOf(avrSpeed1Decimal + " km/h");
 
-                    Log.e("RUN LIsT FRAGMENrunType", String.valueOf(mRunType));
+//                    Log.e("RUN LIsT FRAGMENrunType", String.valueOf(mRunType));
                     String mDate = formatDate(stopTime);
                     dateTextView.setText(mDate);
                     startTimeTextView.setText(mHoursStart);

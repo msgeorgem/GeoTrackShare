@@ -20,8 +20,8 @@ import com.example.android.geotrackshare.DetailActivity;
 import com.example.android.geotrackshare.R;
 import com.example.android.geotrackshare.RunTypes.RunTypesAdapterNoUI;
 
+import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
@@ -32,6 +32,7 @@ import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_MAX_SPEEDP;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_RUNTYPEP;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_RUN_IDP;
+import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_STOP_TIMEP;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_TIME_COUNTERP;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_TOTAL_DISTANCEP;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry._ID;
@@ -48,7 +49,7 @@ public class TracksCursorAdapter extends CursorRecyclerAdapter<TracksCursorAdapt
 
     public static String fileName;
     private RunListFragment fragment = new RunListFragment();
-    private long id,id2long;
+    private long id, id2long;
     private String mmElapsedTime, mDate, mHours, mRunTypeString;
     private Double totalDistance, avrSpeed;
 
@@ -89,13 +90,14 @@ public class TracksCursorAdapter extends CursorRecyclerAdapter<TracksCursorAdapt
         final int mFavourite;
         final int mRunId;
 //        cursor.getColumnNames();
-        Log.e("numberofcolumns", Arrays.toString(cursor.getColumnNames()));
+//        Log.e("numberofcolumns", Arrays.toString(cursor.getColumnNames()));
 
         // Find the columns of item attributes that we're interested in
         id = cursor.getLong(cursor.getColumnIndex(_ID));
         mRunId = cursor.getInt(cursor.getColumnIndex(COLUMN_RUN_IDP));
         int runColumnIndex = cursor.getColumnIndex(COLUMN_RUN_IDP);
 //        int startTimeColumnIndex = cursor.getColumnIndex(COLUMN_START_TIME);
+        int stopTimeColumnIndex = cursor.getColumnIndex(COLUMN_STOP_TIMEP);
         int runTypeColumnIndex = cursor.getColumnIndex(COLUMN_RUNTYPEP);
         int totalDistanceColumnIndex = cursor.getColumnIndex(COLUMN_TOTAL_DISTANCEP);
         int maxAltitudeColumnIndex = cursor.getColumnIndex(COLUMN_MAX_ALTP);
@@ -115,7 +117,10 @@ public class TracksCursorAdapter extends CursorRecyclerAdapter<TracksCursorAdapt
         avrSpeed = cursor.getDouble(avrSpeedColumnIndex);
         Long totalTime = cursor.getLong(totalTimeColumnIndex);
         String mHoursStop = new SimpleDateFormat("HH:mm:ss").format(new Date(totalTime));
+        Long stopTime = cursor.getLong(stopTimeColumnIndex);
+        String mStopTime = new SimpleDateFormat("HH:mm:ss").format(new Date(stopTime));
         mFavourite = cursor.getInt(favouriteColumnIndex);
+
 
         // Read the item attributes from the Cursor for the current item
 
@@ -123,6 +128,7 @@ public class TracksCursorAdapter extends CursorRecyclerAdapter<TracksCursorAdapt
         int mRType = mAdapter.getItem(mRunType).getPicture();
         Bitmap icon = BitmapFactory.decodeResource(context.getResources(), mRType);
 
+//        String tempString = String.valueOf(mFavourite);
 
 //        mDate = DateFormat.getDateInstance(DateFormat.LONG).format(startTime);
 
@@ -133,8 +139,9 @@ public class TracksCursorAdapter extends CursorRecyclerAdapter<TracksCursorAdapt
 
         viewHolder.runTypeIcon.setImageBitmap(icon);
         viewHolder.runIdTextView.setText(runID);
+        String mDate = formatDate(stopTime);
         viewHolder.dateTextView.setText(mDate);
-        viewHolder.hoursTextView.setText(mHoursStop);
+        viewHolder.stopTextView.setText(mStopTime);
         viewHolder.speedTextView.setText(String.format(Locale.ENGLISH, "%s: %.1f",
                 "Avg Speed km/h", avrSpeed));
         viewHolder.timeCounter.setText(String.format(Locale.ENGLISH, "%s: %s",
@@ -202,32 +209,35 @@ public class TracksCursorAdapter extends CursorRecyclerAdapter<TracksCursorAdapt
         });
 
 
-        switch (mFavourite) {
-            case (1):
-                viewHolder.favToggle.setBackgroundDrawable(ContextCompat.getDrawable(context, R.drawable.if_star_black));
-//                viewHolder.favToggle.setChecked(true);
+        if (mFavourite == 1) {
+            viewHolder.favToggle.setBackgroundDrawable(ContextCompat.getDrawable(context, R.drawable.if_star_black));
+            viewHolder.favToggle.setChecked(true);
 
-
-            case (0):
-                viewHolder.favToggle.setBackgroundDrawable(ContextCompat.getDrawable(context, R.drawable.if_star_white));
-//                viewHolder.favToggle.setChecked(false);
-
+        } else {
+            viewHolder.favToggle.setBackgroundDrawable(ContextCompat.getDrawable(context, R.drawable.if_star_white));
+            viewHolder.favToggle.setChecked(false);
         }
 
 
-        viewHolder.favToggle.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+        viewHolder.favToggle.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onCheckedChanged(CompoundButton compoundButton, boolean isChecked) {
-
-                if (isChecked) {
+            public void onClick(View view) {
+                if (((ToggleButton) view).isChecked()) {
                     viewHolder.favToggle.setBackgroundDrawable(ContextCompat.getDrawable(context, R.drawable.if_star_black));
                     updateFavouritePost(1, mRunId, context);
+
                 } else {
                     viewHolder.favToggle.setBackgroundDrawable(ContextCompat.getDrawable(context, R.drawable.if_star_white));
                     updateFavouritePost(0, mRunId, context);
+
                 }
             }
         });
+    }
+
+    String formatDate(long dateInMillis) {
+        Date date = new Date(dateInMillis);
+        return DateFormat.getDateInstance(DateFormat.MEDIUM).format(date);
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
@@ -235,7 +245,7 @@ public class TracksCursorAdapter extends CursorRecyclerAdapter<TracksCursorAdapt
         public ImageView runTypeIcon;
         public TextView runIdTextView;
         public TextView dateTextView;
-        public TextView hoursTextView;
+        public TextView stopTextView;
         public TextView speedTextView;
         public TextView maxSpeedTextView;
         public TextView altitude;
@@ -253,7 +263,7 @@ public class TracksCursorAdapter extends CursorRecyclerAdapter<TracksCursorAdapt
             runTypeIcon = view.findViewById(R.id.run_type_icon);
             runIdTextView = view.findViewById(R.id.run_id);
             dateTextView = view.findViewById(R.id.day);
-            hoursTextView = view.findViewById(R.id.hours);
+            stopTextView = view.findViewById(R.id.stop_time);
             speedTextView = view.findViewById(R.id.avg_speed);
             minAltitude = view.findViewById(R.id.min_alt);
             maxAltitude = view.findViewById(R.id.max_alt);
@@ -265,6 +275,4 @@ public class TracksCursorAdapter extends CursorRecyclerAdapter<TracksCursorAdapt
             favToggle = view.findViewById(R.id.favListToggleButton);
         }
     }
-
-
 }
