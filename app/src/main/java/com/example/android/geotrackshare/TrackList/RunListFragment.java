@@ -309,7 +309,7 @@ public class RunListFragment extends Fragment implements LoaderManager.LoaderCal
         if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT) {
             tracksRecyclerView.setLayoutManager(new GridLayoutManager(getActivity(), 1));
         } else {
-            tracksRecyclerView.setLayoutManager(new GridLayoutManager(getActivity(), 2));
+            tracksRecyclerView.setLayoutManager(new GridLayoutManager(getActivity(), 1));
         }
 
         mTracksAdapter = new TracksCursorAdapter(this, null);

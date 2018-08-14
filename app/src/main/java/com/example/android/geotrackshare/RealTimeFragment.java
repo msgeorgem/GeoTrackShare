@@ -282,11 +282,11 @@ public class RealTimeFragment extends Fragment implements
 
         mAddressOutputTextView = mView.findViewById(R.id.address_text);
 
-        mLatitudeTextView = mView.findViewById(R.id.latitude_text);
-        mLongitudeTextView = mView.findViewById(R.id.longitude_text);
+//        mLatitudeTextView = mView.findViewById(R.id.latitude_text);
+//        mLongitudeTextView = mView.findViewById(R.id.longitude_text);
 
-        mPrevLatitudeTextView = mView.findViewById(R.id.prev_latitude_text);
-        mPrevLongitudeTextView = mView.findViewById(R.id.prev_longitude_text);
+//        mPrevLatitudeTextView = mView.findViewById(R.id.prev_latitude_text);
+//        mPrevLongitudeTextView = mView.findViewById(R.id.prev_longitude_text);
         mIntervalTextView = mView.findViewById(R.id.interval);
         mDeleteTextView = mView.findViewById(R.id.delete_loops);
 
@@ -758,10 +758,10 @@ public class RealTimeFragment extends Fragment implements
             mLastUpdateTimeMillis = intent.getLongExtra(LocationUpdatesService.EXTRA_LAST_TIME_UPDATE, 0);
             mCurrentAddress = intent.getStringExtra(LocationUpdatesService.EXTRA_ADDRESS);
 
-            mLatitudeTextView.setText(String.format(Locale.ENGLISH, "%s: %f", mLatitudeLabel,
-                    mCurrentLatitude));
-            mLongitudeTextView.setText(String.format(Locale.ENGLISH, "%s: %f", mLongitudeLabel,
-                    mCurrentLongitude));
+//            mLatitudeTextView.setText(String.format(Locale.ENGLISH, "%s: %f", mLatitudeLabel,
+//                    mCurrentLatitude));
+//            mLongitudeTextView.setText(String.format(Locale.ENGLISH, "%s: %f", mLongitudeLabel,
+//                    mCurrentLongitude));
             mAltitudeTextView.setText(String.format(Locale.ENGLISH, "%s: %f", mAltitudeLabel,
                     mCurrentAltitude));
             mSpeedTextView.setText(String.format(Locale.ENGLISH, "%s: %.1f", mSpeedLabel,
@@ -773,15 +773,15 @@ public class RealTimeFragment extends Fragment implements
                     mMaxSpeedLabel, mMaxSpeed));
             mMaxAltitudeTextView.setText(String.format(Locale.ENGLISH, "%s: %f",
                     mMaxAltitudeLabel, mMaxAltitude));
-            mMinAltitudeTextView.setText(String.format(Locale.ENGLISH, "%s: %f",
-                    mMinAltitudeLabel, mMinAltitude));
+//            mMinAltitudeTextView.setText(String.format(Locale.ENGLISH, "%s: %f",
+//                    mMinAltitudeLabel, mMinAltitude));
             mTotalDistanceTextView.setText(String.format(Locale.ENGLISH, "%s: %.3f",
                     mDistanceLabel, mTotalDistance));
 
-            mPrevLatitudeTextView.setText(String.format(Locale.ENGLISH, "%s: %f", mPrevLatitudeLabel,
-                    mPreviousLatitude));
-            mPrevLongitudeTextView.setText(String.format(Locale.ENGLISH, "%s: %f", mPrevLongitudeLabel,
-                    mPreviousLongitude));
+//            mPrevLatitudeTextView.setText(String.format(Locale.ENGLISH, "%s: %f", mPrevLatitudeLabel,
+//                    mPreviousLatitude));
+//            mPrevLongitudeTextView.setText(String.format(Locale.ENGLISH, "%s: %f", mPrevLongitudeLabel,
+//                    mPreviousLongitude));
 
             mElapsedTime = String.format("%02d:%02d:%02d", TimeUnit.MILLISECONDS.toHours(mElapsedTimeMillis),
                     TimeUnit.MILLISECONDS.toMinutes(mElapsedTimeMillis) % TimeUnit.HOURS.toMinutes(1),

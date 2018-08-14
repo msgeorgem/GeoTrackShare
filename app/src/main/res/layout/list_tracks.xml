@@ -19,9 +19,10 @@
 
             <ImageView
                 android:id="@+id/run_type_icon"
-                android:layout_width="13dp"
-                android:layout_height="match_parent"
-                android:layout_weight="0.2" />
+                android:layout_width="60dp"
+                android:layout_height="60dp"
+                android:layout_gravity="center_vertical"
+                android:layout_weight="0.15" />
 
 
             <LinearLayout
