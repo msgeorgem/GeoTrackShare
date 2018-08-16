@@ -2,14 +2,6 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
     android:title="@string/title_advanced_settings">
 
-
-    <ListPreference
-        android:defaultValue="@string/update_interval_by_default_ultimate"
-        android:entries="@array/update_interval_by_labels"
-        android:entryValues="@array/update_interval_by_values"
-        android:key="@string/update_interval_by_key"
-        android:title="@string/update_interval_by_label" />
-
     <CheckBoxPreference
         android:id="@+id/disable_auto_stop"
         android:key="@string/disable_auto_stop_switch_key"

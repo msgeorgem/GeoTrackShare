@@ -53,9 +53,6 @@ public class AdvancedSettingsActivity extends AppCompatActivity {
             setPreferenceScreen(null);
             addPreferencesFromResource(R.xml.advanced_settings);
 
-            Preference intervalBy = findPreference(getString(R.string.update_interval_by_key));
-            bindPreferenceSummaryToValue1(intervalBy);
-
             Preference disableAutoStopPreference = findPreference(getString(R.string.disable_auto_stop_switch_key));
             bindPreferenceSummaryToValue2(disableAutoStopPreference);
 
@@ -91,12 +88,6 @@ public class AdvancedSettingsActivity extends AppCompatActivity {
 
         }
 
-        private void bindPreferenceSummaryToValue1(Preference preference) {
-            preference.setOnPreferenceChangeListener(this);
-            SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
-            String preferenceString = preferences.getString(preference.getKey(), "");
-            onPreferenceChange(preference, preferenceString);
-        }
 
         private void bindPreferenceSummaryToValue2(Preference preference) {
             preference.setOnPreferenceChangeListener(this);

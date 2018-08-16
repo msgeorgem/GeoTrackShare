@@ -28,6 +28,9 @@ public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
     public static final String LOG_TAG = MainActivity.class.getName();
     public static ConnectivityManager cm;
+    public static String BICYCLE = "BICYCLE";
+    public static String WALK = "WALK";
+    public static String CAR = "CAR";
 
 
     SharedPreferences sharedPrefs;
@@ -116,16 +119,16 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        int id = item.getItemId();
-        if (id == R.id.action_settings) {
-            Intent settingsIntent = new Intent(this, SettingsActivity.class);
-            startActivity(settingsIntent);
-            return true;
-        }
-        return super.onOptionsItemSelected(item);
-    }
+//    @Override
+//    public boolean onOptionsItemSelected(MenuItem item) {
+//        int id = item.getItemId();
+//        if (id == R.id.action_settings) {
+//            Intent settingsIntent = new Intent(this, SettingsActivity.class);
+//            startActivity(settingsIntent);
+//            return true;
+//        }
+//        return super.onOptionsItemSelected(item);
+//    }
 
     @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
@@ -133,17 +136,20 @@ public class MainActivity extends AppCompatActivity
         int id = item.getItemId();
 
         if (id == R.id.dev_mode) {
-            // Handle the camera action
+            Intent settingsIntent = new Intent(this, CustomSettingsActivity.class);
+            startActivity(settingsIntent);
         } else if (id == R.id.foot_mode) {
-
+            Intent settingsIntent = new Intent(this, ModeSettingsActivity.class);
+            settingsIntent.setAction(WALK);
+            startActivity(settingsIntent);
         } else if (id == R.id.bike_mode) {
-
+            Intent settingsIntent = new Intent(this, ModeSettingsActivity.class);
+            settingsIntent.setAction(BICYCLE);
+            startActivity(settingsIntent);
         } else if (id == R.id.car_mode) {
-
-        } else if (id == R.id.find_me_mode) {
-
-        } else if (id == R.id.follow_me_mode) {
-
+            Intent settingsIntent = new Intent(this, ModeSettingsActivity.class);
+            settingsIntent.setAction(CAR);
+            startActivity(settingsIntent);
         } else if (id == R.id.advanced_settings) {
             Intent settingsIntent = new Intent(this, AdvancedSettingsActivity.class);
             startActivity(settingsIntent);

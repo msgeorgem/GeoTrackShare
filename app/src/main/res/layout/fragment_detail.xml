@@ -34,7 +34,7 @@
                     android:layout_height="420dp">
 
                     <FrameLayout
-                        android:id="@+id/map_container"
+                        android:id="@+id/mapmap"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent" />
 

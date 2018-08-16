@@ -19,6 +19,16 @@ android {
     }
     dataBinding.enabled = true
 
+    flavorDimensions "default"
+    productFlavors {
+        free {
+            applicationId "com.example.android.geotrackshare.free"
+        }
+        paid {
+            applicationId "com.example.android.geotrackshare.paid"
+        }
+    }
+
 }
 
 dependencies {

@@ -103,6 +103,23 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.example.android.geotrackshare.MainActivity" />
         </activity>
+        <activity
+            android:name=".CustomSettingsActivity"
+            android:label="@string/title_custom_settings"
+            android:theme="@style/AppThemeSettings">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.example.android.geotrackshare.MainActivity" />
+        </activity>
+
+        <activity
+            android:name=".ModeSettingsActivity"
+            android:label="@string/title_mode_settings"
+            android:theme="@style/AppThemeSettings">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.example.android.geotrackshare.MainActivity" />
+        </activity>
 
         <provider
             android:name=".Data.TrackProvider"

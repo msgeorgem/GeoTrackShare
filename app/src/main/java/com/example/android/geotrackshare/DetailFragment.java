@@ -71,7 +71,6 @@ import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_TOTAL_DISTANCEP;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.CONTENT_URI;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry._ID;
-import static com.example.android.geotrackshare.MapFragmentII.ARG_BITMAP;
 import static com.example.android.geotrackshare.RealTimeFragment.RUN_TYPE_PICTURE;
 import static com.example.android.geotrackshare.RealTimeFragment.mCategories;
 import static com.example.android.geotrackshare.TrackList.RunListFragment.EXTRA_AVG_SPEED;
@@ -137,7 +136,6 @@ public class DetailFragment extends Fragment implements OnMapReadyCallback {
     private int mTopInset;
     private FrameLayout mUpButtonContainer;
     private int mSelectedItemUpButtonFloor = Integer.MAX_VALUE;
-    private MapFragmentII mapFragmentII;
     private String currentRunText, mTotalTime;
     private Animation animationApear, animationDisapear;
 
@@ -164,14 +162,6 @@ public class DetailFragment extends Fragment implements OnMapReadyCallback {
         return fragment;
     }
 
-    public static DetailFragment newInstance1(Bitmap bitmap) {
-        mMapBitmap = bitmap;
-        Bundle arguments = new Bundle();
-        arguments.putParcelable(ARG_BITMAP, bitmap);
-        DetailFragment fragment = new DetailFragment();
-        fragment.setArguments(arguments);
-        return fragment;
-    }
 
     static String formatDate(long dateInMillis) {
         Date date = new Date(dateInMillis);
@@ -186,7 +176,6 @@ public class DetailFragment extends Fragment implements OnMapReadyCallback {
             runIdInt = getArguments().getInt(ARG_ITEM_ID);
             Log.e(TAG, String.valueOf(runIdInt));
         }
-
     }
 
     public DetailActivity getActivityCast() {
@@ -212,19 +201,18 @@ public class DetailFragment extends Fragment implements OnMapReadyCallback {
         runIdTextView = view.findViewById(R.id.run_id);
         avgSpeedTextView = view.findViewById(R.id.avg_speed_value);
         mScreenShotted = view.findViewById(R.id.scrollScreenShotted);
-        mMapFrame = view.findViewById(R.id.map_container);
+        mMapFrame = view.findViewById(R.id.mapmap);
         mapScreenShottedTemp = view.findViewById(R.id.mapImageView);
         mapScreenShottedTemp.setVisibility(View.INVISIBLE);
-//        mapFragment = MapFragment.newInstance();
+        mapFragment = MapFragment.newInstance();
         mUpButtonContainer = view.findViewById(R.id.up_container);
 
 
-//        FragmentTransaction transaction = getChildFragmentManager().beginTransaction();
-//        transaction.add(R.id.mapmap, mapFragment, "FRAGMENT_TAG")
-//                .addToBackStack("FRAGMENT_TAG").commit();
-//        getChildFragmentManager().executePendingTransactions();
-//
-//        mapFragment.getMapAsync(this);
+        FragmentTransaction transaction = getChildFragmentManager().beginTransaction();
+        transaction.add(R.id.mapmap, mapFragment, "FRAGMENT_TAG").commit();
+        getChildFragmentManager().executePendingTransactions();
+
+        mapFragment.getMapAsync(this);
 
 //        mapFragmentII = new MapFragmentII();
 //        FragmentManager manager = getFragmentManager();
@@ -303,15 +291,15 @@ public class DetailFragment extends Fragment implements OnMapReadyCallback {
     }
 
 
-    @Override
-    public void onViewCreated(View view, Bundle savedInstanceState) {
-        Fragment childFragment = new MapFragmentII();
-        Bundle args = new Bundle();
-        args.putInt(ARG_ITEM_ID, runIdInt);
-        childFragment.setArguments(args);
-        FragmentTransaction transaction = getChildFragmentManager().beginTransaction();
-        transaction.replace(R.id.map_container, childFragment).commit();
-    }
+//    @Override
+//    public void onViewCreated(View view, Bundle savedInstanceState) {
+//        Fragment childFragment = new MapFragmentII();
+//        Bundle args = new Bundle();
+//        args.putInt(ARG_ITEM_ID, runIdInt);
+//        childFragment.setArguments(args);
+//        FragmentTransaction transaction = getChildFragmentManager().beginTransaction();
+//        transaction.replace(R.id.map_container, childFragment).commit();
+//    }
 
     @Override
     public void onSaveInstanceState(Bundle outState) {

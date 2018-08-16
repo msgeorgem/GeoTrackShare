@@ -6,10 +6,7 @@
     <group
         android:checkableBehavior="single"
         android:enabled="true">
-        <item
-            android:id="@+id/dev_mode"
-            android:icon="@drawable/ic_developer_board_black_48dp"
-            android:title="Ultimate Mode" />
+
         <item
             android:id="@+id/foot_mode"
             android:icon="@drawable/ic_directions_walk_black_24dp"
@@ -22,20 +19,11 @@
             android:id="@+id/car_mode"
             android:icon="@drawable/ic_directions_car_black_24dp"
             android:title="Car Mode" />
+        <item
+            android:id="@+id/dev_mode"
+            android:icon="@drawable/ic_developer_board_black_48dp"
+            android:title="Custom Mode" />
     </group>
-
-    <item android:title="Catch me if you can :)">
-        <menu>
-            <item
-                android:id="@+id/find_me_mode"
-                android:icon="@drawable/ic_menu_share"
-                android:title="Find Me Mode" />
-            <item
-                android:id="@+id/follow_me_mode"
-                android:icon="@drawable/ic_menu_send"
-                android:title="Follow Me Mode" />
-        </menu>
-    </item>
 
     <item android:title="Settings">
         <menu>
