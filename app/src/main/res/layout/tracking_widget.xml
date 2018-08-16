@@ -2,7 +2,8 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/tracking_widget"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="#80000000">
 
 
     <LinearLayout
@@ -26,7 +27,8 @@
                 android:layout_height="30dp"
                 android:layout_marginLeft="8dp"
                 android:layout_marginRight="8dp"
-                android:text="Run No: " />
+                android:text="Run No: "
+                android:textColor="#FFF" />
 
             <TextView
                 android:id="@+id/tracking_time"
@@ -37,7 +39,9 @@
                 android:layout_marginRight="8dp"
                 android:layout_marginStart="8dp"
                 android:layout_marginTop="8dp"
-                android:text="Elapsed TIme" />
+                android:text="Time"
+                android:textColor="#FFF"
+                android:textSize="18sp" />
 
             <TextView
                 android:id="@+id/tracking_distance"
@@ -48,7 +52,9 @@
                 android:layout_marginRight="8dp"
                 android:layout_marginStart="8dp"
                 android:layout_marginTop="8dp"
-                android:text="Total Distance" />
+                android:text="Distance"
+                android:textColor="#FFF"
+                android:textSize="18sp" />
 
             <TextView
                 android:id="@+id/avg_speed"
@@ -59,7 +65,9 @@
                 android:layout_marginRight="8dp"
                 android:layout_marginStart="8dp"
                 android:layout_marginTop="8dp"
-                android:text="Avg speed" />
+                android:text="Avg speed"
+                android:textColor="#FFF"
+                android:textSize="18sp" />
 
             <TextView
                 android:id="@+id/max_altitude"
@@ -70,7 +78,8 @@
                 android:layout_marginRight="8dp"
                 android:layout_marginStart="8dp"
                 android:layout_marginTop="8dp"
-                android:text="Max Altitude" />
+                android:text="Max alt."
+                android:textColor="#FFF" />
 
             <TextView
 
@@ -88,7 +97,8 @@
                 android:layout_marginRight="8dp"
                 android:layout_marginStart="8dp"
                 android:layout_marginTop="8dp"
-                android:text="Current speed" />
+                android:text="Current speed"
+                android:textColor="#FFF" />
 
             <TextView
                 android:id="@+id/current_altitude"
@@ -99,7 +109,8 @@
                 android:layout_marginRight="8dp"
                 android:layout_marginStart="8dp"
                 android:layout_marginTop="8dp"
-                android:text="Current Altitude" />
+                android:text="Current alt."
+                android:textColor="#FFF" />
 
         </LinearLayout>
 
@@ -125,7 +136,9 @@
                 android:layout_marginRight="8dp"
                 android:layout_marginStart="8dp"
                 android:layout_marginTop="8dp"
-                android:text="00:00:00" />
+                android:text="00:00:00"
+                android:textColor="#FFF"
+                android:textSize="18sp" />
 
             <TextView
                 android:id="@+id/tracking_distance_dynamic"
@@ -136,7 +149,10 @@
                 android:layout_marginRight="8dp"
                 android:layout_marginStart="8dp"
                 android:layout_marginTop="8dp"
-                android:text="0.000km" />
+                android:text="0.000km"
+                android:textColor="#FFF"
+                android:textSize="18sp"
+                android:textStyle="bold" />
 
             <TextView
                 android:id="@+id/avg_speed_dynamic"
@@ -147,7 +163,10 @@
                 android:layout_marginRight="8dp"
                 android:layout_marginStart="8dp"
                 android:layout_marginTop="8dp"
-                android:text="00 km/h" />
+                android:text="00 km/h"
+                android:textColor="#FFF"
+                android:textSize="18sp"
+                android:textStyle="bold" />
 
             <TextView
                 android:id="@+id/max_altitude_dynamic"
@@ -158,7 +177,8 @@
                 android:layout_marginRight="8dp"
                 android:layout_marginStart="8dp"
                 android:layout_marginTop="8dp"
-                android:text="0000 meters" />
+                android:text="0000 meters"
+                android:textColor="#FFF" />
 
 
             <TextView
@@ -176,7 +196,8 @@
                 android:layout_marginRight="8dp"
                 android:layout_marginStart="8dp"
                 android:layout_marginTop="8dp"
-                android:text="00 km/h" />
+                android:text="00 km/h"
+                android:textColor="#FFF" />
 
             <TextView
                 android:id="@+id/current_altitude_dynamic"
@@ -187,7 +208,8 @@
                 android:layout_marginRight="8dp"
                 android:layout_marginStart="8dp"
                 android:layout_marginTop="8dp"
-                android:text="0000 meters" />
+                android:text="0000 meters"
+                android:textColor="#FFF" />
 
         </LinearLayout>
 

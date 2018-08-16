@@ -74,17 +74,21 @@ public class TrackingWidgetProvider extends AppWidgetProvider {
             String mElapsedTime = LocationUpdatesService.getDateFromMillis(mElapsedTimeMillis);
             mRemoteViews.setTextViewText(R.id.tracking_time_dynamic, mElapsedTime);
 
-            String mMaxAltitude = String.valueOf(intent.getDoubleExtra(LocationUpdatesService.EXTRA_MAX_ALTITUDE, 0));
-            mRemoteViews.setTextViewText(R.id.max_altitude_dynamic, mMaxAltitude);
+            Double mMaxAltitudeDouble = intent.getDoubleExtra(LocationUpdatesService.EXTRA_MAX_ALTITUDE, 0);
+            String maxAltDecimal = String.format("%.1f", mMaxAltitudeDouble);
+            mRemoteViews.setTextViewText(R.id.max_altitude_dynamic, maxAltDecimal);
 
-            String mAverageSpeed = String.valueOf(intent.getDoubleExtra(LocationUpdatesService.EXTRA_AVG_SPEED, 0));
-            mRemoteViews.setTextViewText(R.id.avg_speed_dynamic, mAverageSpeed);
+            Double mAverageSpeedDouble = intent.getDoubleExtra(LocationUpdatesService.EXTRA_AVG_SPEED, 0);
+            String avrSpeed1Decimal = String.format("%.1f", mAverageSpeedDouble);
+            mRemoteViews.setTextViewText(R.id.avg_speed_dynamic, avrSpeed1Decimal);
 
-            String mCurrentAltitude = String.valueOf(intent.getDoubleExtra(LocationUpdatesService.EXTRA_ALTITUDE, 0));
-            mRemoteViews.setTextViewText(R.id.current_altitude_dynamic, mCurrentAltitude);
+            Double mCurrentAltitudeDouble = intent.getDoubleExtra(LocationUpdatesService.EXTRA_ALTITUDE, 0);
+            String currentAltDecimal = String.format("%.1f", mCurrentAltitudeDouble);
+            mRemoteViews.setTextViewText(R.id.current_altitude_dynamic, currentAltDecimal);
 
-            String mCurrentSpeed = String.valueOf(intent.getDoubleExtra(LocationUpdatesService.EXTRA_SPEED, 0));
-            mRemoteViews.setTextViewText(R.id.current_speed_dynamic, mCurrentSpeed);
+            Double mCurrentSpeedDouble = intent.getDoubleExtra(LocationUpdatesService.EXTRA_SPEED, 0);
+            String currentSpeedDecimal = String.format("%.1f", mCurrentSpeedDouble);
+            mRemoteViews.setTextViewText(R.id.current_speed_dynamic, currentSpeedDecimal);
 
         } else {
 
