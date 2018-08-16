@@ -2,23 +2,19 @@ package com.example.android.geotrackshare;
 
 import android.app.FragmentTransaction;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
-import android.graphics.Matrix;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.content.FileProvider;
-import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
 import android.view.animation.AlphaAnimation;
@@ -75,9 +71,7 @@ import static com.example.android.geotrackshare.TrackList.RunListFragment.EXTRA_
 import static com.example.android.geotrackshare.TrackList.RunListFragment.PROJECTION_POST;
 
 public class ScreenShotActivity extends AppCompatActivity implements OnMapReadyCallback {
-    public static final String ARG_BITMAP = "ARG_BITMAP";
-    public static final String COMES_FROM_SCREENSHOT = "COMES_FROM_SCREENSHOT";
-    public static final String EXTRASS_RUN_ID = "EXTRASS_RUN_ID";
+
     private static final String TAG = "MapFragmentII";
     private static final String[] PROJECTION02 = {
             _ID,
@@ -102,16 +96,9 @@ public class ScreenShotActivity extends AppCompatActivity implements OnMapReadyC
     private Animation animationApear, animationDisapear;
     private String mTime;
     private Double mDistance, mAvgSpeed;
-    private View mUpButtonContainer;
-    private View mUpButton;
+
     private long mStartId;
     private boolean mComesFromDetailFragment = false;
-
-
-    private long mSelectedItemId;
-    private int mSelectedItemUpButtonFloor = Integer.MAX_VALUE;
-    private int mTopInset;
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -134,7 +121,6 @@ public class ScreenShotActivity extends AppCompatActivity implements OnMapReadyC
         mAvgSpeedTextView = findViewById(R.id.speed);
         mRunTypeIcon = findViewById(R.id.run_type_icon);
 
-
         intent = getIntent();
         if (ACTION_FROM_RUNLISTFRAGMENT.equals(intent.getAction())) {
             mComesFromDetailFragment = false;
@@ -155,12 +141,6 @@ public class ScreenShotActivity extends AppCompatActivity implements OnMapReadyC
 
         String totlaDistance3Dec = String.format("%.3f", mDistance);
         String totalDistanceString = String.valueOf(totlaDistance3Dec + " km");
-
-//        String maxAltitudeNoDecimal = String.format("%.0f", maxAltitude);
-//        String maxAltitudeString = String.valueOf(maxAltitudeNoDecimal + " m");
-
-//        String maxSpeed1Decimal = String.format("%.1f", maxSpeed);
-//        String maxSpeedString = String.valueOf(maxSpeed1Decimal + " km/h");
 
         String avrSpeed1Decimal = String.format("%.1f", mAvgSpeed);
         String avrSpeedString = String.valueOf(avrSpeed1Decimal + " km/h");
@@ -213,7 +193,6 @@ public class ScreenShotActivity extends AppCompatActivity implements OnMapReadyC
             }
         });
 
-
     }
 
     @Override
@@ -225,10 +204,6 @@ public class ScreenShotActivity extends AppCompatActivity implements OnMapReadyC
         double mStartLongitude = startLocation(runIdInt)[1];
         double mStopLatitude = stopLocation(runIdInt)[0];
         double mStopLongitude = stopLocation(runIdInt)[1];
-        Log.e("onMapReady..", String.valueOf(mStartLatitude));
-        Log.e("onMapReady..", String.valueOf(mStartLongitude));
-        Log.e("onMapReady..", String.valueOf(mStopLatitude));
-        Log.e("onMapReady..", String.valueOf(mStopLongitude));
 
         double mSouthLatitude;
         double mWestLongitude;
@@ -291,33 +266,6 @@ public class ScreenShotActivity extends AppCompatActivity implements OnMapReadyC
 
         // Zoom out to zoom level 10, animating with a duration of 2 seconds.
         mMap.animateCamera(CameraUpdateFactory.zoomTo(14), 2000, null);
-
-        // Construct a CameraPosition focusing on Mountain View and animate the camera to that position.
-//        CameraPosition cameraPosition = new CameraPosition.Builder()
-//                .target(mStopPoint)               // Sets the center of the map to Mountain View
-//                .zoom(15)                   // Sets the zoom
-//                .bearing(0)                // Sets the orientation of the camera to east
-//                .tilt(30)                   // Sets the tilt of the camera to 30 degrees
-//                .build();                   // Creates a CameraPosition from the builder
-//        mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
-
-
-//        mMap.setOnMapLoadedCallback(new GoogleMap.OnMapLoadedCallback() {
-//            @Override
-//            public void onMapLoaded() {
-//                mMap.snapshot(new GoogleMap.SnapshotReadyCallback() {
-//                    @Override
-//                    public void onSnapshotReady(Bitmap bitmap) {
-//                        Toast.makeText(getApplication(), getResources().getString(R.string.map_is_loaded),
-//                                Toast.LENGTH_SHORT).show();
-////                        mMapBitmap = bitmap;
-//
-////                        mapScreenShottedTemp.setImageBitmap(mMapBitmap);
-//                    }
-//                });
-//
-//            }
-//        });
 
     }
 
@@ -452,17 +400,11 @@ public class ScreenShotActivity extends AppCompatActivity implements OnMapReadyC
     /*  Method which will take screenshot on Basis of Screenshot Type ENUM  */
     private void takeScreenshot() {
         mMapBitmap = screenshotMap();
-//        try {
-//            Thread.sleep(1000);
-//        } catch (InterruptedException e) {
-//            e.printStackTrace();
-//        }
+
         mapScreenShottedTemp.setImageBitmap(mMapBitmap);
         fabShare.setVisibility(View.INVISIBLE);
         mMapFrame.setVisibility(View.INVISIBLE);
         mapScreenShottedTemp.setVisibility(View.VISIBLE);
-//        runIdTextView.setText("  G-Track");
-//        dateTextView.setText("ScreenShot");
 
 //                Screenshot taken after map view replaced by bitmap
         mSharredBitmap = getScreenShot(mScreenShotted);
@@ -482,8 +424,7 @@ public class ScreenShotActivity extends AppCompatActivity implements OnMapReadyC
             File sharedFile = store(mSharredBitmap, "screenshot" + ".jpg", saveFile);//save the screenshot to selected path
             Uri uri = FileProvider.getUriForFile(getApplication(), BuildConfig.APPLICATION_ID + ".provider", sharedFile);
             Log.e("shareScreenshot", String.valueOf(uri));
-//            shareScreenshot(file);//finally share screenshot
-//            showScreenShotToAccept(sharedFile);
+
             shareScreenshot(sharedFile);
 
         } else
@@ -496,89 +437,17 @@ public class ScreenShotActivity extends AppCompatActivity implements OnMapReadyC
 //        mScreenShotPreview.setImageBitmap(bitmap);
 
     }
-
-    public void showScreenShotToAccept(final File sharedFile) {
-
-        ImageView image = null;
-        Uri uri = FileProvider.getUriForFile(this, BuildConfig.APPLICATION_ID + ".provider", sharedFile);
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-            View dialogView = getLayoutInflater().inflate(R.layout.dialog_box, null);
-//            View dialogView = getLayoutInflater().inflate(R.layout.dialog_box, null, false);
-            image = dialogView.findViewById(R.id.image1);
-            Bitmap tempSmallerBitmap = getResizedBitmap(mSharredBitmap, 400, 800);
-
-            image.setImageBitmap(tempSmallerBitmap);
-//            Picasso.with(getActivityCast()).load(uri).resize(600, 1200).into(image);
-        }
-        // Create an AlertDialog.Builder and set the message, and click listeners
-        // for the positive and negative buttons on the dialog.
-        if (image.getParent() != null)
-            ((ViewGroup) image.getParent()).removeView(image);
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setMessage(R.string.question_to_accept);
-        builder.setView(image);
-        builder.setPositiveButton(R.string.accept, new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int id) {
-                // User clicked the "Delete" button, so delete the item.
-                //remove from DB
-                shareScreenshot(sharedFile);
-                fabShare.startAnimation(animationDisapear);
-                fabShare.setVisibility(View.INVISIBLE);
-                fabScreenShot.startAnimation(animationApear);
-                fabScreenShot.setVisibility(View.VISIBLE);
-
-            }
-        });
-        builder.setNegativeButton(R.string.dismiss, new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int id) {
-                // User clicked the "Cancel" button, so dismiss the dialog
-                if (dialog != null) {
-                    dialog.dismiss();
-                }
-                fabShare.startAnimation(animationDisapear);
-                fabShare.setVisibility(View.INVISIBLE);
-                fabScreenShot.startAnimation(animationApear);
-                fabScreenShot.setVisibility(View.VISIBLE);
-            }
-        });
-        // Create and show the AlertDialog
-        AlertDialog alertDialog = builder.create();
-        alertDialog.show();
-        alertDialog.setCanceledOnTouchOutside(false);
-
-    }
-
     /*  Share Screenshot  */
     private void shareScreenshot(File fileImagePath) {
-//        Uri uri = Uri.fromFile(file);//Convert file path into Uri for sharing
         Uri uri = FileProvider.getUriForFile(getApplication(), BuildConfig.APPLICATION_ID + ".provider", fileImagePath);
         Log.e("shareScreenshot", String.valueOf(uri));
         Intent intent = new Intent();
-//        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
         intent.setAction(Intent.ACTION_SEND);
         intent.setType("image/*");
         intent.putExtra(android.content.Intent.EXTRA_SUBJECT, R.string.sharing_title);
         intent.putExtra(android.content.Intent.EXTRA_TEXT, getString(R.string.sharing_text));
         intent.putExtra(Intent.EXTRA_STREAM, uri);//pass uri here
         startActivity(Intent.createChooser(intent, getString(R.string.sharing_title)));
-    }
-
-
-    public Bitmap getResizedBitmap(Bitmap bm, int newWidth, int newHeight) {
-        int width = bm.getWidth();
-        int height = bm.getHeight();
-        float scaleWidth = ((float) newWidth) / width;
-        float scaleHeight = ((float) newHeight) / height;
-        // CREATE A MATRIX FOR THE MANIPULATION
-        Matrix matrix = new Matrix();
-        // RESIZE THE BIT MAP
-        matrix.postScale(scaleWidth, scaleHeight);
-
-        // "RECREATE" THE NEW BITMAP
-        Bitmap resizedBitmap = Bitmap.createBitmap(
-                bm, 0, 0, width, height, matrix, false);
-        bm.recycle();
-        return resizedBitmap;
     }
 
     /*  Method which will return Bitmap after taking screenshot. We have to pass the view which we want to take screenshot.  */
@@ -623,10 +492,6 @@ public class ScreenShotActivity extends AppCompatActivity implements OnMapReadyC
         return file;
     }
 
-    @Override
-    public void onBackPressed() {
-        super.onBackPressed();
-    }
 
     public void onGetDataFromDataBaseAndDisplay(int id) {
 
@@ -666,37 +531,6 @@ public class ScreenShotActivity extends AppCompatActivity implements OnMapReadyC
                             TimeUnit.MILLISECONDS.toSeconds(totalTime) % TimeUnit.MINUTES.toSeconds(1));
 
 
-//                    String totlaDistance3Dec = String.format("%.3f",mDistance);
-//                    String totalDistanceString = String.valueOf(totlaDistance3Dec + " km");
-//
-//                    String maxAltitudeNoDecimal = String.format("%.0f", maxAltitude);
-//                    String maxAltitudeString = String.valueOf(maxAltitudeNoDecimal + " m");
-//
-//                    String maxSpeed1Decimal = String.format("%.1f", maxSpeed);
-//                    String maxSpeedString = String.valueOf(maxSpeed1Decimal + " km/h");
-//
-//                    String avrSpeed1Decimal = String.format("%.1f", mAvgSpeed);
-//                    String avrSpeedString = String.valueOf(avrSpeed1Decimal + " km/h");
-//
-//                    Log.e("RUN LIsT FRAGMENrunType", String.valueOf(mRunType));
-//                    String mDate = formatDate(stopTime);
-//                    dateTextView.setText(mDate);
-//                    startTimeTextView.setText(mHoursStart);
-//                    distanceTextView.setText(totalDistanceString);
-//                    durationTextView.setText(mTotalTime);
-//                    stopTimeTextView.setText(mHoursStop);
-//
-//                    runIdTextView.setText(currentRunText);
-//                    avgSpeedTextView.setText(avrSpeedString);
-//                    maxSpeedTextView.setText(maxSpeedString);
-//                    maxAltTextView.setText(maxAltitudeString);
-//
-//                    RunTypesAdapterNoUI mAdapter = new RunTypesAdapterNoUI(this, mCategories);
-//                    RUN_TYPE_PICTURE = mAdapter.getItem(mRunType).getPicture();
-//                    Log.e("RUN RUN_TYPE_PICTURE", String.valueOf(RUN_TYPE_PICTURE));
-//                    Bitmap icon = BitmapFactory.decodeResource(getResources(), RUN_TYPE_PICTURE);
-//                    mIconView.setImageBitmap(icon);
-
                 } while (cursor.moveToNext());
             }
             if (cursor != null) {
@@ -709,8 +543,4 @@ public class ScreenShotActivity extends AppCompatActivity implements OnMapReadyC
 
     }
 
-    private void updateUpButtonPosition() {
-        int upButtonNormalBottom = mTopInset + mUpButton.getHeight();
-        mUpButton.setTranslationY(Math.min(mSelectedItemUpButtonFloor - upButtonNormalBottom, 0));
-    }
 }

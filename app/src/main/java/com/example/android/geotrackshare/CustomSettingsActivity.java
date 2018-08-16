@@ -9,8 +9,6 @@ import android.preference.PreferenceManager;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 
-import com.example.android.geotrackshare.R;
-
 /**
  * Created by Marcin on 2017-09-12.
  */
@@ -58,9 +56,7 @@ public class CustomSettingsActivity extends AppCompatActivity {
 
             Preference intervalBy = findPreference(getString(R.string.update_interval_by_key));
             bindPreferenceSummaryToValue1(intervalBy);
-
         }
-
 
         @Override
         public boolean onPreferenceChange(Preference preference, Object value) {
@@ -76,9 +72,7 @@ public class CustomSettingsActivity extends AppCompatActivity {
             } else {
                 preference.setSummary(stringValue);
             }
-
             return true;
-
         }
 
         private void bindPreferenceSummaryToValue1(Preference preference) {
@@ -88,7 +82,5 @@ public class CustomSettingsActivity extends AppCompatActivity {
             onPreferenceChange(preference, preferenceString);
         }
 
-
     }
-
 }

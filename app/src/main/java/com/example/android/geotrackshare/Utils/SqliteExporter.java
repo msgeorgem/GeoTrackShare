@@ -39,8 +39,6 @@ public class SqliteExporter {
 
         String fileName = TracksCursorAdapter.fileName;
         File backupDirEXT = new File(RunListFragment.mContext.getExternalCacheDir(), fileName);
-//       file saved on internal drive will not be read by gmail without permissions
-        File backupFileINT = new File(RunListFragment.mContext.getFilesDir(), fileName);
 
         boolean success = backupDirEXT.createNewFile();
         if (!success) {
@@ -64,7 +62,6 @@ public class SqliteExporter {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd_HHmm");
         return "backup_run_" + runID + "_" + sdf.format(new Date()) + ".csv";
     }
-
 
     private static void writeCsv(File backupFile, SQLiteDatabase db, int runId) {
         CSVWriter csvWrite = null;

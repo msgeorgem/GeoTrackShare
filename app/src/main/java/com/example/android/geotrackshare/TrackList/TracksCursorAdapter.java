@@ -53,14 +53,14 @@ public class TracksCursorAdapter extends CursorRecyclerAdapter<TracksCursorAdapt
     private String mmElapsedTime, mDate, mHours, mRunTypeString;
     private Double totalDistance, avrSpeed;
 
-    private int mQuantity, mRunType;
+    private int mRunType;
     private String ORDER = " DESC LIMIT 1";
 
 
     public TracksCursorAdapter(RunListFragment context, Cursor cursor) {
         super(context, cursor);
         this.fragment = context;
-//        setHasStableIds(true);
+
     }
 
     @Override
@@ -89,14 +89,13 @@ public class TracksCursorAdapter extends CursorRecyclerAdapter<TracksCursorAdapt
         final Context context = viewHolder.itemView.getContext();
         final int mFavourite;
         final int mRunId;
-//        cursor.getColumnNames();
+
 //        Log.e("numberofcolumns", Arrays.toString(cursor.getColumnNames()));
 
         // Find the columns of item attributes that we're interested in
         id = cursor.getLong(cursor.getColumnIndex(_ID));
         mRunId = cursor.getInt(cursor.getColumnIndex(COLUMN_RUN_IDP));
         int runColumnIndex = cursor.getColumnIndex(COLUMN_RUN_IDP);
-//        int startTimeColumnIndex = cursor.getColumnIndex(COLUMN_START_TIME);
         int stopTimeColumnIndex = cursor.getColumnIndex(COLUMN_STOP_TIMEP);
         int runTypeColumnIndex = cursor.getColumnIndex(COLUMN_RUNTYPEP);
         int totalDistanceColumnIndex = cursor.getColumnIndex(COLUMN_TOTAL_DISTANCEP);
@@ -107,8 +106,6 @@ public class TracksCursorAdapter extends CursorRecyclerAdapter<TracksCursorAdapt
         int favouriteColumnIndex = cursor.getColumnIndex(COLUMN_FAVORITEP);
 
         String runID = cursor.getString(runColumnIndex);
-//        Long startTime = cursor.getLong(startTimeColumnIndex);
-//        String mHoursStart = new SimpleDateFormat("HH:mm:ss").format(new Date(startTime));
 
         mRunType = cursor.getInt(runTypeColumnIndex);
         totalDistance = cursor.getDouble(totalDistanceColumnIndex);
@@ -121,17 +118,11 @@ public class TracksCursorAdapter extends CursorRecyclerAdapter<TracksCursorAdapt
         String mStopTime = new SimpleDateFormat("HH:mm:ss").format(new Date(stopTime));
         mFavourite = cursor.getInt(favouriteColumnIndex);
 
-
         // Read the item attributes from the Cursor for the current item
 
         RunTypesAdapterNoUI mAdapter = new RunTypesAdapterNoUI(context, mCategories);
         int mRType = mAdapter.getItem(mRunType).getPicture();
         Bitmap icon = BitmapFactory.decodeResource(context.getResources(), mRType);
-
-//        String tempString = String.valueOf(mFavourite);
-
-//        mDate = DateFormat.getDateInstance(DateFormat.LONG).format(startTime);
-
 
         mmElapsedTime = String.format("%02d:%02d:%02d", TimeUnit.MILLISECONDS.toHours(totalTime),
                 TimeUnit.MILLISECONDS.toMinutes(totalTime) % TimeUnit.HOURS.toMinutes(1),
@@ -182,11 +173,7 @@ public class TracksCursorAdapter extends CursorRecyclerAdapter<TracksCursorAdapt
                     editor.apply();
                 } else {
                     viewHolder.trashToggle.setBackgroundDrawable(ContextCompat.getDrawable(context, R.drawable.trashcan02));
-//                    STAR GREY IS ONLY TEMPORARY STATE BETWEEN CLICK AND SHOWDELETECONFIRMATIONDIALOG AND CANCEL BUTTON
-//                    SO WE DO NOT SAVE GREY STAR STATE IN THIS CASE
-//                    SharedPreferences.Editor editor = DetailActivity.favPrefs.edit();
-//                    editor.putBoolean("On"+ context, false);
-//                    editor.apply();
+
                     fragment.showDeleteConfirmationDialogOneItem(viewHolder);
                 }
             }
@@ -195,7 +182,6 @@ public class TracksCursorAdapter extends CursorRecyclerAdapter<TracksCursorAdapt
         viewHolder.exportCSV.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-//                long id2 = viewHolder.getItemId();
                 fileName = createBackupFileName(mRunId);
                 fragment.shareViaEmail(mRunId);
             }
@@ -207,7 +193,6 @@ public class TracksCursorAdapter extends CursorRecyclerAdapter<TracksCursorAdapt
                 Log.e("viewHolder.shareImage", String.valueOf(mRunId));
             }
         });
-
 
         if (mFavourite == 1) {
             viewHolder.favToggle.setBackgroundDrawable(ContextCompat.getDrawable(context, R.drawable.if_star_black));
@@ -229,7 +214,6 @@ public class TracksCursorAdapter extends CursorRecyclerAdapter<TracksCursorAdapt
                 } else {
                     viewHolder.favToggle.setBackgroundDrawable(ContextCompat.getDrawable(context, R.drawable.if_star_white));
                     updateFavouritePost(0, mRunId, context);
-
                 }
             }
         });
@@ -247,8 +231,6 @@ public class TracksCursorAdapter extends CursorRecyclerAdapter<TracksCursorAdapt
         public TextView dateTextView;
         public TextView stopTextView;
         public TextView speedTextView;
-        public TextView maxSpeedTextView;
-        public TextView altitude;
         public TextView minAltitude;
         public TextView maxAltitude;
         public TextView timeCounter;

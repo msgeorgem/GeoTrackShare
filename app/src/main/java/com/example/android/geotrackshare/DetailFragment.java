@@ -2,21 +2,13 @@ package com.example.android.geotrackshare;
 
 import android.app.Fragment;
 import android.app.FragmentTransaction;
-import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
-import android.graphics.Matrix;
-import android.net.Uri;
 import android.os.Bundle;
-import android.os.Environment;
-import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
-import android.support.v4.content.FileProvider;
-import android.support.v7.app.AlertDialog;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -34,25 +26,18 @@ import com.example.android.geotrackshare.RunTypes.RunTypesAdapterNoUI;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
-import com.google.android.gms.maps.MapView;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PolylineOptions;
 
-import java.io.File;
-import java.io.FileOutputStream;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.GregorianCalendar;
 import java.util.concurrent.TimeUnit;
 
-import butterknife.Unbinder;
-
-import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_ALTITUDE;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_AVR_SPEEDP;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_LATITUDE;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_LONGITUDE;
@@ -61,13 +46,9 @@ import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_RUNTYPEP;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_RUN_ID;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_RUN_IDP;
-import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_SPEED;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_START_TIMEP;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_STOP_TIMEP;
-import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_TIME;
-import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_TIME_COUNTER;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_TIME_COUNTERP;
-import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_TOTAL_DISTANCE;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_TOTAL_DISTANCEP;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.CONTENT_URI;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry._ID;
@@ -86,9 +67,7 @@ import static com.example.android.geotrackshare.TrackList.RunListFragment.PROJEC
 public class DetailFragment extends Fragment implements OnMapReadyCallback {
     public static final String ARG_ITEM_ID = "item_id";
     public static final String ACTION_FROM_DETAILFRAGMENT = "ACTION_FROM_DETAILFRAGMENT";
-    public static final String ARG_PARAM1 = "ARG_PARAM1";
     private static final String TAG = "DetailFragment";
-
 
     private static final String[] PROJECTION02 = {
             _ID,
@@ -96,22 +75,17 @@ public class DetailFragment extends Fragment implements OnMapReadyCallback {
             COLUMN_LATITUDE,
             COLUMN_LONGITUDE
     };
-    private static final float PARALLAX_FACTOR = 1.25f;
     //    public static FragmentDetailBinding mDetailBinding;
     View view;
     private String MAPSTATE = "MAPSTATE";
-    private Unbinder mUnbinder;
-    private Cursor mCursor;
-    public FloatingActionButton fabShare, fabScreenShot;
-    private View mRootView;
-    private int mMutedColor = 0xFF333333;
+    public FloatingActionButton fabShare;
     private Cursor cur;
     public static FloatingActionButton fab;
     private ArrayList<LatLng> coordinatesList;
     private LatLng here;
     private double[] mStartLocation = new double[2];
     private double[] mStopLocation = new double[2];
-    private int mItemId, mRunType;
+    private int mRunType;
     private int runIdInt;
     private ImageView mIconView;
     private TextView maxAltTextView;
@@ -123,9 +97,7 @@ public class DetailFragment extends Fragment implements OnMapReadyCallback {
     private TextView stopTimeTextView;
     private TextView runIdTextView;
     private TextView avgSpeedTextView;
-    private MapView mMapView;
     private MapFragment mapFragment;
-    private Boolean mRecuringBoolean;
     private static GoogleMap mMap;
     private static Bitmap mMapBitmap;
     private Bitmap mSharedImageBitmap;
@@ -133,19 +105,9 @@ public class DetailFragment extends Fragment implements OnMapReadyCallback {
     private double mTotalDistance, mAvgSpeed;
     private FrameLayout mMapFrame;
     private ImageView mapScreenShottedTemp;
-    private int mTopInset;
     private FrameLayout mUpButtonContainer;
-    private int mSelectedItemUpButtonFloor = Integer.MAX_VALUE;
     private String currentRunText, mTotalTime;
     private Animation animationApear, animationDisapear;
-
-
-
-    private SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.sss");
-    // Use default locale format
-    private SimpleDateFormat outputFormat = new SimpleDateFormat();
-    // Most time functions can only handle 1902 - 2037
-    private GregorianCalendar START_OF_EPOCH = new GregorianCalendar(2, 1, 1);
 
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
@@ -183,13 +145,11 @@ public class DetailFragment extends Fragment implements OnMapReadyCallback {
     }
 
 
-
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
         view = inflater.inflate(R.layout.fragment_detail, container, false);
-        mRecuringBoolean = false;
         mIconView = view.findViewById(R.id.run_type);
         maxAltTextView = view.findViewById(R.id.max_alt_value);
         maxSpeedTextView = view.findViewById(R.id.max_speed_value);
@@ -207,45 +167,15 @@ public class DetailFragment extends Fragment implements OnMapReadyCallback {
         mapFragment = MapFragment.newInstance();
         mUpButtonContainer = view.findViewById(R.id.up_container);
 
-
         FragmentTransaction transaction = getChildFragmentManager().beginTransaction();
         transaction.add(R.id.mapmap, mapFragment, "FRAGMENT_TAG").commit();
         getChildFragmentManager().executePendingTransactions();
 
         mapFragment.getMapAsync(this);
 
-//        mapFragmentII = new MapFragmentII();
-//        FragmentManager manager = getFragmentManager();
-//        manager.beginTransaction()
-//                .replace(R.id.map_container, mapFragmentII, mapFragmentII.getTag())
-//                .commitAllowingStateLoss();
-
-//        Fragment childFragment = new ChildFragment();
-//        FragmentTransaction transaction = getChildFragmentManager().beginTransaction();
-//        transaction.replace(R.id.map_container, childFragment).commit();
-
-
-
         onGetDataFromDataBaseAndDisplay(runIdInt);
         queryCoordinatesList(runIdInt);
 
-//        fab = view.findViewById(R.id.fab);
-//        fab.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View view) {
-////                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-////                        .setAction("Action", null).show();
-////                createShareTrackIntent();
-//                if (getArguments().containsKey(ARG_BITMAP)) {
-//                    mMapBitmap = getArguments().getParcelable(ARG_BITMAP);
-////                    Log.e(TAG, String.valueOf(runIdInt));
-//                }
-//                Intent intent = new Intent(getActivity(), ScreenShotActivity.class);
-//                intent.setAction(ACTION_FROM_DETAILFRAGMENT);
-//                intent.putExtra(ARG_ITEM_ID, runIdInt);
-//                startActivity(intent);
-//            }
-//        });
         animationApear = new AlphaAnimation(0.0f, 1.0f);
         animationApear.setDuration(1500);
         animationApear.setStartOffset(500);
@@ -254,89 +184,24 @@ public class DetailFragment extends Fragment implements OnMapReadyCallback {
         animationDisapear.setDuration(1000);
         animationDisapear.setStartOffset(0);
 
-
-//        Animation animation = new AlphaAnimation(0.0f, 1.0f);
-//        animation.setDuration(1000);
-//        animation.setStartOffset(1000);
-//        fab.startAnimation(animation);
-
         fabShare = view.findViewById(R.id.fab2);
         fabShare.startAnimation(animationApear);
         fabShare.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 onShareClick(runIdInt, mTotalTime, mTotalDistance, mAvgSpeed, mRunType);
-//                takeScreenshot();
+
             }
         });
-
-
-//        fabScreenShot = view.findViewById(R.id.fab2);
-//        fabScreenShot.setAnimation(animationApear);
-//        fabScreenShot.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View view) {
-//                MapFragmentII.screenshotMap();
-////                mMapBitmap = screenshotMap();
-//                fabShare.setVisibility(View.VISIBLE);
-//                fabShare.startAnimation(animationApear);
-//                fabScreenShot.startAnimation(animationDisapear);
-//                fabScreenShot.setVisibility(View.INVISIBLE);
-//
-//            }
-//        });
-
 
         return view;
     }
 
-
-//    @Override
-//    public void onViewCreated(View view, Bundle savedInstanceState) {
-//        Fragment childFragment = new MapFragmentII();
-//        Bundle args = new Bundle();
-//        args.putInt(ARG_ITEM_ID, runIdInt);
-//        childFragment.setArguments(args);
-//        FragmentTransaction transaction = getChildFragmentManager().beginTransaction();
-//        transaction.replace(R.id.map_container, childFragment).commit();
-//    }
-
-    @Override
-    public void onSaveInstanceState(Bundle outState) {
-        Log.e("onSaveInstanceState..", String.valueOf("maps"));
-        outState.putBoolean(MAPSTATE, true);
-
-        super.onSaveInstanceState(outState);
-//        mapFragment.onSaveInstanceState(outState);
-    }
-
-    @Override
-    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
-        super.onActivityCreated(savedInstanceState);
-        Log.e("onActivityCreated..", String.valueOf("maps"));
-//        mapFragment.onActivityCreated(savedInstanceState);
-        if (savedInstanceState != null) {
-            mRecuringBoolean = savedInstanceState.getBoolean(MAPSTATE);
-        }
-
-    }
-
-
     public ArrayList queryCoordinatesList(int id) {
-        String[] PROJECTION = {
-                COLUMN_RUN_ID,
-                COLUMN_TIME,
-                COLUMN_LATITUDE,
-                COLUMN_LONGITUDE,
-                COLUMN_ALTITUDE,
-                COLUMN_SPEED,
-                COLUMN_TIME_COUNTER,
-                COLUMN_TOTAL_DISTANCE
-        };
+
         String specificID = String.valueOf(id);
         String mSelectionClause = TrackContract.TrackingEntry.COLUMN_RUN_ID;
         String SELECTION = mSelectionClause + " = '" + specificID + "'";
-        String ORDER = " " + COLUMN_SPEED + " DESC LIMIT 1";
 
         try {
             cur = getActivity().getContentResolver()
@@ -348,11 +213,9 @@ public class DetailFragment extends Fragment implements OnMapReadyCallback {
                 while (cur.moveToNext()) {
                     double latitude = cur.getDouble(cur.getColumnIndex(COLUMN_LATITUDE));
                     double longitude = cur.getDouble(cur.getColumnIndex(COLUMN_LONGITUDE));
-//                    LatLng latLng = new LatLng(latitude, longitude);
                     here = new LatLng(latitude, longitude);
                     Log.i("Print Current Location1", String.valueOf(here));
                     coordinatesList.add(here);
-
                 }
             }
             if (cur != null) {
@@ -362,9 +225,7 @@ public class DetailFragment extends Fragment implements OnMapReadyCallback {
         } catch (Exception e) {
             Log.e("Path Error", e.toString());
         }
-
         return coordinatesList;
-
     }
 
     private double[] startLocation(int id) {
@@ -441,9 +302,6 @@ public class DetailFragment extends Fragment implements OnMapReadyCallback {
         try {
             Cursor cursor = getActivity().getContentResolver().query(TrackContract.TrackingEntry.CONTENT_URI_POST, PROJECTION_POST, mSelection, null, null);
 
-            String[] columnnames = cursor.getColumnNames();
-//            Log.e("columnnames..", Arrays.toString(columnnames));
-
             if (cursor != null && cursor.moveToFirst()) {
                 do {
                     int runColumnIndex = cursor.getColumnIndex(COLUMN_RUN_IDP);
@@ -489,7 +347,6 @@ public class DetailFragment extends Fragment implements OnMapReadyCallback {
                     String avrSpeed1Decimal = String.format("%.1f", mAvgSpeed);
                     String avrSpeedString = String.valueOf(avrSpeed1Decimal + " km/h");
 
-//                    Log.e("RUN LIsT FRAGMENrunType", String.valueOf(mRunType));
                     String mDate = formatDate(stopTime);
                     dateTextView.setText(mDate);
                     startTimeTextView.setText(mHoursStart);
@@ -517,7 +374,6 @@ public class DetailFragment extends Fragment implements OnMapReadyCallback {
         } catch (Exception e) {
             Log.e("Path Error123", e.toString());
         }
-
     }
 
     @Override
@@ -527,10 +383,6 @@ public class DetailFragment extends Fragment implements OnMapReadyCallback {
         double mStartLongitude = startLocation(runIdInt)[1];
         double mStopLatitude = stopLocation(runIdInt)[0];
         double mStopLongitude = stopLocation(runIdInt)[1];
-        Log.e("onMapReady..", String.valueOf(mStartLatitude));
-        Log.e("onMapReady..", String.valueOf(mStartLongitude));
-        Log.e("onMapReady..", String.valueOf(mStopLatitude));
-        Log.e("onMapReady..", String.valueOf(mStopLongitude));
 
         double mSouthLatitude;
         double mWestLongitude;
@@ -595,20 +447,7 @@ public class DetailFragment extends Fragment implements OnMapReadyCallback {
         mMap.animateCamera(CameraUpdateFactory.zoomTo(14), 2000, null);
 
         // Construct a CameraPosition focusing on Mountain View and animate the camera to that position.
-//        CameraPosition cameraPosition = new CameraPosition.Builder()
-//                .target(mStopPoint)               // Sets the center of the map to Mountain View
-//                .zoom(15)                   // Sets the zoom
-//                .bearing(0)                // Sets the orientation of the camera to east
-//                .tilt(30)                   // Sets the tilt of the camera to 30 degrees
-//                .build();                   // Creates a CameraPosition from the builder
-//        mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
 
-//        try {
-//            Thread.sleep(2500);
-//        } catch (InterruptedException ex) {
-//            Thread.currentThread().interrupt();
-
-//        }
         mMap.setOnMapLoadedCallback(new GoogleMap.OnMapLoadedCallback() {
             @Override
             public void onMapLoaded() {
@@ -618,213 +457,11 @@ public class DetailFragment extends Fragment implements OnMapReadyCallback {
                         Toast.makeText(getActivityCast(), getResources().getString(R.string.map_is_loaded),
                                 Toast.LENGTH_SHORT).show();
                         mMapBitmap = bitmap;
-//                        mapScreenShottedTemp.setImageBitmap(mMapBitmap);
+
                     }
                 });
-
             }
         });
-
-    }
-
-
-    //    public Bitmap screenshotMap() {
-//        mMap.setOnMapLoadedCallback(new GoogleMap.OnMapLoadedCallback() {
-//            @Override
-//            public void onMapLoaded() {
-//                mMap.snapshot(new GoogleMap.SnapshotReadyCallback() {
-//                    @Override
-//                    public void onSnapshotReady(Bitmap bitmap) {
-//                        Toast.makeText(getActivityCast(),"screenshotMap.setOnMapLoadedCallback,onMapLoaded,onSnapshotReady",
-//                                Toast.LENGTH_SHORT).show();
-//                        mMapBitmap = bitmap;
-////                        mapScreenShottedTemp.setImageBitmap(mMapBitmap);
-//                    }
-//                });
-//
-//            }
-//        });
-////        final GoogleMap.SnapshotReadyCallback callback = new GoogleMap.SnapshotReadyCallback() {
-////
-////            @Override
-////            public void onSnapshotReady(Bitmap snapshot) {
-////                mMapBitmap = snapshot;
-////
-////
-////            }
-////        };
-////        mMap.setOnMapLoadedCallback(new GoogleMap.OnMapLoadedCallback() {
-////            @Override
-////            public void onMapLoaded() {
-////                mMap.snapshot(callback);
-//////                mapScreenShottedTemp.setImageBitmap(mMapBitmap);
-////            }
-////        });
-//        return mMapBitmap;
-//
-//
-//    }
-    /*  Method which will take screenshot on Basis of Screenshot Type ENUM  */
-    private void takeScreenshot() {
-        Bitmap bitmap = null;
-//        MapFragmentII.screenshotMap();
-//        mMapBitmap = screenshotMap();
-
-
-        mapScreenShottedTemp.setImageBitmap(mMapBitmap);
-        mMapFrame.setVisibility(View.INVISIBLE);
-        mapScreenShottedTemp.setVisibility(View.VISIBLE);
-        runIdTextView.setText("  G-Track");
-        dateTextView.setText("ScreenShot");
-
-//                Screenshot taken after map view replaced by bitmap
-        mSharedImageBitmap = getScreenShot(mScreenShotted);
-
-//                After screenshot taken bitmapg oes invisible
-//        mapScreenShottedTemp.setVisibility(View.INVISIBLE);
-//        mMapFrame.setVisibility(View.VISIBLE);
-
-
-        //If bitmap is not null
-        if (mSharedImageBitmap != null) {
-            showScreenShotImage(mSharedImageBitmap);//show bitmap over imageview
-
-            File saveFile = getMainDirectoryName(getActivityCast());//get the path to save screenshot
-
-            File sharedFile = store(mSharedImageBitmap, "screenshot" + ".jpg", saveFile);//save the screenshot to selected path
-            Uri uri = FileProvider.getUriForFile(getActivityCast(), BuildConfig.APPLICATION_ID + ".provider", sharedFile);
-            Log.e("shareScreenshot", String.valueOf(uri));
-//            shareScreenshot(file);//finally share screenshot
-            showScreenShotToAccept(sharedFile);
-
-        } else
-            //If bitmap is null show toast message
-            Toast.makeText(getActivityCast(), R.string.screenshot_take_failed, Toast.LENGTH_SHORT).show();
-
-    }
-
-    /*  Show screenshot Bitmap */
-    private void showScreenShotImage(Bitmap bitmap) {
-//        mScreenShotPreview.setImageBitmap(bitmap);
-
-    }
-
-    public void showScreenShotToAccept(final File sharedFile) {
-
-        ImageView image = null;
-        Uri uri = FileProvider.getUriForFile(getActivityCast(), BuildConfig.APPLICATION_ID + ".provider", sharedFile);
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-            View dialogView = getLayoutInflater().inflate(R.layout.dialog_box, null);
-//            View dialogView = getLayoutInflater().inflate(R.layout.dialog_box, null, false);
-            image = dialogView.findViewById(R.id.image1);
-            Bitmap tempSmallerBitmap = getResizedBitmap(mSharedImageBitmap, 400, 800);
-
-            image.setImageBitmap(tempSmallerBitmap);
-//            Picasso.with(getActivityCast()).load(uri).resize(600, 1200).into(image);
-        }
-        // Create an AlertDialog.Builder and set the message, and click listeners
-        // for the positive and negative buttons on the dialog.
-        if (image.getParent() != null)
-            ((ViewGroup) image.getParent()).removeView(image);
-        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-        builder.setMessage(R.string.question_to_accept);
-        builder.setView(image);
-        builder.setPositiveButton(R.string.accept, new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int id) {
-                // User clicked the "Delete" button, so delete the item.
-                //remove from DB
-                shareScreenshot(sharedFile);
-            }
-        });
-        builder.setNegativeButton(R.string.dismiss, new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int id) {
-                // User clicked the "Cancel" button, so dismiss the dialog
-                if (dialog != null) {
-                    dialog.dismiss();
-                }
-
-            }
-        });
-        // Create and show the AlertDialog
-        AlertDialog alertDialog = builder.create();
-        alertDialog.show();
-        alertDialog.setCanceledOnTouchOutside(false);
-
-    }
-
-    /*  Share Screenshot  */
-    private void shareScreenshot(File fileImagePath) {
-//        Uri uri = Uri.fromFile(file);//Convert file path into Uri for sharing
-        Uri uri = FileProvider.getUriForFile(getActivityCast(), BuildConfig.APPLICATION_ID + ".provider", fileImagePath);
-        Log.e("shareScreenshot", String.valueOf(uri));
-        Intent intent = new Intent();
-//        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-        intent.setAction(Intent.ACTION_SEND);
-        intent.setType("image/*");
-        intent.putExtra(android.content.Intent.EXTRA_SUBJECT, R.string.sharing_title);
-        intent.putExtra(android.content.Intent.EXTRA_TEXT, getString(R.string.sharing_text));
-        intent.putExtra(Intent.EXTRA_STREAM, uri);//pass uri here
-        startActivity(Intent.createChooser(intent, getString(R.string.sharing_title)));
-    }
-
-
-    public Bitmap getResizedBitmap(Bitmap bm, int newWidth, int newHeight) {
-        int width = bm.getWidth();
-        int height = bm.getHeight();
-        float scaleWidth = ((float) newWidth) / width;
-        float scaleHeight = ((float) newHeight) / height;
-        // CREATE A MATRIX FOR THE MANIPULATION
-        Matrix matrix = new Matrix();
-        // RESIZE THE BIT MAP
-        matrix.postScale(scaleWidth, scaleHeight);
-
-        // "RECREATE" THE NEW BITMAP
-        Bitmap resizedBitmap = Bitmap.createBitmap(
-                bm, 0, 0, width, height, matrix, false);
-        bm.recycle();
-        return resizedBitmap;
-    }
-
-    /*  Method which will return Bitmap after taking screenshot. We have to pass the view which we want to take screenshot.  */
-    public Bitmap getScreenShot(View view) {
-        View screenView = view.getRootView();
-        screenView.setDrawingCacheEnabled(true);
-        Bitmap bitmap = Bitmap.createBitmap(screenView.getDrawingCache());
-        screenView.setDrawingCacheEnabled(false);
-        return bitmap;
-    }
-
-
-    /*  Create Directory where screenshot will save for sharing screenshot  */
-    public File getMainDirectoryName(Context context) {
-        //Here we will use getExternalFilesDir and inside that we will make our Demo folder
-        //benefit of getExternalFilesDir is that whenever the app uninstalls the images will get deleted automatically.
-        File mainDir = new File(
-                context.getExternalFilesDir(Environment.DIRECTORY_PICTURES), "Demo");
-
-        //If File is not present create directory
-        if (!mainDir.exists()) {
-            if (mainDir.mkdir())
-                Log.e("Create Directory", "Main Directory Created : " + mainDir);
-        }
-        return mainDir;
-    }
-
-    /*  Store taken screenshot into above created path  */
-    public File store(Bitmap bm, String fileName, File saveFilePath) {
-        File dir = new File(saveFilePath.getAbsolutePath());
-        if (!dir.exists())
-            dir.mkdirs();
-        File file = new File(saveFilePath.getAbsolutePath(), fileName);
-        try {
-            FileOutputStream fOut = new FileOutputStream(file);
-            bm.compress(Bitmap.CompressFormat.JPEG, 100, fOut);
-            fOut.flush();
-            fOut.close();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return file;
     }
 
     public void onShareClick(int id, String time, Double distance, Double speed, int runType) {
@@ -835,9 +472,6 @@ public class DetailFragment extends Fragment implements OnMapReadyCallback {
         intent.putExtra(EXTRA_TOTAL_DISTANCE, distance);
         intent.putExtra(EXTRA_AVG_SPEED, speed);
         intent.putExtra(EXTRA_RUNTYPE, runType);
-
-//        Uri currentProductUri = ContentUris.withAppendedId(TrackContract.TrackingEntry.CONTENT_URI, id);
-//        intent.setData(currentProductUri);
         startActivity(intent);
     }
 }

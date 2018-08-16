@@ -39,23 +39,15 @@ import com.example.android.geotrackshare.Utils.SqliteExporter;
 import java.util.Arrays;
 
 import static android.support.constraint.Constraints.TAG;
-import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_AVR_SPEED;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_AVR_SPEEDP;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_FAVORITEP;
-import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_MAX_ALT;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_MAX_ALTP;
-import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_MAX_SPEED;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_MAX_SPEEDP;
-import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_RUNTYPE;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_RUNTYPEP;
-import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_RUN_ID;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_RUN_IDP;
-import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_START_TIME;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_START_TIMEP;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_STOP_TIMEP;
-import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_TIME_COUNTER;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_TIME_COUNTERP;
-import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_TOTAL_DISTANCE;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_TOTAL_DISTANCEP;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.CONTENT_URI_POST;
 import static com.example.android.geotrackshare.DetailActivity.ACTION_FROM_RUNLISTFRAGMENT;
@@ -69,31 +61,12 @@ public class RunListFragment extends Fragment implements LoaderManager.LoaderCal
 
     public static final String LOG_TAG = RunListFragment.class.getName();
     public static final String EXTRA_RUN_ID = "EXTRA_RUN_ID";
-    public static final String EXTRA_START_TIME = "EXTRA_START_TIME";
-    public static final String EXTRA_STOP_TIME = "EXTRA_STOP_TIME";
     public static final String EXTRA_RUNTYPE = "EXTRA_RUNTYPE";
     public static final String EXTRA_TOTAL_DISTANCE = "EXTRA_TOTAL_DISTANCE";
-    public static final String EXTRA_MAX_ALT = "EXTRA_MAX_ALT";
-    public static final String EXTRA_MAX_SPEED = "EXTRA_MAX_SPEED";
     public static final String EXTRA_AVG_SPEED = "EXTRA_AVG_SPEED";
     public static final String EXTRA_TOTAL_TIME = "EXTRA_TOTAL_TIME";
 
-
-
-    //   Just a rough idea how to sort in query
-    public static final String SORT_ORDER_ID = TrackContract.TrackingEntry._ID + " DESC";
     private static final int FAV_LOADER = 0;
-    private static final String[] PROJECTION = {
-            TrackContract.TrackingEntry._ID,
-            COLUMN_RUN_ID,
-            COLUMN_START_TIME,
-            COLUMN_RUNTYPE,
-            COLUMN_TOTAL_DISTANCE,
-            COLUMN_MAX_ALT,
-            COLUMN_MAX_SPEED,
-            COLUMN_AVR_SPEED,
-            COLUMN_TIME_COUNTER
-    };
 
     public static final String[] PROJECTION_POST = {
             TrackContract.TrackingEntry._ID,
@@ -124,10 +97,6 @@ public class RunListFragment extends Fragment implements LoaderManager.LoaderCal
         String state = Environment.getExternalStorageState();
         return Environment.MEDIA_MOUNTED.equals(state);
     }
-
-//    public Cursor querY() {
-//        return getActivity().getContentResolver().query(TrackContract.TrackingEntry.CONTENT_URI, null, null, null, SORT_ORDER_ID);
-//    }
 
     public static void updateFavouritePost(final int favourite, final int id, final Context context) {
         Log.e(TAG, "saving " + favourite);
@@ -222,9 +191,7 @@ public class RunListFragment extends Fragment implements LoaderManager.LoaderCal
                 getString(R.string.run_settings_order_by_key)
         );
 
-//        String SELECTION = COLUMN_RUN_ID + " GROUP BY " + COLUMN_RUN_ID;
         String SORT_ORDER = COLUMN + " DESC ";
-
 
         // Perform a query using CursorLoader
         return new CursorLoader(getActivity(),    // Parent activity context
@@ -271,19 +238,6 @@ public class RunListFragment extends Fragment implements LoaderManager.LoaderCal
         outState.putParcelable(BUNDLE_RECYCLER_LAYOUT, tracksRecyclerView.getLayoutManager().onSaveInstanceState());
     }
 
-//    public static String getAppDir() {
-//
-//        return mContext.getFilesDir() + "/" + mContext.getString(R.string.app_name);
-//    }
-//
-//    public static File createDirIfNotExist() {
-//        String path = getAppDir()+ "/backup";
-//        File dir = new File(path);
-//        if (!dir.exists()) {
-//            dir.mkdir();
-//        }
-//        return dir;
-//    }
 
     public void onItemClick(int id) {
         Long idLong = (long) id;
@@ -291,8 +245,6 @@ public class RunListFragment extends Fragment implements LoaderManager.LoaderCal
         intent.setAction(ACTION_FROM_RUNLISTFRAGMENT);
         intent.putExtra(EXTRA_RUN_ID, idLong);
 
-//        Uri currentProductUri = ContentUris.withAppendedId(TrackContract.TrackingEntry.CONTENT_URI, id);
-//        intent.setData(currentProductUri);
         startActivity(intent);
     }
 
@@ -317,8 +269,6 @@ public class RunListFragment extends Fragment implements LoaderManager.LoaderCal
         // Set the adapter on the {@link ListView}
         // so the list can be populated in the user interface
         tracksRecyclerView.setAdapter(mTracksAdapter);
-//        tracksRecyclerView.addItemDecoration(new DividerItemDecoration(getActivity(), DividerItemDecoration.VERTICAL));
-//        tracksRecyclerView.addItemDecoration(new DividerItemDecoration(getActivity(), DividerItemDecoration.HORIZONTAL));
         tracksRecyclerView.setItemAnimator(new DefaultItemAnimator());
 
         mEmptyStateTextView = view.findViewById(R.id.empty_view_runs);
@@ -329,30 +279,22 @@ public class RunListFragment extends Fragment implements LoaderManager.LoaderCal
         getLoaderManager().initLoader(FAV_LOADER, null, this);
         mDbHelper = new TrackDbHelper(getActivity());
         mContext = getActivity();
-//        fileName = createBackupFileName(runID);
 
         return view;
     }
-
-//    /* Checks if external storage is available to at least read */
-//    public static boolean isExternalStorageReadable() {
-//        String state = Environment.getExternalStorageState();
-//        return Environment.MEDIA_MOUNTED.equals(state) ||
-//                Environment.MEDIA_MOUNTED_READ_ONLY.equals(state);
-//    }
 
     public void shareViaEmail(int runId) {
         try {
             SQLiteDatabase database = mDbHelper.getReadableDatabase();
             String filelocation1 = SqliteExporter.export(database, runId);
             String file_name = SqliteExporter.createBackupFileName(runId);
-//            File Root= Environment.getExternalStorageDirectory();
-//            String filelocation=Root.getAbsolutePath() + folder_name + "/" + file_name;
+
             Intent intent = new Intent(Intent.ACTION_SENDTO);
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-//            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+
             intent.setType("text/plain");
-            String message = "File to be shared is " + file_name + ".";
+            String sarharingMessage = getString(R.string.sharing_message);
+            String message = sarharingMessage + " " + file_name + ".";
             intent.putExtra(Intent.EXTRA_SUBJECT, "Subject");
             intent.putExtra(Intent.EXTRA_STREAM, Uri.parse("file://" + filelocation1));
             intent.putExtra(Intent.EXTRA_TEXT, message);
@@ -370,8 +312,6 @@ public class RunListFragment extends Fragment implements LoaderManager.LoaderCal
         intent.setAction(ACTION_FROM_RUNLISTFRAGMENT);
         intent.putExtra(EXTRA_RUN_ID, id);
 
-//        Uri currentProductUri = ContentUris.withAppendedId(TrackContract.TrackingEntry.CONTENT_URI, id);
-//        intent.setData(currentProductUri);
         startActivity(intent);
     }
 

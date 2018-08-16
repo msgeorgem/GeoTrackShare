@@ -46,7 +46,6 @@ public class AdvancedSettingsActivity extends AppCompatActivity {
     }
     public static class TracksPreferenceFragment extends PreferenceFragment implements Preference.OnPreferenceChangeListener {
 
-
         @Override
         public void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
@@ -65,9 +64,7 @@ public class AdvancedSettingsActivity extends AppCompatActivity {
             Preference screenOnPreference = findPreference(getString(R.string.screen_on_switch_key));
             bindPreferenceSummaryToValue5(screenOnPreference);
 
-
         }
-
 
         @Override
         public boolean onPreferenceChange(Preference preference, Object value) {
@@ -85,9 +82,7 @@ public class AdvancedSettingsActivity extends AppCompatActivity {
             }
 
             return true;
-
         }
-
 
         private void bindPreferenceSummaryToValue2(Preference preference) {
             preference.setOnPreferenceChangeListener(this);
@@ -116,7 +111,5 @@ public class AdvancedSettingsActivity extends AppCompatActivity {
             preferenceBooleanScreenOn = preferences.getBoolean(preference.getKey(), true);
             onPreferenceChange(preference, preferenceBooleanScreenOn);
         }
-
     }
-
 }

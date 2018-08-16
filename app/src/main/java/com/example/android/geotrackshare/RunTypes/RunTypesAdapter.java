@@ -18,11 +18,6 @@ import java.util.ArrayList;
  */
 
 public class RunTypesAdapter extends ArrayAdapter<RunType> {
-    /**
-     * Resource ID for the background color for this list of words
-     */
-    private int mColorResourceId;
-
 
     /**
      * This is our own custom constructor (it doesn't mirror a superclass constructor).
@@ -81,7 +76,6 @@ public class RunTypesAdapter extends ArrayAdapter<RunType> {
         RunType currentItem = getItem(position);
 
         viewHolder.titleTextView.setText(currentItem.getTitle());
-//        viewHolder.descriptionTextView.setText(currentItem.getDescription());
 
         // Get the image resource ID from the current AndroidFlavor object and
         // set the image to iconView
@@ -95,28 +89,19 @@ public class RunTypesAdapter extends ArrayAdapter<RunType> {
             // Otherwise hide the ImageView (set visibility to GONE)
             viewHolder.iconView.setVisibility(View.GONE);
         }
-//        // Set the theme color for the list item
-//        // Find the color that the resource ID maps to
-//        int color = ContextCompat.getColor(getContext(), mColorResourceId);
-//        // Set the background color of the text container View
-//        viewHolder.textContainer.setBackgroundColor(color);
-
         return convertView;
 
     }
 
     class ViewHolder {
         private TextView titleTextView;
-        private TextView descriptionTextView;
         private ImageView iconView;
-        private View textContainer;
 
         public ViewHolder(@NonNull View view) {
             this.titleTextView = view
                     .findViewById(R.id.run_type_text_view);
             this.iconView = view
                     .findViewById(R.id.icon);
-//            this.textContainer = view.findViewById(R.id.text_container);
         }
     }
 }

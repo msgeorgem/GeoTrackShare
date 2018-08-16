@@ -79,13 +79,7 @@ public class RealTimeFragment extends Fragment implements
     private static final long CHECK_NO_MOVE_TIME_IN_MILLISECONDS = 180000; // 3 min
     // Keys for storing activity state in the Bundle.
     private final static String KEY_REQUESTING_LOCATION_UPDATES = "requesting-location-updates";
-    private final static String KEY_LOCATION = "location";
-    private final static String KEY_ALTITUDE = "altitude";
-    private final static String KEY_SPEED = "speed";
     private final static String KEY_LAST_RUN = "KEY_LAST_RUN";
-    private final static String KEY_LAST_UPDATED_TIME = "last-updated-time-string";
-    private final static String KEY_LAST_UPDATED_ETIME = "last-updated-elapsedtime-string";
-    private final static String KEY_LAST_UPDATED_TDISTANCE = "last-updated-total-distance";
     /**
      * The desired interval for location updates. Inexact. Updates may be more or less frequent.
      */
@@ -96,7 +90,6 @@ public class RealTimeFragment extends Fragment implements
      */
 
     public static String UPDATE_INTERVAL_IN_MILLISECONDS_STRING = "";
-    public static String START_TIME;
     public static String DELETE_LAST_ROWS_STRING = "";
     public static int RUN_TYPE_VALUE;
     public static String RUN_TYPE_KEY = "RUN_TYPE_KEY";
@@ -116,7 +109,7 @@ public class RealTimeFragment extends Fragment implements
     public static boolean DISABLE_AUTO_CLOSE;
     public static Context mContext;
     public static SharedPreferences sharedPrefs, mSharedPrefsRunType;
-    public String tmDevice, tmSerial, androidId, deviceId;
+    public String tmDevice, androidId;
     public TelephonyManager tm;
     /**
      * Time when the location was updated represented as a String.
@@ -144,11 +137,6 @@ public class RealTimeFragment extends Fragment implements
     private Button mRequestLocationUpdatesButton;
     private Button mRemoveLocationUpdatesButton;
     private TextView mLastUpdateTimeTextView;
-    private TextView mLatitudeTextView;
-    private TextView mLongitudeTextView;
-    private TextView mPrevLatitudeTextView;
-    private TextView mPrevLongitudeTextView;
-    private TextView mDevIDTextView;
     private TextView mAltitudeTextView;
     private TextView mSpeedTextView;
     private TextView mMaxSpeedTextView;
@@ -275,21 +263,6 @@ public class RealTimeFragment extends Fragment implements
         updateConstants();
 
 
-//        Log.i("update interval", String.valueOf(UPDATE_INTERVAL_IN_MILLISECONDS));
-
-//        Integer i = R.string.update_interval_by_default_ultimate;
-//        String numberAsString = "1234";
-//
-//        long number = Long.parseLong(getResources().getString(R.string.update_interval_by_default_ultimate));
-//
-//        String key = getString(R.string.update_interval_by_key);
-
-
-//        UPDATE_INTERVAL_IN_MILLISECONDS = sharedPrefs.getLong(
-//                MY_PREFERENCE_KEY,
-//                number
-//        );
-
         // Locate the UI widgets.
         mRunNumber = mView.findViewById(R.id.run_number);
         mLocation = mView.findViewById(R.id.locate_on_map);
@@ -298,11 +271,6 @@ public class RealTimeFragment extends Fragment implements
 
         mAddressOutputTextView = mView.findViewById(R.id.address_text);
 
-//        mLatitudeTextView = mView.findViewById(R.id.latitude_text);
-//        mLongitudeTextView = mView.findViewById(R.id.longitude_text);
-
-//        mPrevLatitudeTextView = mView.findViewById(R.id.prev_latitude_text);
-//        mPrevLongitudeTextView = mView.findViewById(R.id.prev_longitude_text);
         mIntervalTextView = mView.findViewById(R.id.interval);
         mDeleteTextView = mView.findViewById(R.id.delete_loops);
 
@@ -335,7 +303,6 @@ public class RealTimeFragment extends Fragment implements
         mAndroid_idLabel = "Android ID";
         mIntervalLabel = "Interval";
         mDeleteLabel = "Delete loops";
-//        mAndroid_id = Secure.getString(getContext().getContentResolver(), Secure.ANDROID_ID);
 
         mLastUpdateTime = "";
         mElapsedTime = "";
@@ -347,18 +314,9 @@ public class RealTimeFragment extends Fragment implements
         final Double mSelectedLatitude = createNewLocation()[0];
         final Double mSelectedLongitude = createNewLocation()[1];
 
-        // Permission checked below
-//        readPhoneState();
-
         tm = (TelephonyManager) getContext().getSystemService(Context.TELEPHONY_SERVICE);
         androidId = "" + Settings.Secure.getString(mContext.getContentResolver(), Settings.Secure.ANDROID_ID);
-//        deviceUuid = new UUID(androidId.hashCode(), ((long)tmDevice.hashCode() << 32) | tmSerial.hashCode());
-//        deviceId = deviceUuid.toString();
 
-//        WifiManager wm = (WifiManager)Ctxt.getSystemService(Context.WIFI_SERVICE);
-//        return wm.getConnectionInfo().getMacAddress();
-//        mDevIDTextView.setText(String.format(Locale.ENGLISH, "%s: %s", mAndroid_idLabel,
-//                mAndroid_id));
         mRunNumber.setText(String.format(Locale.ENGLISH, "%s: %s",
                 mLastRunLabel, mLast_ID));
 
@@ -410,7 +368,7 @@ public class RealTimeFragment extends Fragment implements
         mRemoveLocationUpdatesButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-//                mService.stopLocationUpdates();
+
                 mService.stopUpdatesButtonHandler();
                 mRunNumber.setText(String.format(Locale.ENGLISH, "%s: %s",
                         mLastRunLabel, mCurrentId));
@@ -545,8 +503,6 @@ public class RealTimeFragment extends Fragment implements
         super.onViewStateRestored(savedInstanceState);
         if (savedInstanceState != null) {
             if (savedInstanceState.getBoolean(KEY_REQUESTING_LOCATION_UPDATES, mRequestingLocationUpdates)) {
-//                onlyUIupdate();
-//                setButtonsEnabledState();
                 {
                     Log.d(TAG, "mRequestingLocationUpdates is TRUE");
                 }
@@ -605,12 +561,8 @@ public class RealTimeFragment extends Fragment implements
         super.onPause();
         Log.d(TAG, "onPause()");
         LocalBroadcastManager.getInstance(mContext).unregisterReceiver(myReceiver);
-        // Remove location updates to save battery.
-        //stopLocationUpdates();
-//        mSensorManager.unregisterListener((SensorEventListener) mContext);
+
     }
-
-
     /**
      * Shows a {@link Snackbar}.
      *
@@ -627,33 +579,6 @@ public class RealTimeFragment extends Fragment implements
                 .setAction(getString(actionStringId), listener).show();
     }
 
-    /**
-     * Return the current state of the permissions needed.
-     */
-    private boolean checkPermissionsFineLocation() {
-        int permissionState = ActivityCompat.checkSelfPermission(mContext,
-                Manifest.permission.ACCESS_FINE_LOCATION);
-        return permissionState == PackageManager.PERMISSION_GRANTED;
-    }
-
-    private boolean checkPermissionsReadPhoneState() {
-        int permissionState = ActivityCompat.checkSelfPermission(mContext,
-                Manifest.permission.READ_PHONE_STATE);
-        return permissionState == PackageManager.PERMISSION_GRANTED;
-    }
-
-
-    private void readPhoneState() {
-        if (checkPermissionsReadPhoneState()) {
-
-//            tmDevice = "" + tm.getDeviceId();
-//            tmSerial = "" + tm.getSimSerialNumber();
-            mDevIDTextView.setText(String.format(Locale.ENGLISH, "%s: %s", mAndroid_idLabel,
-                    tmDevice));
-        } else if (!checkPermissionsReadPhoneState()) {
-            requestPermissions();
-        }
-    }
 
     private void requestPermissions() {
         boolean shouldProvideRationale =
@@ -781,10 +706,6 @@ public class RealTimeFragment extends Fragment implements
             mLastUpdateTimeMillis = intent.getLongExtra(LocationUpdatesService.EXTRA_LAST_TIME_UPDATE, 0);
             mCurrentAddress = intent.getStringExtra(LocationUpdatesService.EXTRA_ADDRESS);
 
-//            mLatitudeTextView.setText(String.format(Locale.ENGLISH, "%s: %f", mLatitudeLabel,
-//                    mCurrentLatitude));
-//            mLongitudeTextView.setText(String.format(Locale.ENGLISH, "%s: %f", mLongitudeLabel,
-//                    mCurrentLongitude));
             mAltitudeTextView.setText(String.format(Locale.ENGLISH, "%s: %f", mAltitudeLabel,
                     mCurrentAltitude));
             mSpeedTextView.setText(String.format(Locale.ENGLISH, "%s: %.1f", mSpeedLabel,
@@ -796,15 +717,8 @@ public class RealTimeFragment extends Fragment implements
                     mMaxSpeedLabel, mMaxSpeed));
             mMaxAltitudeTextView.setText(String.format(Locale.ENGLISH, "%s: %f",
                     mMaxAltitudeLabel, mMaxAltitude));
-//            mMinAltitudeTextView.setText(String.format(Locale.ENGLISH, "%s: %f",
-//                    mMinAltitudeLabel, mMinAltitude));
             mTotalDistanceTextView.setText(String.format(Locale.ENGLISH, "%s: %.3f",
                     mDistanceLabel, mTotalDistance));
-
-//            mPrevLatitudeTextView.setText(String.format(Locale.ENGLISH, "%s: %f", mPrevLatitudeLabel,
-//                    mPreviousLatitude));
-//            mPrevLongitudeTextView.setText(String.format(Locale.ENGLISH, "%s: %f", mPrevLongitudeLabel,
-//                    mPreviousLongitude));
 
             mElapsedTime = String.format("%02d:%02d:%02d", TimeUnit.MILLISECONDS.toHours(mElapsedTimeMillis),
                     TimeUnit.MILLISECONDS.toMinutes(mElapsedTimeMillis) % TimeUnit.HOURS.toMinutes(1),
@@ -827,7 +741,6 @@ public class RealTimeFragment extends Fragment implements
                 mAddressOutputTextView.setText(R.string.in_motion);
             }
         }
-
     }
 
     @Override
@@ -858,7 +771,6 @@ public class RealTimeFragment extends Fragment implements
     public void onNothingSelected(AdapterView<?> adapterView) {
 
     }
-
     /**
      * Receiver for broadcasts sent by {@link LocationUpdatesService}.
      */

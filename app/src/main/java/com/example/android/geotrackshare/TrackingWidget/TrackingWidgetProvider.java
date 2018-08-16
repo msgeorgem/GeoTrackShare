@@ -44,7 +44,7 @@ public class TrackingWidgetProvider extends AppWidgetProvider {
     private static final String TAG = TrackingWidgetProvider.class.getSimpleName();
 
     public static String ACTION_FROM_SERVICE = "ACTION_FROM_SERVICE";
-    public static String EXTRA_RUN_ID_FROM_WIDGET = "EXTRA_RUN_ID_FROM_WIDGET";
+
     private RemoteViews mRemoteViews;
     private int mRunId;
 
@@ -92,29 +92,8 @@ public class TrackingWidgetProvider extends AppWidgetProvider {
 
         } else {
 
-//            Double mTotalDistance = intent.getDoubleExtra(LocationUpdatesService.EXTRA_TOTAL_DISTANCE, 0);
-//            int precision = 1000; //keep 3 digits
-//            String mTotalDistanceString = String.valueOf((float) (Math.floor(mTotalDistance * precision + .5) / precision));
-//            remoteViews.setTextViewText(R.id.tracking_distance_dynamic, mTotalDistanceString);
-
-            String runNumber = "No Tracking";
+            String runNumber = context.getString(R.string.no_tracking);
             mRemoteViews.setTextViewText(R.id.run_number, runNumber);
-
-//            Long mElapsedTimeMillis = intent.getLongExtra(LocationUpdatesService.EXTRA_TOTAL_TIME, 0);
-//            String mElapsedTime = LocationUpdatesService.getDateFromMillis(mElapsedTimeMillis);
-//            remoteViews.setTextViewText(R.id.tracking_time_dynamic, mElapsedTime);
-//
-//            String mMaxAltitude = String.valueOf(intent.getDoubleExtra(LocationUpdatesService.EXTRA_MAX_ALTITUDE, 0));
-//            remoteViews.setTextViewText(R.id.max_altitude_dynamic, mMaxAltitude);
-//
-//            String mAverageSpeed = String.valueOf(intent.getDoubleExtra(LocationUpdatesService.EXTRA_AVG_SPEED, 0));
-//            remoteViews.setTextViewText(R.id.avg_speed_dynamic, mAverageSpeed);
-//
-//            String mCurrentAltitude = String.valueOf(intent.getDoubleExtra(LocationUpdatesService.EXTRA_ALTITUDE, 0));
-//            remoteViews.setTextViewText(R.id.current_altitude_dynamic, mCurrentAltitude);
-//
-//            String mCurrentSpeed = String.valueOf(intent.getDoubleExtra(LocationUpdatesService.EXTRA_SPEED, 0));
-//            remoteViews.setTextViewText(R.id.current_speed_dynamic, mCurrentSpeed);
 
             super.onReceive(context, intent);
         }
@@ -127,20 +106,18 @@ public class TrackingWidgetProvider extends AppWidgetProvider {
         //Start the intent service update widget action, the service takes care of updating the widgets UI
 
         if (!requestingLocationUpdates(context)) {
-            String runNumber = "No Tracking";
+            String runNumber = context.getString(R.string.no_tracking);
             mRemoteViews.setTextViewText(R.id.run_number, runNumber);
         }
 
         for (int widgetId : appWidgetIds) {
             mRemoteViews = new RemoteViews(context.getPackageName(), R.layout.tracking_widget);
             Intent intentActivity = new Intent(context, MainActivity.class);
-//            intentActivity.setAction(ACTION_FROM_WIDGET);
-//            intentActivity.putExtra(EXTRA_RUN_ID_FROM_WIDGET, mRunId);
+
             PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intentActivity, 0);
             mRemoteViews.setOnClickPendingIntent(R.id.tracking_widget, pendingIntent);
 
             appWidgetManager.updateAppWidget(widgetId, mRemoteViews);
-
         }
     }
 

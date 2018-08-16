@@ -32,9 +32,6 @@ public class MainActivity extends AppCompatActivity
     public static String WALK = "WALK";
     public static String CAR = "CAR";
 
-
-    SharedPreferences sharedPrefs;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -73,7 +70,6 @@ public class MainActivity extends AppCompatActivity
         // Sets the Toolbar to act as the ActionBar for this Activity window.
         // Make sure the toolbar exists in the activity and is not null
         setSupportActionBar(toolbar);
-
 
         cm = (ConnectivityManager)
                 getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -118,17 +114,6 @@ public class MainActivity extends AppCompatActivity
             super.onBackPressed();
         }
     }
-
-//    @Override
-//    public boolean onOptionsItemSelected(MenuItem item) {
-//        int id = item.getItemId();
-//        if (id == R.id.action_settings) {
-//            Intent settingsIntent = new Intent(this, SettingsActivity.class);
-//            startActivity(settingsIntent);
-//            return true;
-//        }
-//        return super.onOptionsItemSelected(item);
-//    }
 
     @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {

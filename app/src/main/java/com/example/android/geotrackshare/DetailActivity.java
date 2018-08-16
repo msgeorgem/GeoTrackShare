@@ -21,7 +21,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowInsets;
 
-import com.example.android.geotrackshare.Data.TrackContract;
 import com.example.android.geotrackshare.Data.TrackLoader;
 
 import static com.example.android.geotrackshare.AdvancedSettingsActivity.preferenceBooleanTheme;
@@ -37,19 +36,9 @@ public class DetailActivity extends AppCompatActivity
 
 
     public static final String LOG_TAG = DetailActivity.class.getSimpleName();
-    private static final String BUNDLE_RECYCLER_LAYOUT = "DetailActivity.clipsRecyclerView.activity_detail";
-    public static String ACTION_FROM_WIDGET = "ACTION_FROM_WIDGET";
     public static String ACTION_FROM_RUNLISTFRAGMENT = "ACTION_FROM_RUNLISTFRAGMENT";
 
-    //    private static final String API_key = BuildConfig.API_KEY;
-    private static final String[] PROJECTIONID = {
-            TrackContract.TrackingEntry.COLUMN_RUN_ID,
-    };
-
-
-    public static String CURRENT_RUN_ID;
     public static SharedPreferences favPrefs;
-    private final String MDB_SHARE_HASHTAG = "IMDB Source";
 
     private Cursor mCursor;
     private long mStartId;
@@ -94,9 +83,6 @@ public class DetailActivity extends AppCompatActivity
                 mUpButton.animate()
                         .alpha((state == ViewPager.SCROLL_STATE_IDLE) ? 1f : 0f)
                         .setDuration(300);
-//                DetailFragment.fab.animate()
-//                        .alpha((state == ViewPager.SCROLL_STATE_IDLE) ? 1f : 0f)
-//                        .setDuration(100);
             }
 
             @Override
@@ -164,7 +150,6 @@ public class DetailActivity extends AppCompatActivity
         // Select the start ID
         if (mStartId > 0) {
             mCursor.moveToFirst();
-            // TODO: optimize
             while (!mCursor.isAfterLast()) {
                 if (mCursor.getInt(TrackLoader.Query.COLUMN_RUN_IDP) == mStartId) {
                     Log.e("Query.COLUMN_RUN_IDP", String.valueOf(TrackLoader.Query.COLUMN_RUN_IDP));
@@ -196,7 +181,6 @@ public class DetailActivity extends AppCompatActivity
             super.setPrimaryItem(container, position, object);
             DetailFragment fragment = (DetailFragment) object;
             if (fragment != null) {
-//                mSelectedItemUpButtonFloor = fragment.getUpButtonFloor();
                 updateUpButtonPosition();
             }
         }

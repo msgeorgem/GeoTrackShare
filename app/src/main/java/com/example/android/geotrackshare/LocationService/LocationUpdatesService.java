@@ -268,23 +268,7 @@ public class LocationUpdatesService extends Service implements SensorEventListen
             }
         };
     }
-//    private void getLastLocation() {
-//        try {
-//            mFusedLocationClient.getLastLocation()
-//                    .addOnCompleteListener(new OnCompleteListener<Location>() {
-//                        @Override
-//                        public void onComplete(@NonNull Task<Location> task) {
-//                            if (task.isSuccessful() && task.getResult() != null) {
-//                                mLocation = task.getResult();
-//                            } else {
-//                                Log.w(TAG, "Failed to get location.");
-//                            }
-//                        }
-//                    });
-//        } catch (SecurityException unlikely) {
-//            Log.e(TAG, "Lost location permission." + unlikely);
-//        }
-//    }
+
 
     /**
      * Uses a {@link LocationSettingsRequest.Builder} to build
@@ -346,7 +330,6 @@ public class LocationUpdatesService extends Service implements SensorEventListen
 //        getLastLocation();
         buildLocationSettingsRequest();
 
-
         HandlerThread handlerThread = new HandlerThread(TAG);
         handlerThread.start();
         mServiceHandler = new Handler(handlerThread.getLooper());
@@ -358,13 +341,6 @@ public class LocationUpdatesService extends Service implements SensorEventListen
         mServiceHandler.removeCallbacksAndMessages(null);
     }
 
-//    /**
-//     * Makes a request for location updates. Note that in this sample we merely log the
-//     * {@link SecurityException}.
-//     */
-//    public void requestLocationUpdates() {
-//
-//    }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
@@ -409,7 +385,6 @@ public class LocationUpdatesService extends Service implements SensorEventListen
                     sendNotificationAfterStop(this, mNotificationInformation, mNotificationRunInformation);
                 }
             }
-
         }
         return true; // Ensures onRebind() is called when a client re-binds.
     }
@@ -434,7 +409,6 @@ public class LocationUpdatesService extends Service implements SensorEventListen
 
     }
 
-
     /**
      * Removes location updates from the FusedLocationApi.
      */
@@ -447,11 +421,6 @@ public class LocationUpdatesService extends Service implements SensorEventListen
         mFusedLocationClient.removeLocationUpdates(mLocationCallback);
         setRequestingLocationUpdates(this, false);
         stopSelf();
-//        } catch (SecurityException unlikely) {
-//            setRequestingLocationUpdates(this, true);
-//            Log.e(TAG, "Lost location permission. Could not remove updates. " + unlikely);
-//        }
-
         if (!requestingLocationUpdates(this)) {
             Log.d(TAG, "stopLocationUpdates: updates never requested, no-op.");
             return;
@@ -489,7 +458,6 @@ public class LocationUpdatesService extends Service implements SensorEventListen
 
     }
 
-
     @RequiresApi(api = Build.VERSION_CODES.O)
     private void onNewLocation(Location location) {
         Log.i(TAG, "New location: " + location);
@@ -517,7 +485,6 @@ public class LocationUpdatesService extends Service implements SensorEventListen
 
         LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(intent);
 
-
         Intent startWidgetIntent = new Intent(this, TrackingWidgetProvider.class);
         startWidgetIntent.setAction(ACTION_FROM_SERVICE);
         startWidgetIntent.putExtra(EXTRA_TOTAL_TIME, mElapsedTimeMillis);
@@ -530,8 +497,6 @@ public class LocationUpdatesService extends Service implements SensorEventListen
         startWidgetIntent.putExtra(EXTRA_MAX_ALTITUDE, mMaxAltitude);
 
         sendBroadcast(startWidgetIntent);
-
-
     }
 
     @Override
@@ -614,7 +579,6 @@ public class LocationUpdatesService extends Service implements SensorEventListen
             mElapsedTimeMillis = 0;
         }
         return mElapsedTimeMillis;
-
     }
 
     private double calculateTotalDistance(int id) {
@@ -634,7 +598,6 @@ public class LocationUpdatesService extends Service implements SensorEventListen
                     distanceTempList.add(i);
                 }
             }
-//            Log.i("Print list", speedTempList.toString());
 
             for (int i = 0; i < distanceTempList.size(); i++) {
                 totalDistance += distanceTempList.get(i);
@@ -785,40 +748,6 @@ public class LocationUpdatesService extends Service implements SensorEventListen
 
         return mMaxSpeed;
     }
-//    private void indentifyLastId(int runId) {
-//
-//        String specificID = String.valueOf(runId);
-//        String mSelectionClause = TrackContract.TrackingEntry.COLUMN_RUN_ID;
-//        String SELECTION = mSelectionClause + " = '" + specificID + "'";
-//        String ORDER = " " + _ID + " DESC LIMIT 24";
-//
-//
-//        try {
-//            cur = mContext.getContentResolver()
-//                    .query(TrackContract.TrackingEntry.CONTENT_URI, null, SELECTION, null, ORDER);
-//
-//            ArrayList<String>mSelectionArgs = new ArrayList();
-//            if (cur != null && cur.moveToFirst()) {
-//                while (cur.moveToNext()) {
-//                    String i = String.valueOf(cur.getColumnIndex(COLUMN_MOVE));
-//                    mSelectionArgs.add(i);
-//                }
-//            }
-//
-//            String[] mSelectionArgsArray = new String[mSelectionArgs.size()];
-//            mSelectionArgsArray = mSelectionArgs.toArray(mSelectionArgsArray);
-//            ContentValues data = new ContentValues();
-//            data.put(COLUMN_MOVE, 99);
-//            mContext.getContentResolver().update(TrackContract.TrackingEntry.CONTENT_URI, data, SELECTION, mSelectionArgsArray);
-//
-//            if (cur != null) {
-//                cur.close();
-//            }
-//
-//        } catch (Exception e) {
-//            Log.e("Path Error", e.toString());
-//        }
-//    }
 
     private double queryMaxAlt(int id) {
         String specificID = String.valueOf(id);
@@ -918,11 +847,6 @@ public class LocationUpdatesService extends Service implements SensorEventListen
         int sum = 0;
         int size = 0;
         boolean mNoMove = false;
-//        TODO (2): Compare saved times after changing them to miiliseconds to timeInPast. At this moment
-//        TODO (2): At this moment we leave last ten records no matter what time in past last record was
-//        long currentTime = System.currentTimeMillis();
-//        long timeInPast = currentTime - CHECK_NO_MOVE_TIME_IN_MILLISECONDS;
-
         String specificID = String.valueOf(id);
         String mSelectionClause = TrackContract.TrackingEntry.COLUMN_RUN_ID;
         String SELECTION = mSelectionClause + " = '" + specificID + "'";
@@ -965,10 +889,6 @@ public class LocationUpdatesService extends Service implements SensorEventListen
         int sum = 0;
         int size = 0;
 
-        //        TODO (2): Compare saved times after changing them to miiliseconds to timeInPast. At this moment
-//        TODO (2): At this moment we leave last ten records no matter what time in past last record was
-//        long currentTime = System.currentTimeMillis();
-//        long timeInPast = currentTime - CHECK_NO_MOVE_TIME_IN_MILLISECONDS;
         String specificID = String.valueOf(id);
         String mSelectionClause = TrackContract.TrackingEntry.COLUMN_RUN_ID;
         String SELECTION = mSelectionClause + " = '" + specificID + "'";
@@ -996,13 +916,9 @@ public class LocationUpdatesService extends Service implements SensorEventListen
                 cur.close();
             }
 
-            //TODO (4)    automatically delete empty run
-            //TODO (4)handle geolocation, fences?
-
         } catch (Exception e) {
             Log.e("Path Error", e.toString());
         }
-
 
         return mNoMove;
     }
@@ -1297,10 +1213,6 @@ public class LocationUpdatesService extends Service implements SensorEventListen
                 .setAutoCancel(false)
                 .build();
 
-
-//        // Issue the notification
-//        assert mNotificationManager != null;
-//        mNotificationManager.notify(NOTIFICATION_ID, notification);
         startForeground(NOTIFICATION_ID, notification);
     }
 

@@ -29,7 +29,7 @@ import java.util.Date;
 public class LocationServiceConstants {
 
     public static final String KEY_REQUESTING_LOCATION_UPDATES = "requesting_locaction_updates";
-    public static final String KEY_REQUESTING_LOCATION_UPDATES_WIDGET = "requesting_locaction_updates_widget";
+
 
     /**
      * Returns true if requesting location updates, otherwise returns false.
