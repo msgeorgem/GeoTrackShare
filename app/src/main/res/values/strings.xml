@@ -44,7 +44,6 @@
     <string name="mode_settings_interval">GPS refresh interval is set for: </string>
     <string name="title_custom_settings">Custom Run Settings</string>
 
-
     <string name="run_settings_order_by_maxspeed_label">Max speed</string>
     <string name="run_settings_order_by_avrgspeed_label">Average speed</string>
     <string name="run_settings_order_by_recent_label">ID</string>
@@ -57,7 +56,6 @@
     <string name="run_settings_order_by_default" translatable="false">_id</string>
     <string name="run_settings_order_by_key">_id</string>
     <string name="run_settings_order_by_label">Order</string>
-
 
     <string name="update_interval_by_1s_label">1s</string>
     <string name="update_interval_by_2s_label">2s</string>
@@ -210,8 +208,18 @@
     <string name="map_is_loaded_01">Map is loaded! You can screenshot via share button!</string>
     <string name="question_to_accept">Do you want to share this picture or take new one?</string>
     <string name="accept">Share</string>
+    <string name="run_no">Run No: </string>
     <string name="dismiss">Dismiss</string>
     <string name="no_tracking">No tracking</string>
 
+    <string name="icon">icon</string>
+    <string name="csv">csv</string>
+    <string name="share">share</string>
+    <string name="send">send</string>
+    <string name="locate_on_map">locate on map</string>
+
+    <string name="light_mode">Light mode</string>
+    <string name="darkness_mode">Darkness mode</string>
+    <string name="snap_taken">Snap taken</string>
 
 </resources>

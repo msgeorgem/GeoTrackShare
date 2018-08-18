@@ -52,7 +52,6 @@ import android.support.annotation.RequiresApi;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
-import android.widget.Toast;
 
 import com.example.android.geotrackshare.Data.TrackContract;
 import com.example.android.geotrackshare.MainActivity;
@@ -414,8 +413,12 @@ public class LocationUpdatesService extends Service implements SensorEventListen
      */
     public void stopLocationUpdates() {
         mStopTimeinMillis = System.currentTimeMillis();
-        saveItemPost(mCurrentId, mStartTimeinMillis, mStopTimeinMillis, mRunType, mMaxAltitude, mMaxSpeed, mAverageSpeed,
-                mElapsedTimeMillis, mTotalDistance);
+        if (mCurrentId != 0) {
+            saveItemPost(mCurrentId, mStartTimeinMillis, mStopTimeinMillis, mRunType, mMaxAltitude, mMaxSpeed, mAverageSpeed,
+                    mElapsedTimeMillis, mTotalDistance);
+        } else {
+            queryLastRow();
+        }
         Log.i(TAG, "Removing location updates");
 //        try {
         mFusedLocationClient.removeLocationUpdates(mLocationCallback);
@@ -721,6 +724,49 @@ public class LocationUpdatesService extends Service implements SensorEventListen
         return mLast_ID;
     }
 
+    private int queryLastRow() {
+        int runId, runType;
+        long startTimeinMillis, currentElapsedTime;
+        double currentMaxAlt, currentMaxSpeed, currentAvrSpeed, currentTotalDistance;
+        String ORDER = " " + _ID + " DESC LIMIT 1";
+        try {
+            cur = getContentResolver()
+                    .query(CONTENT_URI, null, null, null, ORDER);
+
+            if (cur != null && cur.moveToFirst()) {
+                do {
+                    int runIdColumnIndex = cur.getColumnIndex(COLUMN_RUN_ID);
+                    int startTimeColumnIndex = cur.getColumnIndex(COLUMN_START_TIME);
+                    int runTypeColumnIndex = cur.getColumnIndex(COLUMN_RUNTYPE);
+                    int maxAltColumnIndex = cur.getColumnIndex(COLUMN_MAX_ALT);
+                    int maxSpeedColumnIndex = cur.getColumnIndex(COLUMN_MAX_SPEED);
+                    int avgSpeedColumnIndex = cur.getColumnIndex(COLUMN_AVR_SPEED);
+                    int elapsedTimeColumnIndex = cur.getColumnIndex(COLUMN_TIME_COUNTER);
+                    int totalColumnIndex = cur.getColumnIndex(COLUMN_TOTAL_DISTANCE);
+
+                    runId = cur.getInt(runIdColumnIndex);
+                    startTimeinMillis = cur.getInt(startTimeColumnIndex);
+                    runType = cur.getInt(runTypeColumnIndex);
+                    currentMaxAlt = cur.getInt(maxAltColumnIndex);
+                    currentMaxSpeed = cur.getInt(maxSpeedColumnIndex);
+                    currentAvrSpeed = cur.getInt(avgSpeedColumnIndex);
+                    currentElapsedTime = cur.getInt(elapsedTimeColumnIndex);
+                    currentTotalDistance = cur.getInt(totalColumnIndex);
+
+                    saveItemPost(runId, startTimeinMillis, mStopTimeinMillis, runType, currentMaxAlt, currentMaxSpeed, currentAvrSpeed,
+                            currentElapsedTime, currentTotalDistance);
+                } while (cur.moveToNext());
+            }
+            if (cur != null) {
+                cur.close();
+            }
+
+        } catch (Exception e) {
+            Log.e("Path Error", e.toString());
+        }
+        return mLast_ID;
+    }
+
     public double queryMaxSpeed(int id) {
         String specificID = String.valueOf(id);
         String mSelectionClause = TrackContract.TrackingEntry.COLUMN_RUN_ID;
@@ -932,7 +978,7 @@ public class LocationUpdatesService extends Service implements SensorEventListen
                 int last_ID = queryLast_ID();
                 String lastRow = TrackContract.TrackingEntry._ID + "=" + last_ID;
                 getContentResolver().delete(CONTENT_URI, lastRow, null);
-                Toast.makeText(RealTimeFragment.mContext, (DELETE_LAST_ROWS - GET_GEOLOCATION_LAST_ROWS) + " " + getString(R.string.delete_one_item), Toast.LENGTH_SHORT).show();
+//                Toast.makeText(RealTimeFragment.mContext, (DELETE_LAST_ROWS - GET_GEOLOCATION_LAST_ROWS) + " " + getString(R.string.delete_one_item), Toast.LENGTH_SHORT).show();
             }
         }
     }
