@@ -11,7 +11,10 @@ import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.location.Location;
+import android.location.LocationManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -37,6 +40,7 @@ import com.example.android.geotrackshare.LocationService.LocationServiceConstant
 import com.example.android.geotrackshare.LocationService.LocationUpdatesService;
 import com.example.android.geotrackshare.RunTypes.RunType;
 import com.example.android.geotrackshare.RunTypes.RunTypesAdapter;
+import com.example.android.geotrackshare.RunTypes.RunTypesAdapterNoUI;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
@@ -311,9 +315,6 @@ public class RealTimeFragment extends Fragment implements
         // Update values using data stored in the Bundle.
         updateValuesFromBundle(savedInstanceState);
 
-        final Double mSelectedLatitude = createNewLocation()[0];
-        final Double mSelectedLongitude = createNewLocation()[1];
-
         tm = (TelephonyManager) getContext().getSystemService(Context.TELEPHONY_SERVICE);
         androidId = "" + Settings.Secure.getString(mContext.getContentResolver(), Settings.Secure.ANDROID_ID);
 
@@ -339,9 +340,7 @@ public class RealTimeFragment extends Fragment implements
 
             @Override
             public void onClick(View view) {
-                String uri = String.format(Locale.ENGLISH, "geo:%f,%f", mSelectedLatitude, mSelectedLongitude);
-                Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(uri));
-                startActivity(intent);
+                createNewLocation();
             }
         });
 
@@ -415,15 +414,21 @@ public class RealTimeFragment extends Fragment implements
         }
     }
 
-    private double[] createNewLocation() {
-        Location location = new Location("dummyprovider");
-        double mLatitude = location.getLatitude();
-        double mLongitude = location.getLongitude();
+    private void createNewLocation() {
 
-        double[] mLocation = new double[2];
-        mLocation[0] = mLatitude;
-        mLocation[1] = mLongitude;
-        return mLocation;
+        LocationManager lm = (LocationManager) getActivity().getSystemService(Context.LOCATION_SERVICE);
+        if (ActivityCompat.checkSelfPermission(mContext, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+                ActivityCompat.checkSelfPermission(mContext, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                requestPermissions();
+        } else {
+            Location location = lm.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+            double mLatitude = location.getLatitude();
+            double mLongitude = location.getLongitude();
+
+            String uri = String.format(Locale.ENGLISH, "geo:%f,%f", mLatitude, mLongitude);
+            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(uri));
+            startActivity(intent);
+        }
     }
 
     /**
@@ -440,10 +445,8 @@ public class RealTimeFragment extends Fragment implements
 
             mRunNumber.setText(String.format(Locale.ENGLISH, "%s: %s",
                     mCurrentRunLabel, mLast_ID));
-
         }
     }
-
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -765,6 +768,12 @@ public class RealTimeFragment extends Fragment implements
         preferEditor.putLong(RUN_TYPE_NOISE_KEY, (long) RUN_TYPE_NOISE);
         preferEditor.apply();
 
+        RunTypesAdapterNoUI mAdapter = new RunTypesAdapterNoUI(mContext, mCategories);
+        long intervalInMillis = mAdapter.getItem(RUN_TYPE_VALUE).getIntervalPreset();
+        long mIntervall = intervalInMillis / 1000;
+        String intervall = String.valueOf(mIntervall) + " s";
+        mIntervalTextView.setText(String.format(Locale.ENGLISH, "%s: %s", mIntervalLabel,
+                intervall));
     }
 
     @Override

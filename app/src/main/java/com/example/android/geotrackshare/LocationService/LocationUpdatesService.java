@@ -67,7 +67,9 @@ import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.LocationSettingsRequest;
 import com.google.android.gms.location.SettingsClient;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
@@ -268,7 +270,6 @@ public class LocationUpdatesService extends Service implements SensorEventListen
         };
     }
 
-
     /**
      * Uses a {@link LocationSettingsRequest.Builder} to build
      * a {@link LocationSettingsRequest} that is used for checking
@@ -282,7 +283,7 @@ public class LocationUpdatesService extends Service implements SensorEventListen
 
     public static String getFormatedTimeInString() {
         long stopTime = System.currentTimeMillis();
-        String mElapsedTime = getDateFromMillis(stopTime);
+        String mElapsedTime = new SimpleDateFormat("HH:mm:ss").format(new Date(stopTime));
         return mElapsedTime;
     }
 
@@ -725,7 +726,7 @@ public class LocationUpdatesService extends Service implements SensorEventListen
     }
 
     private int queryLastRow() {
-        int runId, runType;
+        int runId = 0, runType;
         long startTimeinMillis, currentElapsedTime;
         double currentMaxAlt, currentMaxSpeed, currentAvrSpeed, currentTotalDistance;
         String ORDER = " " + _ID + " DESC LIMIT 1";
@@ -745,16 +746,19 @@ public class LocationUpdatesService extends Service implements SensorEventListen
                     int totalColumnIndex = cur.getColumnIndex(COLUMN_TOTAL_DISTANCE);
 
                     runId = cur.getInt(runIdColumnIndex);
-                    startTimeinMillis = cur.getInt(startTimeColumnIndex);
-                    runType = cur.getInt(runTypeColumnIndex);
-                    currentMaxAlt = cur.getInt(maxAltColumnIndex);
-                    currentMaxSpeed = cur.getInt(maxSpeedColumnIndex);
-                    currentAvrSpeed = cur.getInt(avgSpeedColumnIndex);
-                    currentElapsedTime = cur.getInt(elapsedTimeColumnIndex);
-                    currentTotalDistance = cur.getInt(totalColumnIndex);
 
-                    saveItemPost(runId, startTimeinMillis, mStopTimeinMillis, runType, currentMaxAlt, currentMaxSpeed, currentAvrSpeed,
-                            currentElapsedTime, currentTotalDistance);
+                    if (!queryLastRowPost(runId)) {
+                        startTimeinMillis = cur.getInt(startTimeColumnIndex);
+                        runType = cur.getInt(runTypeColumnIndex);
+                        currentMaxAlt = cur.getInt(maxAltColumnIndex);
+                        currentMaxSpeed = cur.getInt(maxSpeedColumnIndex);
+                        currentAvrSpeed = cur.getInt(avgSpeedColumnIndex);
+                        currentElapsedTime = cur.getInt(elapsedTimeColumnIndex);
+                        currentTotalDistance = cur.getInt(totalColumnIndex);
+
+                        saveItemPost(runId, startTimeinMillis, mStopTimeinMillis, runType, currentMaxAlt, currentMaxSpeed, currentAvrSpeed,
+                                currentElapsedTime, currentTotalDistance);
+                    }
                 } while (cur.moveToNext());
             }
             if (cur != null) {
@@ -764,7 +768,37 @@ public class LocationUpdatesService extends Service implements SensorEventListen
         } catch (Exception e) {
             Log.e("Path Error", e.toString());
         }
-        return mLast_ID;
+        return runId;
+    }
+
+    private boolean queryLastRowPost(int runId) {
+        int runIdPost = 0;
+        boolean duplicaded = false;
+
+        String ORDER = " " + _ID + " DESC LIMIT 1";
+        try {
+            Cursor cursorP = getContentResolver()
+                    .query(CONTENT_URI_POST, null, null, null, ORDER);
+
+            if (cursorP != null && cursorP.moveToFirst()) {
+                do {
+                    int runIdColumnIndex = cursorP.getColumnIndex(COLUMN_RUN_IDP);
+                    runIdPost = cursorP.getInt(runIdColumnIndex);
+
+                } while (cursorP.moveToNext());
+            }
+            if (cursorP != null) {
+                cursorP.close();
+            }
+
+        } catch (Exception e) {
+            Log.e("Path Error", e.toString());
+        }
+        if (runId == runIdPost) {
+            duplicaded = true;
+        }
+
+        return duplicaded;
     }
 
     public double queryMaxSpeed(int id) {
