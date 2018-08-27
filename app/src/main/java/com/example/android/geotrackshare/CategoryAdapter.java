@@ -38,8 +38,10 @@ public class CategoryAdapter extends FragmentPagerAdapter {
     public Fragment getItem(int position) {
         switch (position) {
             case 0:
-                return new RealTimeFragment();
+                return new MapFragment();
             case 1:
+                return new RealTimeFragment();
+            case 2:
                 return new RunListFragment();
             default:
                 return null;
@@ -51,16 +53,23 @@ public class CategoryAdapter extends FragmentPagerAdapter {
      */
     @Override
     public int getCount() {
-        return 2;
+        return 3;
     }
 
     @Override
     public CharSequence getPageTitle(int position) {
-        if (position == 0) {
-            return mContext.getString(R.string.real_time);
-        } else ;
-        {
-            return mContext.getString(R.string.run_list);
+
+        switch (position) {
+            case 0:
+                return mContext.getString(R.string.map);
+            case 1:
+                return mContext.getString(R.string.real_time);
+            case 2:
+                return mContext.getString(R.string.run_list);
+            default:
+                return null;
         }
+
+
     }
 }

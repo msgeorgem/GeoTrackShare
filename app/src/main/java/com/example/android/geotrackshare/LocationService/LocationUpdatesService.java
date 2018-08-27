@@ -181,6 +181,7 @@ public class LocationUpdatesService extends Service implements SensorEventListen
     private final int GET_GEOLOCATION_LAST_ROWS = 5;
     private String CHANNEL_NAME = "GeoTracker Channel";
     private String DESCRIPTION = "GeoTracking";
+    private static long DISPLACEMENT = 10;
     /**
      * Used to check whether the bound activity has really gone away and not unbound as part of an
      * orientation change. We create a foreground service notification only if the former takes
@@ -860,7 +861,7 @@ public class LocationUpdatesService extends Service implements SensorEventListen
         String specificID = String.valueOf(id);
         String mSelectionClause = TrackContract.TrackingEntry.COLUMN_RUN_ID;
         String SELECTION = mSelectionClause + " = '" + specificID + "'";
-        String ORDER = " " + COLUMN_ALTITUDE + " ASC LIMIT 1";
+        String ORDER = " " + COLUMN_ALTITUDE + " ASC LIMIT 1 OFFSET 1";
 //        String[] PROJECTION = {TrackContract.TrackingEntry.COLUMN_ALTITUDE};
 
         try {
@@ -1233,7 +1234,7 @@ public class LocationUpdatesService extends Service implements SensorEventListen
         mLocationRequest.setFastestInterval(FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS);
 
         mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-//        mLocationRequest.setSmallestDisplacement(DISPLACEMENT);
+        mLocationRequest.setSmallestDisplacement(DISPLACEMENT);
     }
 
     private void sendNotificationAfterStart(Context context, String mNotificationInformation, String mNotificationRunInformation) {

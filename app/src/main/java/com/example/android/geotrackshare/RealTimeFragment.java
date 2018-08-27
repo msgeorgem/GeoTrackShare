@@ -11,8 +11,6 @@ import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.location.Location;
 import android.location.LocationManager;
 import android.net.Uri;
@@ -35,6 +33,7 @@ import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.example.android.geotrackshare.LocationService.LocationServiceConstants;
 import com.example.android.geotrackshare.LocationService.LocationUpdatesService;
@@ -251,13 +250,13 @@ public class RealTimeFragment extends Fragment implements
         // Spinner Drop down elements
         mCategories = new ArrayList<RunType>();
         mCategories.add(new RunType(R.drawable.ic_directions_walk_black_24dp,
-                R.string.Run_type_walk, R.string.Run_type_walk_desc, 5000, 0.4));
+                R.string.Run_type_walk, R.string.Run_type_walk_desc, 5000, 0.0));
         mCategories.add(new RunType(R.drawable.ic_directions_bike_black_24dp,
-                R.string.Run_type_bike, R.string.Run_type_bike_desc, 6000, 0.4));
+                R.string.Run_type_bike, R.string.Run_type_bike_desc, 6000, 0.0));
         mCategories.add(new RunType(R.drawable.ic_directions_car_black_24dp,
-                R.string.Run_type_car, R.string.Run_type_car_desc, 10000, 0.2));
+                R.string.Run_type_car, R.string.Run_type_car_desc, 10000, 0.0));
         mCategories.add(new RunType(R.drawable.ic_developer_board_black_48dp,
-                R.string.Run_type_custom, R.string.Run_type_custom_desc, 9999, 0.4));
+                R.string.Run_type_custom, R.string.Run_type_custom_desc, 9999, 0.0));
 
         // Creating adapter for spinner
         mAdapter = new RunTypesAdapter(getActivity(), R.layout.list_run_type, mCategories);
@@ -419,15 +418,20 @@ public class RealTimeFragment extends Fragment implements
         LocationManager lm = (LocationManager) getActivity().getSystemService(Context.LOCATION_SERVICE);
         if (ActivityCompat.checkSelfPermission(mContext, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
                 ActivityCompat.checkSelfPermission(mContext, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                requestPermissions();
+            requestPermissions();
         } else {
             Location location = lm.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-            double mLatitude = location.getLatitude();
-            double mLongitude = location.getLongitude();
+            try {
+                double mLatitude = location.getLatitude();
+                double mLongitude = location.getLongitude();
+                String uri = String.format(Locale.ENGLISH, "geo:%f,%f", mLatitude, mLongitude);
+                Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(uri));
+                startActivity(intent);
+            } catch (NullPointerException e) {
+                System.out.print("Caught the NullPointerException");
+                Toast.makeText(getActivity(), "No location", Toast.LENGTH_SHORT).show();
+            }
 
-            String uri = String.format(Locale.ENGLISH, "geo:%f,%f", mLatitude, mLongitude);
-            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(uri));
-            startActivity(intent);
         }
     }
 
@@ -566,6 +570,7 @@ public class RealTimeFragment extends Fragment implements
         LocalBroadcastManager.getInstance(mContext).unregisterReceiver(myReceiver);
 
     }
+
     /**
      * Shows a {@link Snackbar}.
      *
@@ -780,6 +785,7 @@ public class RealTimeFragment extends Fragment implements
     public void onNothingSelected(AdapterView<?> adapterView) {
 
     }
+
     /**
      * Receiver for broadcasts sent by {@link LocationUpdatesService}.
      */
