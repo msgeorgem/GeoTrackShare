@@ -98,6 +98,49 @@ public class RunListFragment extends Fragment implements LoaderManager.LoaderCal
         return Environment.MEDIA_MOUNTED.equals(state);
     }
 
+    public RunListFragment() {
+        // Required empty public constructor
+    }
+
+    public static RunListFragment newInstance() {
+        return new RunListFragment();
+    }
+
+    @Override
+    public View onCreateView(final LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
+        // Inflate the layout for this fragment
+        view = inflater.inflate(R.layout.fragment_run_list, container, false);
+        Log.i(LOG_TAG, "initLoader");
+
+        // Find a reference to the {@link ListView} in the layout
+        tracksRecyclerView = view.findViewById(R.id.list_runs);
+
+        if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT) {
+            tracksRecyclerView.setLayoutManager(new GridLayoutManager(getActivity(), 1));
+        } else {
+            tracksRecyclerView.setLayoutManager(new GridLayoutManager(getActivity(), 1));
+        }
+
+        mTracksAdapter = new TracksCursorAdapter(this, null);
+
+        // Set the adapter on the {@link ListView}
+        // so the list can be populated in the user interface
+        tracksRecyclerView.setAdapter(mTracksAdapter);
+        tracksRecyclerView.setItemAnimator(new DefaultItemAnimator());
+
+        mEmptyStateTextView = view.findViewById(R.id.empty_view_runs);
+        mEmptyStateTextView.setText(R.string.no_runs);
+
+        mloadingIndicator = view.findViewById(R.id.loading_indicator_runs);
+        //kick off the loader
+        getLoaderManager().initLoader(FAV_LOADER, null, this);
+        mDbHelper = new TrackDbHelper(getActivity());
+        mContext = getActivity();
+
+        return view;
+    }
+
     public static void updateFavouritePost(final int favourite, final int id, final Context context) {
         Log.e(TAG, "saving " + favourite);
         String specificID = String.valueOf(id);
@@ -248,40 +291,7 @@ public class RunListFragment extends Fragment implements LoaderManager.LoaderCal
         startActivity(intent);
     }
 
-    @Override
-    public View onCreateView(final LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
-        view = inflater.inflate(R.layout.fragment_run_list, container, false);
-        Log.i(LOG_TAG, "initLoader");
 
-        // Find a reference to the {@link ListView} in the layout
-        tracksRecyclerView = view.findViewById(R.id.list_runs);
-
-        if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT) {
-            tracksRecyclerView.setLayoutManager(new GridLayoutManager(getActivity(), 1));
-        } else {
-            tracksRecyclerView.setLayoutManager(new GridLayoutManager(getActivity(), 1));
-        }
-
-        mTracksAdapter = new TracksCursorAdapter(this, null);
-
-        // Set the adapter on the {@link ListView}
-        // so the list can be populated in the user interface
-        tracksRecyclerView.setAdapter(mTracksAdapter);
-        tracksRecyclerView.setItemAnimator(new DefaultItemAnimator());
-
-        mEmptyStateTextView = view.findViewById(R.id.empty_view_runs);
-        mEmptyStateTextView.setText(R.string.no_runs);
-
-        mloadingIndicator = view.findViewById(R.id.loading_indicator_runs);
-        //kick off the loader
-        getLoaderManager().initLoader(FAV_LOADER, null, this);
-        mDbHelper = new TrackDbHelper(getActivity());
-        mContext = getActivity();
-
-        return view;
-    }
 
     public void shareViaEmail(int runId) {
         try {

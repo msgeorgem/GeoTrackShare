@@ -36,7 +36,7 @@ import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_TIME_COUNTERP;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_TOTAL_DISTANCEP;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry._ID;
-import static com.example.android.geotrackshare.RealTimeFragment.mCategories;
+import static com.example.android.geotrackshare.MainActivity.mCategories;
 import static com.example.android.geotrackshare.TrackList.RunListFragment.updateFavouritePost;
 import static com.example.android.geotrackshare.Utils.SqliteExporter.createBackupFileName;
 

@@ -13,7 +13,7 @@ import com.example.android.geotrackshare.RunTypes.RunTypesAdapterNoUI;
 import static com.example.android.geotrackshare.MainActivity.BICYCLE;
 import static com.example.android.geotrackshare.MainActivity.CAR;
 import static com.example.android.geotrackshare.MainActivity.WALK;
-import static com.example.android.geotrackshare.RealTimeFragment.mCategories;
+import static com.example.android.geotrackshare.MainActivity.mCategories;
 
 /**
  * Created by Marcin on 2017-09-12.

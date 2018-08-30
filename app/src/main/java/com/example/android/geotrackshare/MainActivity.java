@@ -8,10 +8,11 @@ import android.net.ConnectivityManager;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
+import android.support.design.widget.BottomNavigationView;
 import android.support.design.widget.NavigationView;
-import android.support.design.widget.TabLayout;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v4.view.GravityCompat;
-import android.support.v4.view.ViewPager;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
@@ -19,6 +20,11 @@ import android.support.v7.widget.Toolbar;
 import android.view.MenuItem;
 import android.view.WindowManager;
 import android.widget.Toast;
+
+import com.example.android.geotrackshare.RunTypes.RunType;
+import com.example.android.geotrackshare.TrackList.RunListFragment;
+
+import java.util.ArrayList;
 
 import static com.example.android.geotrackshare.AdvancedSettingsActivity.preferenceBooleanScreenOn;
 import static com.example.android.geotrackshare.AdvancedSettingsActivity.preferenceBooleanTheme;
@@ -31,6 +37,7 @@ public class MainActivity extends AppCompatActivity
     public static String BICYCLE = "BICYCLE";
     public static String WALK = "WALK";
     public static String CAR = "CAR";
+    public static ArrayList<RunType> mCategories;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,30 +47,51 @@ public class MainActivity extends AppCompatActivity
         setContentView(R.layout.activity_main);
         switchScreenOn();
 
-        // Find the view pager that will allow the user to swipe between fragments
-        final ViewPager viewPager = findViewById(R.id.viewpager);
-        //viewPager.setPageTransformer(true, new StackTransformer());
-        // Create an adapter that knows which fragment should be shown on each page
-        CategoryAdapter adapter = new CategoryAdapter(this, getSupportFragmentManager());
+        // Spinner Drop down elements
+        mCategories = new ArrayList<RunType>();
+        mCategories.add(new RunType(R.drawable.ic_directions_walk_black_24dp,
+                R.string.Run_type_walk, R.string.Run_type_walk_desc, 5000, 0.0));
+        mCategories.add(new RunType(R.drawable.ic_directions_bike_black_24dp,
+                R.string.Run_type_bike, R.string.Run_type_bike_desc, 6000, 0.0));
+        mCategories.add(new RunType(R.drawable.ic_directions_car_black_24dp,
+                R.string.Run_type_car, R.string.Run_type_car_desc, 10000, 0.0));
+        mCategories.add(new RunType(R.drawable.ic_developer_board_black_48dp,
+                R.string.Run_type_custom, R.string.Run_type_custom_desc, 9999, 0.0));
 
-        // Set the adapter onto the view pager
-        viewPager.setAdapter(adapter);
+        BottomNavigationView bottomNavigationView = findViewById(R.id.navigation);
 
-        // Find the tab layout that shows the tabs
-        final TabLayout tabLayout = findViewById(R.id.tabs);
+        bottomNavigationView.setOnNavigationItemSelectedListener
+                (new BottomNavigationView.OnNavigationItemSelectedListener() {
+                    @Override
+                    public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+                        Fragment selectedFragment = null;
+                        switch (item.getItemId()) {
+                            case R.id.navigation_map:
+                                selectedFragment = MapFragmentLive.newInstance();
+                                break;
+                            case R.id.navigation_data:
+                                selectedFragment = RealTimeFragment.newInstance();
+                                break;
+                            case R.id.navigation_list:
+                                selectedFragment = RunListFragment.newInstance();
+                                break;
+                            case R.id.navigation_buddies:
+                                selectedFragment = RunListFragment.newInstance();
+                                break;
+                        }
+                        FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
+//                        transaction.setCustomAnimations(android.R.animator.fade_in, android.R.animator.fade_out, android.R.animator.fade_in, android.R.animator.fade_out);
+                        transaction.replace(R.id.container, selectedFragment);
+                        transaction.commit();
+                        return true;
+                    }
+                });
 
-        // Connect the tab layout with the view pager. This will
-        //   1. Update the tab layout when the view pager is swiped
-        //   2. Update the view pager when a tab is selected
-        //   3. Set the tab layout's tab names with the view pager's adapter's titles
-        //      by calling onPageTitle()
-
-        tabLayout.post(new Runnable() {
-            @Override
-            public void run() {
-                tabLayout.setupWithViewPager(viewPager);
-            }
-        });
+        //Manually displaying the first fragment - one time only
+        FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
+//        transaction.setCustomAnimations(android.R.animator.fade_in, android.R.animator.fade_out, android.R.animator.fade_in, android.R.animator.fade_out);
+        transaction.replace(R.id.container, MapFragmentLive.newInstance());
+        transaction.commit();
 
         // Find the toolbar view inside the activity layout
         Toolbar toolbar = findViewById(R.id.toolbar);

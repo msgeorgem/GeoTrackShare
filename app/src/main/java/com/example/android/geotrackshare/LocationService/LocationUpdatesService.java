@@ -59,6 +59,8 @@ import com.example.android.geotrackshare.R;
 import com.example.android.geotrackshare.RealTimeFragment;
 import com.example.android.geotrackshare.TrackingWidget.TrackingWidgetProvider;
 import com.example.android.geotrackshare.Utils.DistanceCalculator;
+import com.example.android.geotrackshare.Utils.StopWatch;
+import com.example.android.geotrackshare.Utils.StopWatchHandler;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
@@ -103,8 +105,12 @@ import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.CONTENT_URI;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.CONTENT_URI_POST;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry._ID;
+import static com.example.android.geotrackshare.LocationService.LocationServiceConstants.lastTrackType;
 import static com.example.android.geotrackshare.LocationService.LocationServiceConstants.requestingLocationUpdates;
+import static com.example.android.geotrackshare.LocationService.LocationServiceConstants.setLastTrackID;
 import static com.example.android.geotrackshare.LocationService.LocationServiceConstants.setRequestingLocationUpdates;
+import static com.example.android.geotrackshare.LocationService.LocationServiceConstants.setStartTimeCurrentTrack;
+import static com.example.android.geotrackshare.LocationService.LocationServiceConstants.setStopWatchRunning;
 import static com.example.android.geotrackshare.RealTimeFragment.DELETE_LAST_ROWS;
 import static com.example.android.geotrackshare.RealTimeFragment.DISABLE_AUTO_CLOSE;
 import static com.example.android.geotrackshare.RealTimeFragment.RUN_TYPE_INTERVAL;
@@ -152,6 +158,8 @@ public class LocationUpdatesService extends Service implements SensorEventListen
     public static final String EXTRA_CURRENT_ID = "EXTRA_CURRENT_ID";
     public static final String EXTRA_ADDRESS = "EXTRA_ADDRESS";
     public static final String EXTRA_STOP_FROM_NOTIFICATION = "EXTRA_STOP_FROM_NOTIFICATION";
+    public static final String EXTRA_REQUESTING_UDPATES = "EXTRA_REQUESTING_UDPATES";
+    public static final String EXTRA_STOP_WATCH = "EXTRA_STOP_WATCH";
     /**
      * Constant used in the location settings dialog.
      */
@@ -162,6 +170,7 @@ public class LocationUpdatesService extends Service implements SensorEventListen
     public static final String EXTRA_LOCATION = PACKAGE_NAME + ".location";
     private static final String TAG = LocationUpdatesService.class.getSimpleName();
     public static final String EXTRA_START_FROM_NOTIFICATION = "EXTRA_START_FROM_NOTIFICATION";
+    public static final String EXTRA_START_STOPWATCH = "EXTRA_START_STOPWATCH";
     private static final int NOTIFICATION_ID = 12345678;
     public static final double NOISEc = 0.02;
     public static double NOISEd = 0.04;
@@ -177,11 +186,13 @@ public class LocationUpdatesService extends Service implements SensorEventListen
      */
     private static final long FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS =
             UPDATE_INTERVAL_IN_MILLISECONDS / 2;
+    public static long startTimeStopWatch;
+
     private final IBinder mBinder = new LocalBinder();
     private final int GET_GEOLOCATION_LAST_ROWS = 5;
     private String CHANNEL_NAME = "GeoTracker Channel";
     private String DESCRIPTION = "GeoTracking";
-    private static long DISPLACEMENT = 10;
+    public static StopWatchHandler mStopWatchHandler;
     /**
      * Used to check whether the bound activity has really gone away and not unbound as part of an
      * orientation change. We create a foreground service notification only if the former takes
@@ -202,7 +213,6 @@ public class LocationUpdatesService extends Service implements SensorEventListen
      * Callback for changes in location.
      */
     private LocationCallback mLocationCallback;
-    private Handler mServiceHandler;
 
     /**
      * The current location.
@@ -237,7 +247,16 @@ public class LocationUpdatesService extends Service implements SensorEventListen
     private String mNotificationRunInformation = "";
     public Cursor mTrackingCursor;
     public Cursor mPostTrackingCursor;
-
+    static StopWatch timer = new StopWatch();
+    private static long DISPLACEMENT = 0;
+    // Start and end times in milliseconds
+    private static long startTime;
+    private static long endTime;
+    // Is the service tracking time?
+    private static boolean isTimerRunning;
+    private String mElapsedTime;
+    private Handler mServiceHandler;
+    private HandlerThread stopWatchThread;
     /**
      * Stores the types of location services the client is interested in using. Used for checking
      * settings to determine if the device has optimal location settings.
@@ -316,52 +335,41 @@ public class LocationUpdatesService extends Service implements SensorEventListen
         super.onRebind(intent);
     }
 
-    @Override
-    public void onCreate() {
-
-        mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
-        mSettingsClient = LocationServices.getSettingsClient(this);
-        mSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
-        mSensorManager.registerListener(this, mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER), SensorManager.SENSOR_DELAY_NORMAL);
-
-        // Kick off the process of building the LocationCallback, LocationRequest, and
-        // LocationSettingsRequest objects.
-        createLocationCallback();
-        createLocationRequest();
-//        getLastLocation();
-        buildLocationSettingsRequest();
-
-        HandlerThread handlerThread = new HandlerThread(TAG);
-        handlerThread.start();
-        mServiceHandler = new Handler(handlerThread.getLooper());
-
-    }
-
-    @Override
-    public void onDestroy() {
-        mServiceHandler.removeCallbacksAndMessages(null);
-    }
-
-
-    @Override
-    public int onStartCommand(Intent intent, int flags, int startId) {
-        Log.i(TAG, "onStartCommand");
-
-
-        if (EXTRA_START_FROM_NOTIFICATION.equals(intent.getAction())) {
-            stopForeground(true);
-            if (!requestingLocationUpdates(this)) {
-                RealTimeFragment.mService.startUpdatesButtonHandler();
-            }
-        } else if (EXTRA_STOP_FROM_NOTIFICATION.equals(intent.getAction())) {
-            stopForeground(true);
-            if (requestingLocationUpdates(this)) {
-                RealTimeFragment.mService.stopUpdatesButtonHandler();
-            }
+    /**
+     * Starts the timer
+     */
+    public static void startStopWatch() {
+        if (!isTimerRunning) {
+            startTimeStopWatch = System.currentTimeMillis();
+            timer.start();
+            isTimerRunning = true;
+        } else {
+            Log.e(TAG, "startTimer request for an already running timer");
         }
+    }
 
-        // Tells the system to not try to recreate the service after it as been killed.
-        return START_NOT_STICKY;
+    /**
+     * Stops the timer
+     */
+    public static void stopStopWatch() {
+        if (isTimerRunning) {
+            timer.stop();
+            endTime = System.currentTimeMillis();
+            isTimerRunning = false;
+        } else {
+            Log.e(TAG, "stopTimer request for a timer that isn't running");
+        }
+    }
+
+    /**
+     * Returns the  elapsed time
+     *
+     * @return the elapsed time in seconds
+     */
+    public static String elapsedTime() {
+        // If the timer is running, the end time will be zero
+        return timer.elapsedTimeString0();
+
     }
 
     @Override
@@ -410,6 +418,75 @@ public class LocationUpdatesService extends Service implements SensorEventListen
 
     }
 
+    @SuppressLint("HandlerLeak")
+    @Override
+    public void onCreate() {
+
+        mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+        mSettingsClient = LocationServices.getSettingsClient(this);
+        mSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
+        mSensorManager.registerListener(this, mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER), SensorManager.SENSOR_DELAY_NORMAL);
+
+        // Kick off the process of building the LocationCallback, LocationRequest, and
+        // LocationSettingsRequest objects.
+        createLocationCallback();
+        createLocationRequest();
+//        getLastLocation();
+        buildLocationSettingsRequest();
+
+        HandlerThread handlerThread = new HandlerThread(TAG);
+        handlerThread.start();
+        mServiceHandler = new Handler(handlerThread.getLooper());
+
+
+//        stopWatchThread = new HandlerThread("StopWatch", android.os.Process.THREAD_PRIORITY_BACKGROUND);
+//        stopWatchThread.start();
+//        mStopWatchHandler = new StopWatchHandler(stopWatchThread.getLooper(),null);
+
+    }
+
+    @Override
+    public void onDestroy() {
+        mServiceHandler.removeCallbacksAndMessages(null);
+        // Cleanup service before destruction
+        stopWatchThread.quit();
+    }
+
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        Log.i(TAG, "onStartCommand");
+        if (intent != null) { // May not have an Intent is the service was killed and restarted (See STICKY_SERVICE).
+
+//            // Execute the specified code on the worker thread
+//            mStopWatchHandler.post(new Runnable() {
+//                @Override
+//                public void run() {
+//                    Log.i(TAG, "mStopWatchHandler.post(new Runnable() ");
+//                    // Do something here!
+//                    // Notify anyone listening for broadcasts about the new location.
+//                    Intent intent = new Intent(ACTION_BROADCAST);
+//                    intent.putExtra(EXTRA_STOP_WATCH, mElapsedTime);
+//                    LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(intent);
+//                }
+//            });
+        }
+
+        if (EXTRA_START_FROM_NOTIFICATION.equals(intent.getAction())) {
+            stopForeground(true);
+            if (!requestingLocationUpdates(this)) {
+                RealTimeFragment.mService.startUpdatesButtonHandler();
+            }
+        } else if (EXTRA_STOP_FROM_NOTIFICATION.equals(intent.getAction())) {
+            stopForeground(true);
+            if (requestingLocationUpdates(this)) {
+                RealTimeFragment.mService.stopUpdatesButtonHandler();
+            }
+        }
+
+        // Tells the system to not try to recreate the service after it as been killed.
+        return START_NOT_STICKY;
+    }
+
     /**
      * Removes location updates from the FusedLocationApi.
      */
@@ -430,78 +507,7 @@ public class LocationUpdatesService extends Service implements SensorEventListen
             Log.d(TAG, "stopLocationUpdates: updates never requested, no-op.");
             return;
         }
-    }
 
-    /**
-     * Handles the Start Updates button and requests start of location updates. Does nothing if
-     * updates have already been requested.
-     */
-    public void startUpdatesButtonHandler() {
-        if (!requestingLocationUpdates(this)) {
-            mStartTimeinMillis = System.currentTimeMillis();
-            mCurrentId = queryMaxId() + 1;
-            mRunType = RUN_TYPE_VALUE;
-            NOISEd = RUN_TYPE_NOISE;
-            startLocationUpdates();
-            mNotificationInformation = getResources().getString(R.string.Tracking_started_at) + getFormatedTimeInString() + "      STARTED...";
-            mNotificationRunInformation = getResources().getString(R.string.Current_run) + mCurrentId;
-            sendNotificationAfterStart(this, mNotificationInformation, mNotificationRunInformation);
-        }
-    }
-
-    /**
-     * Handles the Stop Updates button, and requests removal of location updates.
-     */
-    public void stopUpdatesButtonHandler() {
-        // It is a good practice to remove location requests when the activity is in a paused or
-        // stopped state. Doing so helps battery performance and is especially
-        // recommended in applications that request frequent location updates.
-        stopLocationUpdates();
-        mNotificationInformation = getResources().getString(R.string.Tracking_stopped_at) + getFormatedTimeInString() + "     ...STOPPED";
-        mNotificationRunInformation = getResources().getString(R.string.Last_run_number) + mCurrentId;
-        sendNotificationAfterStop(this, mNotificationInformation, mNotificationRunInformation);
-
-    }
-
-    @RequiresApi(api = Build.VERSION_CODES.O)
-    private void onNewLocation(Location location) {
-        Log.i(TAG, "New location: " + location);
-
-
-        // Notify anyone listening for broadcasts about the new location.
-        Intent intent = new Intent(ACTION_BROADCAST);
-        intent.putExtra(EXTRA_CURRENT_ID, mCurrentId);
-        intent.putExtra(EXTRA_RUN_TYPE, mRunType);
-        intent.putExtra(EXTRA_LOCATION, location);
-        intent.putExtra(EXTRA_LATITUDE, mCurrentLatitude);
-        intent.putExtra(EXTRA_LONGITUDE, mCurrentLongitude);
-        intent.putExtra(EXTRA_ALTITUDE, mCurrentAltitude);
-        intent.putExtra(EXTRA_SPEED, mCurrentSpeed);
-        intent.putExtra(EXTRA_MAX_SPEED, mMaxSpeed);
-        intent.putExtra(EXTRA_MAX_ALTITUDE, mMaxAltitude);
-        intent.putExtra(EXTRA_MIN_ALTITUDE, mMinAltitude);
-        intent.putExtra(EXTRA_AVG_SPEED, mAverageSpeed);
-        intent.putExtra(EXTRA_TOTAL_DISTANCE, mTotalDistance);
-        intent.putExtra(EXTRA_PREV_LATITUDE, mPreviousLatitude);
-        intent.putExtra(EXTRA_PREV_LONGITUDE, mPreviousLongitude);
-        intent.putExtra(EXTRA_TOTAL_TIME, mElapsedTimeMillis);
-        intent.putExtra(EXTRA_LAST_TIME_UPDATE, mLastUpdateTimeMillis);
-        intent.putExtra(EXTRA_ADDRESS, mCurrentAddress);
-
-        LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(intent);
-
-        Intent startWidgetIntent = new Intent(this, TrackingWidgetProvider.class);
-        startWidgetIntent.setAction(ACTION_FROM_SERVICE);
-        startWidgetIntent.putExtra(EXTRA_TOTAL_TIME, mElapsedTimeMillis);
-        startWidgetIntent.putExtra(EXTRA_CURRENT_ID, mCurrentId);
-        startWidgetIntent.putExtra(EXTRA_TOTAL_DISTANCE, mTotalDistance);
-        startWidgetIntent.putExtra(EXTRA_TOTAL_DISTANCE, mTotalDistance);
-        startWidgetIntent.putExtra(EXTRA_SPEED, mCurrentSpeed);
-        startWidgetIntent.putExtra(EXTRA_AVG_SPEED, mAverageSpeed);
-        startWidgetIntent.putExtra(EXTRA_ALTITUDE, mCurrentAltitude);
-        startWidgetIntent.putExtra(EXTRA_MAX_ALTITUDE, mMaxAltitude);
-
-        sendBroadcast(startWidgetIntent);
     }
 
     @Override
@@ -1358,4 +1364,106 @@ public class LocationUpdatesService extends Service implements SensorEventListen
 
     }
 
+    /**
+     * Handles the Start Updates button and requests start of location updates. Does nothing if
+     * updates have already been requested.
+     */
+    public void startUpdatesButtonHandler() {
+        if (!requestingLocationUpdates(this)) {
+            mStartTimeinMillis = System.currentTimeMillis();
+            setStartTimeCurrentTrack(this, mStartTimeinMillis);
+            mCurrentId = queryMaxId() + 1;
+            setLastTrackID(this, mCurrentId);
+            mRunType = lastTrackType(this);
+            NOISEd = RUN_TYPE_NOISE;
+            startLocationUpdates();
+            mNotificationInformation = getResources().getString(R.string.Tracking_started_at) + getFormatedTimeInString() + "      STARTED...";
+            mNotificationRunInformation = getResources().getString(R.string.Current_run) + mCurrentId;
+            sendNotificationAfterStart(this, mNotificationInformation, mNotificationRunInformation);
+
+
+            // Notify anyone listening for broadcasts about the new location.
+            Intent intent = new Intent(ACTION_BROADCAST);
+            intent.putExtra(EXTRA_REQUESTING_UDPATES, requestingLocationUpdates(this));
+            LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(intent);
+        }
+    }
+
+    /**
+     * Handles the Stop Updates button, and requests removal of location updates.
+     */
+    public void stopUpdatesButtonHandler() {
+        // It is a good practice to remove location requests when the activity is in a paused or
+        // stopped state. Doing so helps battery performance and is especially
+        // recommended in applications that request frequent location updates.
+        stopLocationUpdates();
+        setStartTimeCurrentTrack(this, 300780120);
+        mNotificationInformation = getResources().getString(R.string.Tracking_stopped_at) + getFormatedTimeInString() + "     ...STOPPED";
+        mNotificationRunInformation = getResources().getString(R.string.Last_run_number) + mCurrentId;
+        sendNotificationAfterStop(this, mNotificationInformation, mNotificationRunInformation);
+
+        // Notify anyone listening for broadcasts about the new location.
+        Intent intent = new Intent(ACTION_BROADCAST);
+        intent.putExtra(EXTRA_REQUESTING_UDPATES, requestingLocationUpdates(this));
+        LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(intent);
+
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.O)
+    private void onNewLocation(Location location) {
+        Log.i(TAG, "New location: " + location);
+
+
+        // Notify anyone listening for broadcasts about the new location.
+        Intent intent = new Intent(ACTION_BROADCAST);
+        intent.putExtra(EXTRA_CURRENT_ID, mCurrentId);
+        intent.putExtra(EXTRA_RUN_TYPE, mRunType);
+        intent.putExtra(EXTRA_LOCATION, location);
+        intent.putExtra(EXTRA_LATITUDE, mCurrentLatitude);
+        intent.putExtra(EXTRA_LONGITUDE, mCurrentLongitude);
+        intent.putExtra(EXTRA_ALTITUDE, mCurrentAltitude);
+        intent.putExtra(EXTRA_SPEED, mCurrentSpeed);
+        intent.putExtra(EXTRA_MAX_SPEED, mMaxSpeed);
+        intent.putExtra(EXTRA_MAX_ALTITUDE, mMaxAltitude);
+        intent.putExtra(EXTRA_MIN_ALTITUDE, mMinAltitude);
+        intent.putExtra(EXTRA_AVG_SPEED, mAverageSpeed);
+        intent.putExtra(EXTRA_TOTAL_DISTANCE, mTotalDistance);
+        intent.putExtra(EXTRA_PREV_LATITUDE, mPreviousLatitude);
+        intent.putExtra(EXTRA_PREV_LONGITUDE, mPreviousLongitude);
+        intent.putExtra(EXTRA_TOTAL_TIME, mElapsedTimeMillis);
+        intent.putExtra(EXTRA_LAST_TIME_UPDATE, mLastUpdateTimeMillis);
+        intent.putExtra(EXTRA_ADDRESS, mCurrentAddress);
+        intent.putExtra(EXTRA_REQUESTING_UDPATES, requestingLocationUpdates(this));
+
+        LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(intent);
+
+        Intent startWidgetIntent = new Intent(this, TrackingWidgetProvider.class);
+        startWidgetIntent.setAction(ACTION_FROM_SERVICE);
+        startWidgetIntent.putExtra(EXTRA_TOTAL_TIME, mElapsedTimeMillis);
+        startWidgetIntent.putExtra(EXTRA_CURRENT_ID, mCurrentId);
+        startWidgetIntent.putExtra(EXTRA_TOTAL_DISTANCE, mTotalDistance);
+        startWidgetIntent.putExtra(EXTRA_TOTAL_DISTANCE, mTotalDistance);
+        startWidgetIntent.putExtra(EXTRA_SPEED, mCurrentSpeed);
+        startWidgetIntent.putExtra(EXTRA_AVG_SPEED, mAverageSpeed);
+        startWidgetIntent.putExtra(EXTRA_ALTITUDE, mCurrentAltitude);
+        startWidgetIntent.putExtra(EXTRA_MAX_ALTITUDE, mMaxAltitude);
+
+        sendBroadcast(startWidgetIntent);
+    }
+
+    /**
+     * @return whether the timer is running
+     */
+    public boolean isTimerRunning() {
+        setStopWatchRunning(this, isTimerRunning);
+        return isTimerRunning;
+    }
+//    public static void elapsedTimeBroadCast(Context context) {
+//        // If the timer is running, the end time will be zero
+//        String elapsedTime = timer.elapsedTimeString0();
+//        Intent intent = new Intent(ACTION_BROADCAST);
+//        intent.putExtra(EXTRA_STOP_WATCH, elapsedTime);
+//
+//        LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
+//    }
 }

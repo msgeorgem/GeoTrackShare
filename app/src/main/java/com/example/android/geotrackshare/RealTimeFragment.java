@@ -3,6 +3,7 @@ package com.example.android.geotrackshare;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
@@ -15,6 +16,7 @@ import android.location.Location;
 import android.location.LocationManager;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
@@ -37,23 +39,25 @@ import android.widget.Toast;
 
 import com.example.android.geotrackshare.LocationService.LocationServiceConstants;
 import com.example.android.geotrackshare.LocationService.LocationUpdatesService;
-import com.example.android.geotrackshare.RunTypes.RunType;
 import com.example.android.geotrackshare.RunTypes.RunTypesAdapter;
 import com.example.android.geotrackshare.RunTypes.RunTypesAdapterNoUI;
-import com.google.android.gms.location.FusedLocationProviderClient;
-import com.google.android.gms.location.LocationCallback;
-import com.google.android.gms.location.LocationRequest;
+import com.example.android.geotrackshare.Utils.StopWatch;
+import com.example.android.geotrackshare.Utils.StopWatchHandler;
 
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 
 import static com.example.android.geotrackshare.AdvancedSettingsActivity.preferenceBooleanDisableAutoStop;
 import static com.example.android.geotrackshare.LocationService.LocationServiceConstants.requestingLocationUpdates;
+import static com.example.android.geotrackshare.LocationService.LocationServiceConstants.setLastTrackType;
+import static com.example.android.geotrackshare.LocationService.LocationServiceConstants.setStartTimeCurrentTrack;
+import static com.example.android.geotrackshare.LocationService.LocationServiceConstants.startTimeCurrentTrack;
+import static com.example.android.geotrackshare.LocationService.LocationUpdatesService.EXTRA_START_STOPWATCH;
 import static com.example.android.geotrackshare.LocationService.LocationUpdatesService.REQUEST_CHECK_SETTINGS;
+import static com.example.android.geotrackshare.MainActivity.mCategories;
 
 
 /**
@@ -114,6 +118,7 @@ public class RealTimeFragment extends Fragment implements
     public static SharedPreferences sharedPrefs, mSharedPrefsRunType;
     public String tmDevice, androidId;
     public TelephonyManager tm;
+//    public static Handler mHandler;
     /**
      * Time when the location was updated represented as a String.
      */
@@ -124,18 +129,7 @@ public class RealTimeFragment extends Fragment implements
     View mView;
     // The BroadcastReceiver used to listen from broadcasts from the service.
     private MyReceiver myReceiver;
-    /**
-     * Provides access to the Fused Location Provider API.
-     */
-    private FusedLocationProviderClient mFusedLocationClient;
-    /**
-     * Stores parameters for requests to the FusedLocationProviderApi.
-     */
-    private LocationRequest mLocationRequest;
-    /**
-     * Callback for Location events.
-     */
-    private LocationCallback mLocationCallback;
+
     // UI Widgets.
     private Button mRequestLocationUpdatesButton;
     private Button mRemoveLocationUpdatesButton;
@@ -146,7 +140,8 @@ public class RealTimeFragment extends Fragment implements
     private TextView mAvgSpeedTextView;
     private TextView mMinAltitudeTextView;
     private TextView mMaxAltitudeTextView;
-    private TextView mElapsedTimeTextView;
+    // Message type for the handler
+    private final static int MSG_UPDATE_TIME = 0;
     private TextView mTotalDistanceTextView;
     private TextView mRunNumber;
     private TextView mAddressOutputTextView;
@@ -165,7 +160,7 @@ public class RealTimeFragment extends Fragment implements
     private String mAvgSpeedLabel;
     private String mMinAltitudeLabel;
     private String mMaxAltitudeLabel;
-    private String mElapsedTimeLabel;
+    public static TextView mElapsedTimeTextView;
     private String mLastRunLabel;
     private String mCurrentRunLabel;
     private String mDistanceLabel;
@@ -181,9 +176,19 @@ public class RealTimeFragment extends Fragment implements
             mAverageSpeed, mMaxAltitude, mMinAltitude, mTotalTime, mDistance, mTotalDistance,
             mPreviousLatitude, mPreviousLongitude, mRoundedDistance;
     private Location mCurrentLocation;
-    public static ArrayList<RunType> mCategories;
+
     private RunTypesAdapter mAdapter;
     private Spinner mSpinner;
+    public static String mElapsedTimeLabel;
+    final int MSG_START_TIMER = 0;
+    final int MSG_STOP_TIMER = 1;
+    final int MSG_UPDATE_TIMER = 2;
+    final int REFRESH_RATE = 100;
+    // Handler to update the UI every second when the timer is running
+    private final Handler mStopWatchHandler = new StopWatchHandler(this);
+    private StopWatch timer = new StopWatch();
+    private boolean serviceBound;
+
     /**
      * Tracks the status of the location updates request. Value changes when the user presses the
      * Start Updates and Stop Updates buttons.
@@ -210,11 +215,29 @@ public class RealTimeFragment extends Fragment implements
         }
     };
 
+    public static RealTimeFragment newInstance() {
+        RealTimeFragment fragment = new RealTimeFragment();
+
+        return fragment;
+    }
     public RealTimeFragment() {
         // Required empty public constructor
     }
 
-    @SuppressLint("HardwareIds")
+    public void launchStopWatch() {
+        Intent startIntent = new Intent(getContext(), LocationUpdatesService.class);
+        // Extra to help us figure out if we arrived in onStartCommand via the notification or not.
+        startIntent.setAction(EXTRA_START_STOPWATCH);
+        PendingIntent pStartIntent = PendingIntent.getService(getContext(), 0,
+                startIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        try {
+            pStartIntent.send();
+        } catch (PendingIntent.CanceledException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @SuppressLint({"HardwareIds", "HandlerLeak"})
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -228,6 +251,7 @@ public class RealTimeFragment extends Fragment implements
         myReceiver = new MyReceiver();
         // Check that the user hasn't revoked permissions by going to Settings.
         if (mRequestingLocationUpdates) {
+            mStopWatchHandler.sendEmptyMessage(MSG_UPDATE_TIME);
             if (!checkPermissions()) {
                 requestPermissions();
             }
@@ -247,16 +271,6 @@ public class RealTimeFragment extends Fragment implements
         // Spinner click listener
         mSpinner.setOnItemSelectedListener(this);
 
-        // Spinner Drop down elements
-        mCategories = new ArrayList<RunType>();
-        mCategories.add(new RunType(R.drawable.ic_directions_walk_black_24dp,
-                R.string.Run_type_walk, R.string.Run_type_walk_desc, 5000, 0.0));
-        mCategories.add(new RunType(R.drawable.ic_directions_bike_black_24dp,
-                R.string.Run_type_bike, R.string.Run_type_bike_desc, 6000, 0.0));
-        mCategories.add(new RunType(R.drawable.ic_directions_car_black_24dp,
-                R.string.Run_type_car, R.string.Run_type_car_desc, 10000, 0.0));
-        mCategories.add(new RunType(R.drawable.ic_developer_board_black_48dp,
-                R.string.Run_type_custom, R.string.Run_type_custom_desc, 9999, 0.0));
 
         // Creating adapter for spinner
         mAdapter = new RunTypesAdapter(getActivity(), R.layout.list_run_type, mCategories);
@@ -310,6 +324,61 @@ public class RealTimeFragment extends Fragment implements
         mLastUpdateTime = "";
         mElapsedTime = "";
         mStartTimeString = "";
+        Long startTime = startTimeCurrentTrack(mContext);
+        Calendar c = Calendar.getInstance();
+        SimpleDateFormat df = new SimpleDateFormat("HH:mm:ss");
+        String formattedDate = df.format(c.getTime());
+        Long currentTime = c.getTimeInMillis();
+
+        Long elapsedTime = currentTime - startTime;
+//        if (startTime == 300780120){
+////            mElapsedTimeTextView.setText(String.format(Locale.ENGLISH, "%s: %s",
+////                    mElapsedTimeLabel, "00:00:00"));
+//            String currentTimeString = String.format("%02d:%02d:%02d", TimeUnit.MILLISECONDS.toHours(currentTime),
+//                    TimeUnit.MILLISECONDS.toMinutes(currentTime) % TimeUnit.HOURS.toMinutes(1),
+//                    TimeUnit.MILLISECONDS.toSeconds(currentTime) % TimeUnit.MINUTES.toSeconds(1));
+////            mElapsedTimeTextView.setText(String.format(Locale.ENGLISH, "%s: %s",
+////                    mElapsedTimeLabel, formattedDate));
+//            mElapsedTimeTextView.setText("Current Date and Time : "+formattedDate);
+//
+//
+//        } else {
+//            String elapsedTimeString = String.format("%02d:%02d:%02d", TimeUnit.MILLISECONDS.toHours(elapsedTime),
+//                    TimeUnit.MILLISECONDS.toMinutes(elapsedTime) % TimeUnit.HOURS.toMinutes(1),
+//                    TimeUnit.MILLISECONDS.toSeconds(elapsedTime) % TimeUnit.MINUTES.toSeconds(1));
+//
+//            mElapsedTimeTextView.setText(String.format(Locale.ENGLISH, "%s: %s",
+//                    mElapsedTimeLabel, elapsedTimeString));
+//        }
+
+//        mHandler = new Handler()
+//        {
+//            @Override
+//            public void handleMessage(Message msg) {
+//                super.handleMessage(msg);
+//                switch (msg.what) {
+//                    case MSG_START_TIMER:
+//                        long startTime = timer.start();
+//                        setStartTimeCurrentTrack(mContext,startTime);  //start timer
+//                        mHandler.sendEmptyMessage(MSG_UPDATE_TIMER);
+//                        break;
+//                    case MSG_UPDATE_TIMER:
+//                        mElapsedTimeTextView.setText(String.format(Locale.ENGLISH, "%s: %s",
+//                                mElapsedTimeLabel, timer.elapsedTimeString0()));
+////                        mElapsedTimeTextView.setText(""+ timer.elapsedTimeString0());
+//                        mHandler.sendEmptyMessageDelayed(MSG_UPDATE_TIMER,REFRESH_RATE); //text view is updated every second,
+//                        break;                                  //though the timer is still running
+//                    case MSG_STOP_TIMER:
+//                        mHandler.removeMessages(MSG_UPDATE_TIMER); // no more updates.
+//                        timer.stop();//stop timer
+//                        mElapsedTimeTextView.setText(""+ timer.toString1());
+//                        break;
+//
+//                    default:
+//                        break;
+//                }
+//            }
+//        };
 
         // Update values using data stored in the Bundle.
         updateValuesFromBundle(savedInstanceState);
@@ -350,11 +419,16 @@ public class RealTimeFragment extends Fragment implements
                 if (!checkPermissions()) {
                     requestPermissions();
                 } else {
+
                     mService.startUpdatesButtonHandler();
+
+//                    LocationUpdatesService.startStopWatch();
+                    mStopWatchHandler.sendEmptyMessage(MSG_START_TIMER);
+                    setStartTimeCurrentTrack(mContext, LocationUpdatesService.startTimeStopWatch);
+//                    LocationUpdatesService.elapsedTimeBroadCast(getActivity());
                 }
-
                 updateConstants();
-
+                MapFragmentLive.mRequestingLocationUpdates = true;
                 long mIntervall = UPDATE_INTERVAL_IN_MILLISECONDS / 1000;
                 String mIntervalll = String.valueOf(mIntervall) + " s";
                 mIntervalTextView.setText(String.format(Locale.ENGLISH, "%s: %s", mIntervalLabel,
@@ -366,10 +440,15 @@ public class RealTimeFragment extends Fragment implements
         mRemoveLocationUpdatesButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-
+                MapFragmentLive.mRequestingLocationUpdates = false;
                 mService.stopUpdatesButtonHandler();
                 mRunNumber.setText(String.format(Locale.ENGLISH, "%s: %s",
                         mLastRunLabel, mCurrentId));
+//                mStopWatchHandler.sendEmptyMessage(MSG_STOP_TIMER);
+//                mStopWatchHandler.sendEmptyMessage(MSG_STOP_TIMER);
+                LocationUpdatesService.stopStopWatch();
+                updateStopWatchStop();
+
 
             }
         });
@@ -588,7 +667,7 @@ public class RealTimeFragment extends Fragment implements
     }
 
 
-    private void requestPermissions() {
+    public void requestPermissions() {
         boolean shouldProvideRationale =
                 ActivityCompat.shouldShowRequestPermissionRationale((Activity) mContext,
                         Manifest.permission.ACCESS_FINE_LOCATION);
@@ -713,7 +792,8 @@ public class RealTimeFragment extends Fragment implements
             mElapsedTimeMillis = intent.getLongExtra(LocationUpdatesService.EXTRA_TOTAL_TIME, 0);
             mLastUpdateTimeMillis = intent.getLongExtra(LocationUpdatesService.EXTRA_LAST_TIME_UPDATE, 0);
             mCurrentAddress = intent.getStringExtra(LocationUpdatesService.EXTRA_ADDRESS);
-
+            String mStopWatch = intent.getStringExtra(LocationUpdatesService.EXTRA_STOP_WATCH);
+//            Log.i("onlyUIupdate",mStopWatch);
             mAltitudeTextView.setText(String.format(Locale.ENGLISH, "%s: %f", mAltitudeLabel,
                     mCurrentAltitude));
             mSpeedTextView.setText(String.format(Locale.ENGLISH, "%s: %.1f", mSpeedLabel,
@@ -728,12 +808,12 @@ public class RealTimeFragment extends Fragment implements
             mTotalDistanceTextView.setText(String.format(Locale.ENGLISH, "%s: %.3f",
                     mDistanceLabel, mTotalDistance));
 
-            mElapsedTime = String.format("%02d:%02d:%02d", TimeUnit.MILLISECONDS.toHours(mElapsedTimeMillis),
-                    TimeUnit.MILLISECONDS.toMinutes(mElapsedTimeMillis) % TimeUnit.HOURS.toMinutes(1),
-                    TimeUnit.MILLISECONDS.toSeconds(mElapsedTimeMillis) % TimeUnit.MINUTES.toSeconds(1));
+//            mElapsedTime = String.format("%02d:%02d:%02d", TimeUnit.MILLISECONDS.toHours(mElapsedTimeMillisStopWatch),
+//                    TimeUnit.MILLISECONDS.toMinutes(mElapsedTimeMillisStopWatch) % TimeUnit.HOURS.toMinutes(1),
+//                    TimeUnit.MILLISECONDS.toSeconds(mElapsedTimeMillisStopWatch) % TimeUnit.MINUTES.toSeconds(1));
 
-            mElapsedTimeTextView.setText(String.format(Locale.ENGLISH, "%s: %s",
-                    mElapsedTimeLabel, mElapsedTime));
+//            mElapsedTimeTextView.setText(String.format(Locale.ENGLISH, "%s: %s",
+//                    mElapsedTimeLabel, mStopWatch));
 
             String mHours = new SimpleDateFormat("HH:mm:ss").format(new Date(mLastUpdateTimeMillis));
             mLastUpdateTimeTextView.setText(String.format(Locale.ENGLISH, "%s: %s",
@@ -756,6 +836,7 @@ public class RealTimeFragment extends Fragment implements
         // On selecting a spinner item
 
         RUN_TYPE_VALUE = mSpinner.getSelectedItemPosition();
+        setLastTrackType(mContext, RUN_TYPE_VALUE);
         RUN_TYPE_TITLE = getString(mAdapter.getItem(RUN_TYPE_VALUE).getTitle());
         RUN_TYPE_PICTURE = mAdapter.getItem(RUN_TYPE_VALUE).getPicture();
         RUN_TYPE_DESCRIPTION = getString(mAdapter.getItem(RUN_TYPE_VALUE).getDescription());
@@ -794,6 +875,32 @@ public class RealTimeFragment extends Fragment implements
         public void onReceive(Context context, Intent intent) {
             onlyUIupdate(intent);
 
+        }
+    }
+
+    /**
+     * Updates the StopWatch when a run starts
+     */
+    private void updateStopWatchPause() {
+        mStopWatchHandler.sendEmptyMessage(MSG_UPDATE_TIME);
+        mElapsedTimeTextView.setText("Paused");
+    }
+
+    /**
+     * Updates the StopWatch when a run stops
+     */
+    public void updateStopWatchStop() {
+        mStopWatchHandler.removeMessages(MSG_UPDATE_TIME);
+        mElapsedTimeTextView.setText("Stopped");
+
+    }
+
+    /**
+     * Updates the StopWatch readout in the UI; the service must be bound
+     */
+    public void updateStopWatch(String elapsedTime) {
+        if (mBound) {
+            mElapsedTimeTextView.setText(elapsedTime);
         }
     }
 }

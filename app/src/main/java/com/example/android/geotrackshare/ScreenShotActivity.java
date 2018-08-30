@@ -61,8 +61,8 @@ import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry._ID;
 import static com.example.android.geotrackshare.DetailActivity.ACTION_FROM_RUNLISTFRAGMENT;
 import static com.example.android.geotrackshare.DetailFragment.ACTION_FROM_DETAILFRAGMENT;
+import static com.example.android.geotrackshare.MainActivity.mCategories;
 import static com.example.android.geotrackshare.RealTimeFragment.RUN_TYPE_PICTURE;
-import static com.example.android.geotrackshare.RealTimeFragment.mCategories;
 import static com.example.android.geotrackshare.TrackList.RunListFragment.EXTRA_AVG_SPEED;
 import static com.example.android.geotrackshare.TrackList.RunListFragment.EXTRA_RUNTYPE;
 import static com.example.android.geotrackshare.TrackList.RunListFragment.EXTRA_RUN_ID;
