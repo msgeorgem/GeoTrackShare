@@ -449,7 +449,7 @@ public class LocationUpdatesService extends Service implements SensorEventListen
     public void onDestroy() {
         mServiceHandler.removeCallbacksAndMessages(null);
         // Cleanup service before destruction
-        stopWatchThread.quit();
+        // stopWatchThread.quit();
     }
 
     @Override

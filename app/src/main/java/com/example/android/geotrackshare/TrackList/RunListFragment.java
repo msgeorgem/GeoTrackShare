@@ -51,6 +51,7 @@ import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_TOTAL_DISTANCEP;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.CONTENT_URI_POST;
 import static com.example.android.geotrackshare.DetailActivity.ACTION_FROM_RUNLISTFRAGMENT;
+import static com.example.android.geotrackshare.LocationService.LocationServiceConstants.lastTrackID;
 
 
 /**
@@ -112,6 +113,7 @@ public class RunListFragment extends Fragment implements LoaderManager.LoaderCal
         // Inflate the layout for this fragment
         view = inflater.inflate(R.layout.fragment_run_list, container, false);
         Log.i(LOG_TAG, "initLoader");
+        mContext = getActivity();
 
         // Find a reference to the {@link ListView} in the layout
         tracksRecyclerView = view.findViewById(R.id.list_runs);
@@ -130,13 +132,14 @@ public class RunListFragment extends Fragment implements LoaderManager.LoaderCal
         tracksRecyclerView.setItemAnimator(new DefaultItemAnimator());
 
         mEmptyStateTextView = view.findViewById(R.id.empty_view_runs);
-        mEmptyStateTextView.setText(R.string.no_runs);
+        if (lastTrackID(mContext) == 0) {
+            mEmptyStateTextView.setText(R.string.no_runs);
+        }
 
         mloadingIndicator = view.findViewById(R.id.loading_indicator_runs);
         //kick off the loader
         getLoaderManager().initLoader(FAV_LOADER, null, this);
         mDbHelper = new TrackDbHelper(getActivity());
-        mContext = getActivity();
 
         return view;
     }

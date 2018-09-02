@@ -3,7 +3,6 @@ package com.example.android.geotrackshare;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
-import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
@@ -55,7 +54,6 @@ import static com.example.android.geotrackshare.LocationService.LocationServiceC
 import static com.example.android.geotrackshare.LocationService.LocationServiceConstants.setLastTrackType;
 import static com.example.android.geotrackshare.LocationService.LocationServiceConstants.setStartTimeCurrentTrack;
 import static com.example.android.geotrackshare.LocationService.LocationServiceConstants.startTimeCurrentTrack;
-import static com.example.android.geotrackshare.LocationService.LocationUpdatesService.EXTRA_START_STOPWATCH;
 import static com.example.android.geotrackshare.LocationService.LocationUpdatesService.REQUEST_CHECK_SETTINGS;
 import static com.example.android.geotrackshare.MainActivity.mCategories;
 
@@ -224,18 +222,6 @@ public class RealTimeFragment extends Fragment implements
         // Required empty public constructor
     }
 
-    public void launchStopWatch() {
-        Intent startIntent = new Intent(getContext(), LocationUpdatesService.class);
-        // Extra to help us figure out if we arrived in onStartCommand via the notification or not.
-        startIntent.setAction(EXTRA_START_STOPWATCH);
-        PendingIntent pStartIntent = PendingIntent.getService(getContext(), 0,
-                startIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-        try {
-            pStartIntent.send();
-        } catch (PendingIntent.CanceledException e) {
-            e.printStackTrace();
-        }
-    }
 
     @SuppressLint({"HardwareIds", "HandlerLeak"})
     @Override
@@ -421,11 +407,9 @@ public class RealTimeFragment extends Fragment implements
                 } else {
 
                     mService.startUpdatesButtonHandler();
-
-//                    LocationUpdatesService.startStopWatch();
                     mStopWatchHandler.sendEmptyMessage(MSG_START_TIMER);
                     setStartTimeCurrentTrack(mContext, LocationUpdatesService.startTimeStopWatch);
-//                    LocationUpdatesService.elapsedTimeBroadCast(getActivity());
+
                 }
                 updateConstants();
                 MapFragmentLive.mRequestingLocationUpdates = true;
@@ -444,9 +428,7 @@ public class RealTimeFragment extends Fragment implements
                 mService.stopUpdatesButtonHandler();
                 mRunNumber.setText(String.format(Locale.ENGLISH, "%s: %s",
                         mLastRunLabel, mCurrentId));
-//                mStopWatchHandler.sendEmptyMessage(MSG_STOP_TIMER);
-//                mStopWatchHandler.sendEmptyMessage(MSG_STOP_TIMER);
-                LocationUpdatesService.stopStopWatch();
+
                 updateStopWatchStop();
 
 
