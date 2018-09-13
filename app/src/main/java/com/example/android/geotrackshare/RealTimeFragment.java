@@ -51,11 +51,16 @@ import java.util.UUID;
 
 import static com.example.android.geotrackshare.AdvancedSettingsActivity.preferenceBooleanDisableAutoStop;
 import static com.example.android.geotrackshare.LocationService.LocationServiceConstants.requestingLocationUpdates;
+import static com.example.android.geotrackshare.LocationService.LocationServiceConstants.serviceBound;
 import static com.example.android.geotrackshare.LocationService.LocationServiceConstants.setLastTrackType;
+import static com.example.android.geotrackshare.LocationService.LocationServiceConstants.setServiceBound;
 import static com.example.android.geotrackshare.LocationService.LocationServiceConstants.setStartTimeCurrentTrack;
 import static com.example.android.geotrackshare.LocationService.LocationServiceConstants.startTimeCurrentTrack;
 import static com.example.android.geotrackshare.LocationService.LocationUpdatesService.REQUEST_CHECK_SETTINGS;
 import static com.example.android.geotrackshare.MainActivity.mCategories;
+import static com.example.android.geotrackshare.Utils.StopWatchHandler.MSG_START_TIMER;
+import static com.example.android.geotrackshare.Utils.StopWatchHandler.MSG_STOP_TIMER;
+import static com.example.android.geotrackshare.Utils.StopWatchHandler.MSG_UPDATE_TIMER;
 
 
 /**
@@ -77,7 +82,7 @@ public class RealTimeFragment extends Fragment implements
     /**
      * Code used in requesting runtime permissions.
      */
-    private static final int REQUEST_PERMISSIONS_REQUEST_CODE = 34;
+    public static final int REQUEST_PERMISSIONS_REQUEST_CODE = 34;
     /**
      * Time without move.
      */
@@ -138,8 +143,6 @@ public class RealTimeFragment extends Fragment implements
     private TextView mAvgSpeedTextView;
     private TextView mMinAltitudeTextView;
     private TextView mMaxAltitudeTextView;
-    // Message type for the handler
-    private final static int MSG_UPDATE_TIME = 0;
     private TextView mTotalDistanceTextView;
     private TextView mRunNumber;
     private TextView mAddressOutputTextView;
@@ -178,14 +181,9 @@ public class RealTimeFragment extends Fragment implements
     private RunTypesAdapter mAdapter;
     private Spinner mSpinner;
     public static String mElapsedTimeLabel;
-    final int MSG_START_TIMER = 0;
-    final int MSG_STOP_TIMER = 1;
-    final int MSG_UPDATE_TIMER = 2;
-    final int REFRESH_RATE = 100;
     // Handler to update the UI every second when the timer is running
     private final Handler mStopWatchHandler = new StopWatchHandler(this);
     private StopWatch timer = new StopWatch();
-    private boolean serviceBound;
 
     /**
      * Tracks the status of the location updates request. Value changes when the user presses the
@@ -194,8 +192,7 @@ public class RealTimeFragment extends Fragment implements
     private Boolean mRequestingLocationUpdates;
     // A reference to the service used to get location updates.
     public static LocationUpdatesService mService = null;
-    // Tracks the bound state of the service.
-    private boolean mBound = false;
+
     // Monitors the state of the connection to the service.
     private final ServiceConnection mServiceConnection = new ServiceConnection() {
 
@@ -203,13 +200,13 @@ public class RealTimeFragment extends Fragment implements
         public void onServiceConnected(ComponentName name, IBinder service) {
             LocationUpdatesService.LocalBinder binder = (LocationUpdatesService.LocalBinder) service;
             mService = binder.getService();
-            mBound = true;
+            setServiceBound(mContext, true);
         }
 
         @Override
         public void onServiceDisconnected(ComponentName name) {
             mService = null;
-            mBound = false;
+            setServiceBound(mContext, false);
         }
     };
 
@@ -237,7 +234,7 @@ public class RealTimeFragment extends Fragment implements
         myReceiver = new MyReceiver();
         // Check that the user hasn't revoked permissions by going to Settings.
         if (mRequestingLocationUpdates) {
-            mStopWatchHandler.sendEmptyMessage(MSG_UPDATE_TIME);
+            mStopWatchHandler.sendEmptyMessage(MSG_UPDATE_TIMER);
             if (!checkPermissions()) {
                 requestPermissions();
             }
@@ -428,8 +425,7 @@ public class RealTimeFragment extends Fragment implements
                 mService.stopUpdatesButtonHandler();
                 mRunNumber.setText(String.format(Locale.ENGLISH, "%s: %s",
                         mLastRunLabel, mCurrentId));
-
-                updateStopWatchStop();
+                mStopWatchHandler.sendEmptyMessage(MSG_STOP_TIMER);
 
 
             }
@@ -444,7 +440,7 @@ public class RealTimeFragment extends Fragment implements
         return mView;
     }
 
-    private void updateConstants() {
+    public void updateConstants() {
         RUN_TYPE_VALUE = mSharedPrefsRunType.getInt(RUN_TYPE_KEY, -1);
         if (RUN_TYPE_VALUE != -1) {
             // set the selected value of the spinner
@@ -596,12 +592,12 @@ public class RealTimeFragment extends Fragment implements
     public void onStop() {
         super.onStop();
         Log.d(TAG, "onStop()");
-        if (mBound) {
+        if (serviceBound(mContext)) {
             // Unbind from the service. This signals to the service that this activity is no longer
             // in the foreground, and the service can respond by promoting itself to a foreground
             // service.
             mContext.getApplicationContext().unbindService(mServiceConnection);
-            mBound = false;
+            setServiceBound(mContext, false);
         }
         PreferenceManager.getDefaultSharedPreferences(mContext)
                 .unregisterOnSharedPreferenceChangeListener(this);
@@ -864,7 +860,7 @@ public class RealTimeFragment extends Fragment implements
      * Updates the StopWatch when a run starts
      */
     private void updateStopWatchPause() {
-        mStopWatchHandler.sendEmptyMessage(MSG_UPDATE_TIME);
+        mStopWatchHandler.sendEmptyMessage(MSG_UPDATE_TIMER);
         mElapsedTimeTextView.setText("Paused");
     }
 
@@ -872,7 +868,7 @@ public class RealTimeFragment extends Fragment implements
      * Updates the StopWatch when a run stops
      */
     public void updateStopWatchStop() {
-        mStopWatchHandler.removeMessages(MSG_UPDATE_TIME);
+        mStopWatchHandler.removeMessages(MSG_UPDATE_TIMER);
         mElapsedTimeTextView.setText("Stopped");
 
     }
@@ -881,7 +877,7 @@ public class RealTimeFragment extends Fragment implements
      * Updates the StopWatch readout in the UI; the service must be bound
      */
     public void updateStopWatch(String elapsedTime) {
-        if (mBound) {
+        if (serviceBound(mContext)) {
             mElapsedTimeTextView.setText(elapsedTime);
         }
     }

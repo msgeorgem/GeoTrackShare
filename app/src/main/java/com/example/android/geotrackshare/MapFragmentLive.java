@@ -2,10 +2,13 @@ package com.example.android.geotrackshare;
 
 
 import android.Manifest;
+import android.app.Activity;
 import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
@@ -13,8 +16,14 @@ import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.location.Location;
 import android.location.LocationManager;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.IBinder;
+import android.provider.Settings;
+import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -32,6 +41,7 @@ import android.widget.Toast;
 import com.example.android.geotrackshare.Data.TrackContract;
 import com.example.android.geotrackshare.LocationService.LocationUpdatesService;
 import com.example.android.geotrackshare.RunTypes.RunTypesAdapterNoUI;
+import com.example.android.geotrackshare.Utils.StopWatchHandler;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
@@ -58,8 +68,14 @@ import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry._ID;
 import static com.example.android.geotrackshare.LocationService.LocationServiceConstants.lastTrackType;
 import static com.example.android.geotrackshare.LocationService.LocationServiceConstants.requestingLocationUpdates;
+import static com.example.android.geotrackshare.LocationService.LocationServiceConstants.serviceBound;
+import static com.example.android.geotrackshare.LocationService.LocationServiceConstants.setServiceBound;
+import static com.example.android.geotrackshare.LocationService.LocationServiceConstants.setStartTimeCurrentTrack;
 import static com.example.android.geotrackshare.MainActivity.mCategories;
+import static com.example.android.geotrackshare.RealTimeFragment.REQUEST_PERMISSIONS_REQUEST_CODE;
 import static com.example.android.geotrackshare.RealTimeFragment.RUN_TYPE_PICTURE;
+import static com.example.android.geotrackshare.Utils.StopWatchHandler.MSG_START_TIMER;
+import static com.example.android.geotrackshare.Utils.StopWatchHandler.MSG_UPDATE_TIMER;
 
 
 /**
@@ -99,7 +115,26 @@ public class MapFragmentLive extends Fragment implements OnMapReadyCallback {
     private int mCurrentType, mCurrentId;
     private LatLng mCurrentLocation;
     private RunTypesAdapterNoUI mAdapter;
+    // A reference to the service used to get location updates.
+    public static LocationUpdatesService mService = null;
+    // Handler to update the UI every second when the timer is running
+    private final Handler mStopWatchHandler = new StopWatchHandler(this);
+    // Monitors the state of the connection to the service.
+    private final ServiceConnection mServiceConnection = new ServiceConnection() {
 
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            LocationUpdatesService.LocalBinder binder = (LocationUpdatesService.LocalBinder) service;
+            mService = binder.getService();
+            setServiceBound(mContext, true);
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            mService = null;
+            setServiceBound(mContext, false);
+        }
+    };
 
     public MapFragmentLive() {
         // Required empty public constructor
@@ -191,7 +226,29 @@ public class MapFragmentLive extends Fragment implements OnMapReadyCallback {
 //            e.printStackTrace();
 //        }
 //        mMapView.getMapAsync(this);
+        // Bind to the service. If the service is in foreground mode, this signals to the service
+        // that since this activity is in the foreground, the service can exit foreground mode.
 
+        fabRecord.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (!checkPermissions()) {
+                    requestPermissions();
+                } else {
+
+                    mService.startUpdatesButtonHandler();
+                    mStopWatchHandler.sendEmptyMessage(MSG_START_TIMER);
+                    setStartTimeCurrentTrack(mContext, LocationUpdatesService.startTimeStopWatch);
+                }
+//                updateConstants();
+                mRequestingLocationUpdates = true;
+
+            }
+        });
+
+
+        mContext.getApplicationContext().bindService(new Intent(mContext, LocationUpdatesService.class), mServiceConnection,
+                Context.BIND_AUTO_CREATE);
 
         return mView;
     }
@@ -479,6 +536,145 @@ public class MapFragmentLive extends Fragment implements OnMapReadyCallback {
             String totalDistanceString = String.valueOf(totlaDistance3Dec + " km");
             mDistanceTextView.setText(totalDistanceString);
         }
+    }
+
+    /**
+     * Updates the StopWatch when a run starts
+     */
+    private void updateStopWatchPause() {
+        mStopWatchHandler.sendEmptyMessage(MSG_UPDATE_TIMER);
+        mTimeTextView.setText("Paused");
+    }
+
+    /**
+     * Updates the StopWatch when a run stops
+     */
+    public void updateStopWatchStop() {
+        mStopWatchHandler.removeMessages(MSG_UPDATE_TIMER);
+        mTimeTextView.setText("Stopped");
+
+    }
+
+    /**
+     * Updates the StopWatch readout in the UI; the service must be bound
+     */
+    public void updateStopWatch(String elapsedTime) {
+        if (serviceBound(mContext)) {
+            mTimeTextView.setText(elapsedTime);
+        }
+    }
+
+    /**
+     * Shows a {@link Snackbar}.
+     *
+     * @param mainTextStringId The id for the string resource for the Snackbar text.
+     * @param actionStringId   The text of the action item.
+     * @param listener         The listener associated with the Snackbar action.
+     */
+    private void showSnackbar(final int mainTextStringId, final int actionStringId,
+                              View.OnClickListener listener) {
+        Snackbar.make(
+                getActivity().findViewById(android.R.id.content),
+                getString(mainTextStringId),
+                Snackbar.LENGTH_INDEFINITE)
+                .setAction(getString(actionStringId), listener).show();
+    }
+
+
+    public void requestPermissions() {
+        boolean shouldProvideRationale =
+                ActivityCompat.shouldShowRequestPermissionRationale((Activity) mContext,
+                        Manifest.permission.ACCESS_FINE_LOCATION);
+        boolean shouldProvideRationale1 =
+                ActivityCompat.shouldShowRequestPermissionRationale((Activity) mContext,
+                        Manifest.permission.READ_PHONE_STATE);
+
+        // Provide an additional rationale to the user. This would happen if the user denied the
+        // request previously, but didn't check the "Don't ask again" checkbox.
+        if (shouldProvideRationale || shouldProvideRationale1) {
+            Log.i(TAG, "Displaying permission rationale to provide additional context.");
+            showSnackbar(R.string.permission_rationale,
+                    android.R.string.ok, new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            // Request permission
+                            ActivityCompat.requestPermissions((Activity) mContext,
+                                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                                    REQUEST_PERMISSIONS_REQUEST_CODE);
+                            // Request permission
+                            ActivityCompat.requestPermissions((Activity) mContext,
+                                    new String[]{Manifest.permission.READ_PHONE_STATE},
+                                    REQUEST_PERMISSIONS_REQUEST_CODE);
+                        }
+                    });
+        } else {
+            Log.i(TAG, "Requesting permission");
+            // Request permission. It's possible this can be auto answered if device policy
+            // sets the permission in a given state or the user denied the permission
+            // previously and checked "Never ask again".
+            ActivityCompat.requestPermissions((Activity) mContext,
+                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                    REQUEST_PERMISSIONS_REQUEST_CODE);
+            ActivityCompat.requestPermissions((Activity) mContext,
+                    new String[]{Manifest.permission.READ_PHONE_STATE},
+                    REQUEST_PERMISSIONS_REQUEST_CODE);
+        }
+    }
+
+    /**
+     * Callback received when a permissions request has been completed.
+     */
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
+                                           @NonNull int[] grantResults) {
+        Log.i(TAG, "onRequestPermissionResult");
+        if (requestCode == REQUEST_PERMISSIONS_REQUEST_CODE) {
+            if (grantResults.length <= 0) {
+                // If user interaction was interrupted, the permission request is cancelled and you
+                // receive empty arrays.
+                Log.i(TAG, "User interaction was cancelled.");
+            } else if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                if (mRequestingLocationUpdates) {
+                    Log.i(TAG, "Permission granted, updates requested, starting location updates");
+                    mService.startUpdatesButtonHandler();
+                }
+            } else {
+                // Permission denied.
+                setButtonsEnabledState(false);
+                // Notify the user via a SnackBar that they have rejected a core permission for the
+                // app, which makes the Activity useless. In a real app, core permissions would
+                // typically be best requested during a welcome-screen flow.
+
+                // Additionally, it is important to remember that a permission might have been
+                // rejected without asking the user for permission (device policy or "Never ask
+                // again" prompts). Therefore, a user interface affordance is typically implemented
+                // when permissions are denied. Otherwise, your app could appear unresponsive to
+                // touches or interactions which have required permissions.
+                showSnackbar(R.string.permission_denied_explanation,
+                        R.string.settings, new View.OnClickListener() {
+                            @Override
+                            public void onClick(View view) {
+                                // Build intent that displays the App settings screen.
+                                Intent intent = new Intent();
+                                intent.setAction(
+                                        Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+                                Uri uri = Uri.fromParts("package",
+                                        BuildConfig.APPLICATION_ID, null);
+                                intent.setData(uri);
+                                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                                startActivity(intent);
+                            }
+                        });
+            }
+        }
+    }
+
+    /**
+     * Returns the current state of the permissions needed.
+     */
+    private boolean checkPermissions() {
+        return PackageManager.PERMISSION_GRANTED == ActivityCompat.checkSelfPermission(mContext,
+                Manifest.permission.ACCESS_FINE_LOCATION);
     }
 }
 

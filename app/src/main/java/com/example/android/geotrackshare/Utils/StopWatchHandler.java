@@ -5,6 +5,7 @@ import android.os.HandlerThread;
 import android.os.Message;
 
 import com.example.android.geotrackshare.LocationService.LocationUpdatesService;
+import com.example.android.geotrackshare.MapFragmentLive;
 import com.example.android.geotrackshare.RealTimeFragment;
 
 import java.lang.ref.WeakReference;
@@ -16,7 +17,8 @@ public class StopWatchHandler extends Handler {
     private static final String TAG = StopWatchHandler.class.getSimpleName();
     public static long mStartTime;
     final int REFRESH_RATE = 100;
-    public WeakReference<RealTimeFragment> fragment;
+    private WeakReference<RealTimeFragment> realTimeFragment;
+    private WeakReference<MapFragmentLive> mapFragmentLive;
     StopWatch timer = new StopWatch();
     Handler mStopWatchHandler;
     private volatile HandlerThread stopWatchThread;
@@ -28,7 +30,12 @@ public class StopWatchHandler extends Handler {
 //        this.fragment = new WeakReference<>(fragment);
 //    }
     public StopWatchHandler(RealTimeFragment fragment) {
-        this.fragment = new WeakReference<>(fragment);
+        this.realTimeFragment = new WeakReference<>(fragment);
+
+    }
+
+    public StopWatchHandler(MapFragmentLive fragment) {
+        this.mapFragmentLive = new WeakReference<>(fragment);
 
     }
 
@@ -53,7 +60,8 @@ public class StopWatchHandler extends Handler {
 //                mElapsedTime = timer.elapsedTimeString0();
 
                 try {
-                    fragment.get().updateStopWatch(elapsedTime);
+                    realTimeFragment.get().updateStopWatch(elapsedTime);
+                    mapFragmentLive.get().updateStopWatch(elapsedTime);
                 } catch (NullPointerException e) {
                     System.out.print("Caught the NullPointerException");
                 }
@@ -64,7 +72,8 @@ public class StopWatchHandler extends Handler {
             case MSG_STOP_TIMER:
 //                mStopWatchHandler.removeMessages(MSG_UPDATE_TIMER); // no more updates.
                 removeMessages(MSG_UPDATE_TIMER); // no more updates.
-                fragment.get().updateStopWatchStop();
+                realTimeFragment.get().updateStopWatchStop();
+//                mapFragmentLive.get().updateStopWatchStop();
 //                timer.stop();//stop timer
                 LocationUpdatesService.stopStopWatch();
 //                        RealTimeFragment.mElapsedTimeTextView.setText(""+ timer.toString1());

@@ -31,6 +31,7 @@ public class LocationServiceConstants {
     public static final String KEY_REQUESTING_LOCATION_UPDATES = "requesting_locaction_updates";
     public static final String KEY_IS_TRACK_PAUSED = "KEY_IS_TRACK_PAUSED";
     public static final String KEY_IS_STOPWATCH_RUNNING = "KEY_IS_STOPWATCH_RUNNING";
+    public static final String KEY_IS_SERVICE_BOUND = "KEY_IS_SERVICE_BOUND";
     public static final String KEY_LAST_TRACK_TYPE = "KEY_LAST_TRACK_TYPE";
     public static final String KEY_LAST_TRACK_ID = "KEY_LAST_TRACK_ID";
     public static final String KEY_START_TIME_TRACK = "KEY_START_TIME_TRACK";
@@ -208,5 +209,29 @@ public class LocationServiceConstants {
         return context.getString(R.string.location_updated,
                 DateFormat.getDateTimeInstance().format(new Date()));
     }
+
+    /**
+     * Returns true if service in Bound, otherwise returns false.
+     *
+     * @param context The {@link Context}.
+     */
+    public static Boolean serviceBound(Context context) {
+        return PreferenceManager.getDefaultSharedPreferences(context)
+                .getBoolean(KEY_IS_SERVICE_BOUND, false);
+    }
+
+    /**
+     * Stores the boolean isBound in SharedPreferences.
+     *
+     * @param isBound updates start time.
+     */
+    public static void setServiceBound(Context context, boolean isBound) {
+        PreferenceManager.getDefaultSharedPreferences(context)
+                .edit()
+                .putBoolean(KEY_IS_SERVICE_BOUND, isBound)
+                .apply();
+    }
+
+
 
 }
