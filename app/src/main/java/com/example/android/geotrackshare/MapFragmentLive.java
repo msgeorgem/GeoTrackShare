@@ -75,8 +75,8 @@ import static com.example.android.geotrackshare.MainActivity.mCategories;
 import static com.example.android.geotrackshare.RealTimeFragment.REQUEST_PERMISSIONS_REQUEST_CODE;
 import static com.example.android.geotrackshare.RealTimeFragment.RUN_TYPE_PICTURE;
 import static com.example.android.geotrackshare.Utils.StopWatchHandler.MSG_START_TIMER;
-import static com.example.android.geotrackshare.Utils.StopWatchHandler.MSG_UPDATE_TIMER;
-
+import static com.example.android.geotrackshare.Utils.StopWatchHandler.MSG_STOP_TIMER_MAP_LIVE;
+import static com.example.android.geotrackshare.Utils.StopWatchHandler.MSG_UPDATE_TIMER_MAP_LIVE;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -182,11 +182,18 @@ public class MapFragmentLive extends Fragment implements OnMapReadyCallback {
         fabRecord = mView.findViewById(R.id.fab_record);
         mCurrentType = lastTrackType(mContext);
 
+        // Check that the user hasn't revoked permissions by going to Settings.
+        mRequestingLocationUpdates = requestingLocationUpdates(mContext);
+        if (mRequestingLocationUpdates) {
+            mStopWatchHandler.sendEmptyMessage(MSG_UPDATE_TIMER_MAP_LIVE);
+            if (!checkPermissions()) {
+                requestPermissions();
+            }
+        }
         myReceiver = new MyReceiver();
         currentLocation();
         queryCoordinatesList(mCurrentId);
 
-        mRequestingLocationUpdates = requestingLocationUpdates(mContext);
         if (!mRequestingLocationUpdates) {
             fabPause.setVisibility(View.INVISIBLE);
             fabStop.setVisibility(View.INVISIBLE);
@@ -235,13 +242,22 @@ public class MapFragmentLive extends Fragment implements OnMapReadyCallback {
                 if (!checkPermissions()) {
                     requestPermissions();
                 } else {
-
                     mService.startUpdatesButtonHandler();
                     mStopWatchHandler.sendEmptyMessage(MSG_START_TIMER);
                     setStartTimeCurrentTrack(mContext, LocationUpdatesService.startTimeStopWatch);
                 }
 //                updateConstants();
                 mRequestingLocationUpdates = true;
+
+            }
+        });
+
+        fabStop.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                mRequestingLocationUpdates = false;
+                mService.stopUpdatesButtonHandler();
+                mStopWatchHandler.sendEmptyMessage(MSG_STOP_TIMER_MAP_LIVE);
 
             }
         });
@@ -542,7 +558,7 @@ public class MapFragmentLive extends Fragment implements OnMapReadyCallback {
      * Updates the StopWatch when a run starts
      */
     private void updateStopWatchPause() {
-        mStopWatchHandler.sendEmptyMessage(MSG_UPDATE_TIMER);
+        mStopWatchHandler.sendEmptyMessage(MSG_UPDATE_TIMER_MAP_LIVE);
         mTimeTextView.setText("Paused");
     }
 
@@ -550,7 +566,7 @@ public class MapFragmentLive extends Fragment implements OnMapReadyCallback {
      * Updates the StopWatch when a run stops
      */
     public void updateStopWatchStop() {
-        mStopWatchHandler.removeMessages(MSG_UPDATE_TIMER);
+        mStopWatchHandler.removeMessages(MSG_UPDATE_TIMER_MAP_LIVE);
         mTimeTextView.setText("Stopped");
 
     }
@@ -640,7 +656,7 @@ public class MapFragmentLive extends Fragment implements OnMapReadyCallback {
                 }
             } else {
                 // Permission denied.
-                setButtonsEnabledState(false);
+//                setButtonsEnabledState(false);
                 // Notify the user via a SnackBar that they have rejected a core permission for the
                 // app, which makes the Activity useless. In a real app, core permissions would
                 // typically be best requested during a welcome-screen flow.

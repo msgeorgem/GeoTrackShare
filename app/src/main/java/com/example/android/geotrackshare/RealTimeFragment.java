@@ -58,9 +58,11 @@ import static com.example.android.geotrackshare.LocationService.LocationServiceC
 import static com.example.android.geotrackshare.LocationService.LocationServiceConstants.startTimeCurrentTrack;
 import static com.example.android.geotrackshare.LocationService.LocationUpdatesService.REQUEST_CHECK_SETTINGS;
 import static com.example.android.geotrackshare.MainActivity.mCategories;
+import static com.example.android.geotrackshare.MainActivity.mSharedPrefsRunType;
 import static com.example.android.geotrackshare.Utils.StopWatchHandler.MSG_START_TIMER;
-import static com.example.android.geotrackshare.Utils.StopWatchHandler.MSG_STOP_TIMER;
-import static com.example.android.geotrackshare.Utils.StopWatchHandler.MSG_UPDATE_TIMER;
+import static com.example.android.geotrackshare.Utils.StopWatchHandler.MSG_STOP_TIMER_REAL_TIME;
+import static com.example.android.geotrackshare.Utils.StopWatchHandler.MSG_UPDATE_TIMER_MAP_LIVE;
+import static com.example.android.geotrackshare.Utils.StopWatchHandler.MSG_UPDATE_TIMER_REAL_TIME;
 
 
 /**
@@ -118,7 +120,7 @@ public class RealTimeFragment extends Fragment implements
     public static int DELETE_LAST_ROWS = 15;
     public static boolean DISABLE_AUTO_CLOSE;
     public static Context mContext;
-    public static SharedPreferences sharedPrefs, mSharedPrefsRunType;
+    public static SharedPreferences sharedPrefs;
     public String tmDevice, androidId;
     public TelephonyManager tm;
 //    public static Handler mHandler;
@@ -227,14 +229,13 @@ public class RealTimeFragment extends Fragment implements
 
         mContext = getActivity();
         sharedPrefs = PreferenceManager.getDefaultSharedPreferences(mContext);
-        mSharedPrefsRunType = mContext.getSharedPreferences("Run_Type", Context.MODE_PRIVATE);
         mRequestingLocationUpdates = requestingLocationUpdates(mContext);
 
         DISABLE_AUTO_CLOSE = switchDisableAutoStop();
         myReceiver = new MyReceiver();
         // Check that the user hasn't revoked permissions by going to Settings.
         if (mRequestingLocationUpdates) {
-            mStopWatchHandler.sendEmptyMessage(MSG_UPDATE_TIMER);
+            mStopWatchHandler.sendEmptyMessage(MSG_UPDATE_TIMER_REAL_TIME);
             if (!checkPermissions()) {
                 requestPermissions();
             }
@@ -425,8 +426,7 @@ public class RealTimeFragment extends Fragment implements
                 mService.stopUpdatesButtonHandler();
                 mRunNumber.setText(String.format(Locale.ENGLISH, "%s: %s",
                         mLastRunLabel, mCurrentId));
-                mStopWatchHandler.sendEmptyMessage(MSG_STOP_TIMER);
-
+                mStopWatchHandler.sendEmptyMessage(MSG_STOP_TIMER_REAL_TIME);
 
             }
         });
@@ -860,7 +860,7 @@ public class RealTimeFragment extends Fragment implements
      * Updates the StopWatch when a run starts
      */
     private void updateStopWatchPause() {
-        mStopWatchHandler.sendEmptyMessage(MSG_UPDATE_TIMER);
+        mStopWatchHandler.sendEmptyMessage(MSG_UPDATE_TIMER_REAL_TIME);
         mElapsedTimeTextView.setText("Paused");
     }
 
@@ -868,7 +868,7 @@ public class RealTimeFragment extends Fragment implements
      * Updates the StopWatch when a run stops
      */
     public void updateStopWatchStop() {
-        mStopWatchHandler.removeMessages(MSG_UPDATE_TIMER);
+        mStopWatchHandler.removeMessages(MSG_UPDATE_TIMER_MAP_LIVE);
         mElapsedTimeTextView.setText("Stopped");
 
     }

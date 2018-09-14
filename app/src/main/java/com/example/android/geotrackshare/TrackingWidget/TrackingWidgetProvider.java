@@ -35,8 +35,8 @@ import com.example.android.geotrackshare.R;
 
 import static com.example.android.geotrackshare.LocationService.LocationServiceConstants.requestingLocationUpdates;
 import static com.example.android.geotrackshare.LocationService.LocationUpdatesService.EXTRA_CURRENT_ID;
+import static com.example.android.geotrackshare.MainActivity.mSharedPrefsRunType;
 import static com.example.android.geotrackshare.RealTimeFragment.RUN_TYPE_PICTURE_KEY;
-import static com.example.android.geotrackshare.RealTimeFragment.mSharedPrefsRunType;
 
 
 public class TrackingWidgetProvider extends AppWidgetProvider {

@@ -38,6 +38,7 @@ public class MainActivity extends AppCompatActivity
     public static String WALK = "WALK";
     public static String CAR = "CAR";
     public static ArrayList<RunType> mCategories;
+    public static SharedPreferences mSharedPrefsRunType;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,6 +47,7 @@ public class MainActivity extends AppCompatActivity
         switchTheme();
         setContentView(R.layout.activity_main);
         switchScreenOn();
+        mSharedPrefsRunType = getSharedPreferences("Run_Type", Context.MODE_PRIVATE);
 
         // Spinner Drop down elements
         mCategories = new ArrayList<RunType>();

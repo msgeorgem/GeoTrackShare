@@ -111,13 +111,13 @@ import static com.example.android.geotrackshare.LocationService.LocationServiceC
 import static com.example.android.geotrackshare.LocationService.LocationServiceConstants.setRequestingLocationUpdates;
 import static com.example.android.geotrackshare.LocationService.LocationServiceConstants.setStartTimeCurrentTrack;
 import static com.example.android.geotrackshare.LocationService.LocationServiceConstants.setStopWatchRunning;
+import static com.example.android.geotrackshare.MainActivity.mSharedPrefsRunType;
 import static com.example.android.geotrackshare.RealTimeFragment.DELETE_LAST_ROWS;
 import static com.example.android.geotrackshare.RealTimeFragment.DISABLE_AUTO_CLOSE;
 import static com.example.android.geotrackshare.RealTimeFragment.RUN_TYPE_INTERVAL;
 import static com.example.android.geotrackshare.RealTimeFragment.RUN_TYPE_NOISE;
 import static com.example.android.geotrackshare.RealTimeFragment.RUN_TYPE_PICTURE_KEY;
 import static com.example.android.geotrackshare.RealTimeFragment.RUN_TYPE_VALUE;
-import static com.example.android.geotrackshare.RealTimeFragment.mSharedPrefsRunType;
 import static com.example.android.geotrackshare.TrackingWidget.TrackingWidgetProvider.ACTION_FROM_SERVICE;
 
 
