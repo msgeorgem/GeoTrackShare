@@ -1,7 +1,6 @@
 package com.example.android.geotrackshare.Utils;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.util.concurrent.TimeUnit;
 
 public class StopWatch {
     private long startTime = 0;
@@ -84,6 +83,10 @@ public class StopWatch {
     }
 
     public String elapsedTimeString0() {
-        return new SimpleDateFormat("HH:mm:ss").format(new Date(getElapsedTimeMili0()));
+        long totalTime = getElapsedTimeMili0();
+        return String.format("%02d:%02d:%02d", TimeUnit.MILLISECONDS.toHours(totalTime),
+                TimeUnit.MILLISECONDS.toMinutes(totalTime) % TimeUnit.HOURS.toMinutes(1),
+                TimeUnit.MILLISECONDS.toSeconds(totalTime) % TimeUnit.MINUTES.toSeconds(1));
+
     }
 }

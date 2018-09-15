@@ -263,7 +263,6 @@ public class MapFragmentLive extends Fragment implements OnMapReadyCallback {
             }
         });
 
-
         mContext.getApplicationContext().bindService(new Intent(mContext, LocationUpdatesService.class), mServiceConnection,
                 Context.BIND_AUTO_CREATE);
 
@@ -332,9 +331,12 @@ public class MapFragmentLive extends Fragment implements OnMapReadyCallback {
         LatLngBounds POZNAN = new LatLngBounds(poznan, poznan);
 
         if (mSouthLatitude == 0 && mWestLongitude == 0) {
-            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(poznan, 13));
+            if (mCurrentLocation != null) {
+                mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(mCurrentLocation, 13));
+            } else {
+                mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(poznan, 13));
+            }
         } else {
-
             mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(TRIP.getCenter(), 13));
         }
 
