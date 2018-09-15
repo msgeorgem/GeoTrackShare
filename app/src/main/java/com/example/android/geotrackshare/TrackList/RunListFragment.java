@@ -26,6 +26,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -34,8 +35,10 @@ import com.example.android.geotrackshare.Data.TrackDbHelper;
 import com.example.android.geotrackshare.DetailActivity;
 import com.example.android.geotrackshare.R;
 import com.example.android.geotrackshare.ScreenShotActivity;
+import com.example.android.geotrackshare.Utils.ExportImportDB;
 import com.example.android.geotrackshare.Utils.SqliteExporter;
 
+import java.io.File;
 import java.util.Arrays;
 
 import static android.support.constraint.Constraints.TAG;
@@ -51,7 +54,7 @@ import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_TOTAL_DISTANCEP;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.CONTENT_URI_POST;
 import static com.example.android.geotrackshare.DetailActivity.ACTION_FROM_RUNLISTFRAGMENT;
-import static com.example.android.geotrackshare.LocationService.LocationServiceConstants.lastTrackID;
+import static com.example.android.geotrackshare.Utils.ExportImportDB.appDir;
 
 
 /**
@@ -92,6 +95,7 @@ public class RunListFragment extends Fragment implements LoaderManager.LoaderCal
     //    private static final String SELECTION = TrackContract.TrackingEntry.getGreaterThanZero();
     private RecyclerView tracksRecyclerView;
     private TrackDbHelper mDbHelper;
+    private Button importButton;
 
     /* Checks if external storage is available for read and write */
     public static boolean isExternalStorageWritable() {
@@ -114,7 +118,7 @@ public class RunListFragment extends Fragment implements LoaderManager.LoaderCal
         view = inflater.inflate(R.layout.fragment_run_list, container, false);
         Log.i(LOG_TAG, "initLoader");
         mContext = getActivity();
-
+        appDir = new File(Environment.getExternalStorageDirectory() + "/BackupFolder/GeoTrackShare/geotrackshare.db");
         // Find a reference to the {@link ListView} in the layout
         tracksRecyclerView = view.findViewById(R.id.list_runs);
 
@@ -132,14 +136,13 @@ public class RunListFragment extends Fragment implements LoaderManager.LoaderCal
         tracksRecyclerView.setItemAnimator(new DefaultItemAnimator());
 
         mEmptyStateTextView = view.findViewById(R.id.empty_view_runs);
-        if (lastTrackID(mContext) == 0) {
-            mEmptyStateTextView.setText(R.string.no_runs);
-        }
 
         mloadingIndicator = view.findViewById(R.id.loading_indicator_runs);
         //kick off the loader
         getLoaderManager().initLoader(FAV_LOADER, null, this);
         mDbHelper = new TrackDbHelper(getActivity());
+        importButton = view.findViewById(R.id.importButton);
+        importButton.setVisibility(View.INVISIBLE);
 
         return view;
     }
@@ -260,7 +263,25 @@ public class RunListFragment extends Fragment implements LoaderManager.LoaderCal
         // Update {@link ItemCursor Adapter with this new cursor containing updated item data
         if (!data.moveToFirst()) {
             Log.e(LOG_TAG, "NO DATA");
-            mEmptyStateTextView.setVisibility(View.VISIBLE);
+            if (appDir.exists()) {
+                importButton.setVisibility(View.VISIBLE);
+                importButton.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        if (isExternalStorageWritable()) {
+                            ExportImportDB.importDB();
+                            Toast.makeText(mContext, "DataBase Imported",
+                                    Toast.LENGTH_LONG).show();
+                        } else {
+                            Toast.makeText(mContext, "Storage in not writable",
+                                    Toast.LENGTH_LONG).show();
+                        }
+                    }
+                });
+            } else {
+                mEmptyStateTextView.setVisibility(View.VISIBLE);
+                mEmptyStateTextView.setText(R.string.no_runs);
+            }
             mloadingIndicator.setVisibility(View.GONE);
         } else {
             mEmptyStateTextView.setVisibility(View.GONE);
@@ -293,7 +314,6 @@ public class RunListFragment extends Fragment implements LoaderManager.LoaderCal
 
         startActivity(intent);
     }
-
 
 
     public void shareViaEmail(int runId) {

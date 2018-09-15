@@ -33,6 +33,17 @@
                 android:title="Advanced Settings" />
 
         </menu>
-    </item>
+        <group
+            android:checkableBehavior="single"
+            android:enabled="true">
 
+            <item
+                android:id="@+id/export_import"
+                android:icon="@drawable/ic_menu_manage"
+                android:title="@string/export_import" />
+
+        </group>
+
+
+    </item>
 </menu>

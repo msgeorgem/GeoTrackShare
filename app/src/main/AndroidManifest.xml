@@ -156,6 +156,7 @@
         </provider>
 
         <activity android:name=".ScreenShotActivity"></activity>
+        <activity android:name=".Utils.ExportImportDB"></activity>
     </application>
 
 </manifest>

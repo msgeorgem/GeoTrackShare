@@ -25,13 +25,6 @@ public class StopWatchHandler extends Handler {
     Handler mStopWatchHandler;
     private volatile HandlerThread stopWatchThread;
 
-//    public StopWatchHandler(Looper looper) {
-//    }
-
-    //    public StopWatchHandler(RealTimeFragment fragment) {
-//        this.fragment = new WeakReference<>(fragment);
-//    }
-
 
     public StopWatchHandler(RealTimeFragment fragment) {
         this.realTimeFragment = new WeakReference<>(fragment);
@@ -71,25 +64,21 @@ public class StopWatchHandler extends Handler {
                 } catch (NullPointerException e) {
                     System.out.print("Caught the NullPointerException");
                 }
-
-//                mStopWatchHandler.sendEmptyMessageDelayed(MSG_UPDATE_TIMER,REFRESH_RATE); //text view is updated every second,
                 sendEmptyMessageDelayed(MSG_UPDATE_TIMER_MAP_LIVE, REFRESH_RATE); //text view is updated every second,
                 break;
 
             case MSG_STOP_TIMER_REAL_TIME:
-//                mStopWatchHandler.removeMessages(MSG_UPDATE_TIMER); // no more updates.
+
                 removeMessages(MSG_UPDATE_TIMER_REAL_TIME); // no more updates.
                 realTimeFragment.get().updateStopWatchStop();
                 LocationUpdatesService.stopStopWatch();
-//                        RealTimeFragment.mElapsedTimeTextView.setText(""+ timer.toString1());
                 break;
+
             case MSG_STOP_TIMER_MAP_LIVE:
-//                mStopWatchHandler.removeMessages(MSG_UPDATE_TIMER); // no more updates.
+
                 removeMessages(MSG_UPDATE_TIMER_MAP_LIVE); // no more updates.
                 mapFragmentLive.get().updateStopWatchStop();
-//                timer.stop();//stop timer
                 LocationUpdatesService.stopStopWatch();
-//                        RealTimeFragment.mElapsedTimeTextView.setText(""+ timer.toString1());
                 break;
 
             default:

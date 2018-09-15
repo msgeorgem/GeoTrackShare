@@ -44,6 +44,13 @@
     <string name="title_mode_settings">Advanced Settings</string>
     <string name="mode_settings_interval">GPS refresh interval is set for: </string>
     <string name="title_custom_settings">Custom Run Settings</string>
+    <string name="export_database">Export Database</string>
+    <string name="import_database">Import Database</string>
+    <string name="export_import">Export Import</string>
+    <string name="export_database_key">export_database_key</string>
+    <string name="import_database_key">import_database_key</string>
+    <string name="export_database_summary">Backup your tracks in separate sd folder. Suggested before uninstalling app.</string>
+    <string name="import_database_summary">Import previously exported database. Suggested after reinstalling app</string>
 
     <string name="run_settings_order_by_maxspeed_label">Max speed</string>
     <string name="run_settings_order_by_avrgspeed_label">Average speed</string>
@@ -163,8 +170,8 @@
     <string name="editor_update_item_failed">You already favor this movie</string>
     <string name="editor_insert_item_success">Run added to favourites</string>
 
-    <string name="no_runs">Run list is empty. You can add run by
-        turning tracking button. Just click it! </string>
+    <string name="no_runs">Run list is empty. No backup created. You can add run by
+        turning tracking button. Just record new run! </string>
 
     <string name="address_found">Address Found! </string>
     <string name="in_motion">…in motion…</string>

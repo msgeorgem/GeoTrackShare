@@ -32,6 +32,7 @@ public class AdvancedSettingsActivity extends AppCompatActivity {
             actionBar.setDisplayShowHomeEnabled(true);
             actionBar.setDisplayShowTitleEnabled(true);
         }
+
     }
 
     private void switchThemeS() {
@@ -44,6 +45,7 @@ public class AdvancedSettingsActivity extends AppCompatActivity {
             this.setTheme(R.style.AppThemeSettingsDarkTheme);
     }
     }
+
     public static class TracksPreferenceFragment extends PreferenceFragment implements Preference.OnPreferenceChangeListener {
 
         @Override
@@ -63,6 +65,7 @@ public class AdvancedSettingsActivity extends AppCompatActivity {
 
             Preference screenOnPreference = findPreference(getString(R.string.screen_on_switch_key));
             bindPreferenceSummaryToValue5(screenOnPreference);
+
 
         }
 

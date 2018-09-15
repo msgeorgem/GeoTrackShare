@@ -37,6 +37,7 @@ public class MainActivity extends AppCompatActivity
     public static String BICYCLE = "BICYCLE";
     public static String WALK = "WALK";
     public static String CAR = "CAR";
+    public static String EXPORTIMPORT = "EXPORTIMPORT";
     public static ArrayList<RunType> mCategories;
     public static SharedPreferences mSharedPrefsRunType;
 
@@ -167,6 +168,10 @@ public class MainActivity extends AppCompatActivity
             startActivity(settingsIntent);
         } else if (id == R.id.advanced_settings) {
             Intent settingsIntent = new Intent(this, AdvancedSettingsActivity.class);
+            startActivity(settingsIntent);
+        } else if (id == R.id.export_import) {
+            Intent settingsIntent = new Intent(this, ModeSettingsActivity.class);
+            settingsIntent.setAction(EXPORTIMPORT);
             startActivity(settingsIntent);
         }
 

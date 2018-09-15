@@ -115,6 +115,7 @@ public class MapFragmentLive extends Fragment implements OnMapReadyCallback {
     private int mCurrentType, mCurrentId;
     private LatLng mCurrentLocation;
     private RunTypesAdapterNoUI mAdapter;
+
     // A reference to the service used to get location updates.
     public static LocationUpdatesService mService = null;
     // Handler to update the UI every second when the timer is running
@@ -331,7 +332,7 @@ public class MapFragmentLive extends Fragment implements OnMapReadyCallback {
         LatLngBounds POZNAN = new LatLngBounds(poznan, poznan);
 
         if (mSouthLatitude == 0 && mWestLongitude == 0) {
-            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(mCurrentLocation, 13));
+            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(poznan, 13));
         } else {
 
             mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(TRIP.getCenter(), 13));
