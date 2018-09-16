@@ -27,6 +27,17 @@ public abstract class CursorRecyclerAdapter<VH extends RecyclerView.ViewHolder> 
         }
     }
 
+    public CursorRecyclerAdapter(Cursor c) {
+        this.cur = c;
+        this.mDataValid = cur != null;
+        mRowIdColumn = mDataValid ? cur.getColumnIndex("_id") : -1;
+        mDataSetObserver = new NotifyingDataSetObserver();
+        if (cur != null) {
+            cur.registerDataSetObserver(mDataSetObserver);
+        }
+    }
+
+
     public Cursor getCursor() {
         return cur;
     }

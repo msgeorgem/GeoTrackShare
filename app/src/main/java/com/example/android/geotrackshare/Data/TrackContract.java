@@ -23,7 +23,6 @@ public class TrackContract {
 
     public static final class TrackingEntry implements BaseColumns {
 
-
         public static final Uri CONTENT_URI = Uri.withAppendedPath(BASE_CONTENT_URI, PATH_TRACK);
         public static final Uri CONTENT_URI_POST = Uri.withAppendedPath(BASE_CONTENT_URI_POST, PATH_TRACK_POST);
         public static final String TABLE_NAME_TRACKING = "tracking";

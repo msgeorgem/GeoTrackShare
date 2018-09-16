@@ -7,6 +7,7 @@ import android.content.UriMatcher;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
+import android.support.annotation.NonNull;
 import android.util.Log;
 
 import static android.R.attr.id;
@@ -145,6 +146,39 @@ public class TrackProvider extends ContentProvider {
         // Once we know the ID of the new row in the table,
         // return the new URI with the ID appended to the end of it
         return ContentUris.withAppendedId(uri, id);
+    }
+
+    @Override
+    public int bulkInsert(@NonNull Uri uri, @NonNull ContentValues[] values) {
+        final SQLiteDatabase db = mDbHelper.getWritableDatabase();
+
+        switch (sUriMatcher.match(uri)) {
+
+            case ITEMS:
+                db.beginTransaction();
+                int rowsInserted = 0;
+                try {
+                    for (ContentValues value : values) {
+
+                        long _id = db.insert(TrackContract.TrackingEntry.TABLE_NAME_TRACKING, null, value);
+                        if (_id != -1) {
+                            rowsInserted++;
+                        }
+                    }
+                    db.setTransactionSuccessful();
+                } finally {
+                    db.endTransaction();
+                }
+
+                if (rowsInserted > 0) {
+                    getContext().getContentResolver().notifyChange(uri, null);
+                }
+
+                return rowsInserted;
+
+            default:
+                return super.bulkInsert(uri, values);
+        }
     }
 
     /**

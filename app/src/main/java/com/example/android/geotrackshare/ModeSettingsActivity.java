@@ -110,7 +110,7 @@ public class ModeSettingsActivity extends AppCompatActivity {
             importButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    ExportImportDB.importDB();
+                    ExportImportDB.importIntoDb(getApplication());
                     Toast.makeText(getBaseContext(), "DataBase Imported",
                             Toast.LENGTH_LONG).show();
                 }

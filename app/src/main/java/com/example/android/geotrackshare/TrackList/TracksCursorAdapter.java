@@ -63,6 +63,10 @@ public class TracksCursorAdapter extends CursorRecyclerAdapter<TracksCursorAdapt
 
     }
 
+    public TracksCursorAdapter(Cursor cursor) {
+        super(cursor);
+    }
+
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View itemView = LayoutInflater.from(parent.getContext())
