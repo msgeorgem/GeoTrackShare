@@ -18,6 +18,27 @@
             android:textSize="18sp"
             android:textStyle="bold|italic" />
 
+        <TextView
+            android:id="@+id/last_backup_desc"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginLeft="16dp"
+            android:layout_marginRight="16dp"
+            android:textSize="16sp"
+            android:textStyle="italic" />
+
+        <TextView
+            android:id="@+id/last_backup"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginBottom="16dp"
+            android:layout_marginLeft="16dp"
+            android:layout_marginRight="16dp"
+            android:layout_marginTop="4dp"
+            android:textSize="18sp" />
+
         <Button xmlns:android="http://schemas.android.com/apk/res/android"
             android:id="@+id/exportButton"
             android:layout_width="wrap_content"

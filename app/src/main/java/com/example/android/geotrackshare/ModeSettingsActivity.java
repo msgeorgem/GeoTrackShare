@@ -15,11 +15,16 @@ import android.widget.Toast;
 import com.example.android.geotrackshare.RunTypes.RunTypesAdapterNoUI;
 import com.example.android.geotrackshare.Utils.ExportImportDB;
 
+import static com.example.android.geotrackshare.LocationService.LocationServiceConstants.isExportDone;
+import static com.example.android.geotrackshare.LocationService.LocationServiceConstants.lastDBExportTime;
+import static com.example.android.geotrackshare.LocationService.LocationServiceConstants.setExportDone;
+import static com.example.android.geotrackshare.LocationService.LocationServiceConstants.setLastExportTime;
 import static com.example.android.geotrackshare.MainActivity.BICYCLE;
 import static com.example.android.geotrackshare.MainActivity.CAR;
 import static com.example.android.geotrackshare.MainActivity.EXPORTIMPORT;
 import static com.example.android.geotrackshare.MainActivity.WALK;
 import static com.example.android.geotrackshare.MainActivity.mCategories;
+import static com.example.android.geotrackshare.Utils.StopWatch.formatDate;
 
 /**
  * Created by Marcin on 2017-09-12.
@@ -67,6 +72,8 @@ public class ModeSettingsActivity extends AppCompatActivity {
         TextView modeDesctription1 = findViewById(R.id.mode_description1);
         TextView modeIntervaltext = findViewById(R.id.interval_text);
         TextView modeIntervalvalue = findViewById(R.id.interval_value);
+        final TextView lastBackup = findViewById(R.id.last_backup);
+        TextView lastBackupDesc = findViewById(R.id.last_backup_desc);
         Button exportButton = findViewById(R.id.exportButton);
         Button importButton = findViewById(R.id.importButton);
 
@@ -90,12 +97,26 @@ public class ModeSettingsActivity extends AppCompatActivity {
             description = getResources().getString(R.string.export_database_summary);
             description1 = getResources().getString(R.string.import_database_summary);
             exportButton.setVisibility(View.VISIBLE);
+            if (!isExportDone(getApplicationContext())) {
+                lastBackup.setText(R.string.no_backup);
+            } else {
+                String lastBackupString = getResources().getString(R.string.last_backup);
+                lastBackupDesc.setText(lastBackupString);
+                lastBackup.setText(lastDBExportTime(getApplicationContext()));
+            }
+
 
             exportButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     if (isExternalStorageWritable()) {
                         ExportImportDB.exportDB();
+
+                        String currentDateTimeString = formatDate();
+
+                        lastBackup.setText(currentDateTimeString);
+                        setLastExportTime(getApplicationContext(), currentDateTimeString);
+                        setExportDone(getApplicationContext(), true);
                         Toast.makeText(getBaseContext(), "DataBase Exported",
                                 Toast.LENGTH_LONG).show();
                     } else {
@@ -125,4 +146,5 @@ public class ModeSettingsActivity extends AppCompatActivity {
         String intervalValue = String.valueOf(interval / 1000);
         modeIntervalvalue.setText(intervalValue + " s");
     }
+
 }

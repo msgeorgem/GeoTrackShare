@@ -229,5 +229,7 @@
     <string name="light_mode">Light mode</string>
     <string name="darkness_mode">Darkness mode</string>
     <string name="snap_taken">Snap taken</string>
+    <string name="no_backup">Backup never done!</string>
+    <string name="last_backup">Last backup done:</string>
 
 </resources>

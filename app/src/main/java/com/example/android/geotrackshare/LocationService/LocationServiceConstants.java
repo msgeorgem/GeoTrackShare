@@ -29,13 +29,15 @@ import java.util.Date;
 public class LocationServiceConstants {
 
     public static final String KEY_REQUESTING_LOCATION_UPDATES = "requesting_locaction_updates";
-    public static final String KEY_IS_TRACK_PAUSED = "KEY_IS_TRACK_PAUSED";
-    public static final String KEY_IS_STOPWATCH_RUNNING = "KEY_IS_STOPWATCH_RUNNING";
-    public static final String KEY_IS_SERVICE_BOUND = "KEY_IS_SERVICE_BOUND";
-    public static final String KEY_LAST_TRACK_TYPE = "KEY_LAST_TRACK_TYPE";
-    public static final String KEY_LAST_TRACK_ID = "KEY_LAST_TRACK_ID";
-    public static final String KEY_START_TIME_TRACK = "KEY_START_TIME_TRACK";
-    public static final String KEY_PAUSE_TIME_TRACK = "KEY_PAUSE_TIME_TRACK";
+    private static final String KEY_IS_TRACK_PAUSED = "KEY_IS_TRACK_PAUSED";
+    private static final String KEY_IS_STOPWATCH_RUNNING = "KEY_IS_STOPWATCH_RUNNING";
+    private static final String KEY_IS_SERVICE_BOUND = "KEY_IS_SERVICE_BOUND";
+    private static final String KEY_LAST_TRACK_TYPE = "KEY_LAST_TRACK_TYPE";
+    private static final String KEY_LAST_TRACK_ID = "KEY_LAST_TRACK_ID";
+    private static final String KEY_START_TIME_TRACK = "KEY_START_TIME_TRACK";
+    private static final String KEY_PAUSE_TIME_TRACK = "KEY_PAUSE_TIME_TRACK";
+    private static final String KEY_LAST_DB_EXPORT = "KEY_LAST_DB_EXPORT";
+    private static final String KEY_IS_DB_EXPORT_DONE = "KEY_IS_DB_EXPORT_DONE";
 
 
 
@@ -232,6 +234,49 @@ public class LocationServiceConstants {
                 .apply();
     }
 
+    /**
+     * Returns last backup date and time in string, otherwise .
+     *
+     * @param context The {@link Context}.
+     */
+    public static String lastDBExportTime(Context context) {
+        return PreferenceManager.getDefaultSharedPreferences(context)
+                .getString(KEY_LAST_DB_EXPORT, String.valueOf(R.string.no_backup));
+    }
 
+    /**
+     * Stores the backup date and time  in SharedPreferences.
+     *
+     * @param dateTimeOfExport Last backup date and time.
+     */
+    public static void setLastExportTime(Context context, String dateTimeOfExport) {
+        PreferenceManager.getDefaultSharedPreferences(context)
+                .edit()
+                .putString(KEY_LAST_DB_EXPORT, dateTimeOfExport)
+                .apply();
+    }
+
+
+    /**
+     * Returns true if db export done, otherwise returns false.
+     *
+     * @param context The {@link Context}.
+     */
+    public static boolean isExportDone(Context context) {
+        return PreferenceManager.getDefaultSharedPreferences(context)
+                .getBoolean(KEY_IS_DB_EXPORT_DONE, false);
+    }
+
+    /**
+     * Stores flag if export was done state in SharedPreferences.
+     *
+     * @param exportDone The export updates state.
+     */
+    public static void setExportDone(Context context, boolean exportDone) {
+        PreferenceManager.getDefaultSharedPreferences(context)
+                .edit()
+                .putBoolean(KEY_IS_DB_EXPORT_DONE, exportDone)
+                .apply();
+    }
 
 }

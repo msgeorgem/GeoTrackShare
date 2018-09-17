@@ -1,5 +1,9 @@
 package com.example.android.geotrackshare.Utils;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 
 public class StopWatch {
@@ -88,5 +92,19 @@ public class StopWatch {
                 TimeUnit.MILLISECONDS.toMinutes(totalTime) % TimeUnit.HOURS.toMinutes(1),
                 TimeUnit.MILLISECONDS.toSeconds(totalTime) % TimeUnit.MINUTES.toSeconds(1));
 
+    }
+
+    public static String formatDate() {
+        Date currentTime = new Date();
+        SimpleDateFormat sdf = new SimpleDateFormat("EEE, MMM d, yyyy hh:mm:ss a z");
+        SimpleDateFormat sdf1 = new SimpleDateFormat("hh:mm:ss");
+        String tz = String.valueOf(TimeZone.getDefault());
+        sdf1.setTimeZone(TimeZone.getTimeZone(tz));
+
+        long milis = System.currentTimeMillis();
+        String date = DateFormat.getDateInstance(DateFormat.FULL).format(milis);
+        String time = DateFormat.getTimeInstance().format(milis);
+        return time + " " + date;
+//        return sdf1.format(currentTime);
     }
 }

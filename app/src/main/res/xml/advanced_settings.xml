@@ -31,16 +31,5 @@
         android:summaryOn="On"
         android:title="@string/screen_on_switch_label" />
 
-    <Preference
-        android:key="@string/export_database_key"
-        android:summary="@string/export_database_summary"
-        android:title="@string/export_database"
-        android:widgetLayout="@layout/export_button" />
-
-    <Preference
-        android:key="@string/import_database_key"
-        android:summary="@string/import_database_summary"
-        android:title="@string/import_database"
-        android:widgetLayout="@layout/import_button" />
 
 </PreferenceScreen>
