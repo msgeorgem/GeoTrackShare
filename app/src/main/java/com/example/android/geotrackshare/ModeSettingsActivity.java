@@ -2,11 +2,13 @@ package com.example.android.geotrackshare;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.preference.PreferenceManager;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -14,6 +16,11 @@ import android.widget.Toast;
 
 import com.example.android.geotrackshare.RunTypes.RunTypesAdapterNoUI;
 import com.example.android.geotrackshare.Utils.ExportImportDB;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.net.URLConnection;
 
 import static com.example.android.geotrackshare.LocationService.LocationServiceConstants.isExportDone;
 import static com.example.android.geotrackshare.LocationService.LocationServiceConstants.lastDBExportTime;
@@ -24,6 +31,8 @@ import static com.example.android.geotrackshare.MainActivity.CAR;
 import static com.example.android.geotrackshare.MainActivity.EXPORTIMPORT;
 import static com.example.android.geotrackshare.MainActivity.WALK;
 import static com.example.android.geotrackshare.MainActivity.mCategories;
+import static com.example.android.geotrackshare.Utils.ExportImportDB.appDB;
+import static com.example.android.geotrackshare.Utils.ExportImportDB.backupDB;
 import static com.example.android.geotrackshare.Utils.StopWatch.formatDate;
 
 /**
@@ -131,9 +140,9 @@ public class ModeSettingsActivity extends AppCompatActivity {
             importButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    ExportImportDB.importIntoDb(getApplication());
-                    Toast.makeText(getBaseContext(), "DataBase Imported",
-                            Toast.LENGTH_LONG).show();
+                    showFileChooser();
+//                    ExportImportDB.importIntoDb(getApplication());
+
                 }
             });
 
@@ -145,6 +154,96 @@ public class ModeSettingsActivity extends AppCompatActivity {
 
         String intervalValue = String.valueOf(interval / 1000);
         modeIntervalvalue.setText(intervalValue + " s");
+    }
+
+
+    public void showFileChooser() {
+
+
+//        Uri selectedUri = Uri.parse(String.valueOf(backupPath));
+        Uri selectedUri = Uri.parse(Environment.getExternalStorageDirectory().getPath() + "/BackupFolder/Geotrackshare/");
+        String s = String.valueOf(selectedUri);
+
+        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+
+
+        //        intent.setType("text/db");
+//        intent.setData(selectedUri);
+//        intent.addCategory(Intent.CATEGORY_DEFAULT);
+//        intent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(selectedImagePath));
+        String mime = null;
+        try {
+            mime = URLConnection.guessContentTypeFromStream(new FileInputStream(appDB));
+            String mimes = mime;
+            Log.i("mime", mime);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+//        // New Approach
+//        Uri apkURI = FileProvider.getUriForFile(
+//                this,
+//                getApplicationContext()
+//                        .getPackageName() + ".provider", appDB);
+//        intent.setDataAndType(apkURI, mime);
+//        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+
+
+        Toast.makeText(this, s,
+                Toast.LENGTH_SHORT).show();
+
+        try {
+            startActivityForResult(Intent.createChooser(intent, "Select a File to Upload"), 0);
+        } catch (android.content.ActivityNotFoundException ex) {
+            Toast.makeText(this, "Please install a File Manager.",
+                    Toast.LENGTH_SHORT).show();
+        }
+
+//        I can download contents from Dropbox and for Google Drive, by getContentResolver().openInputStream(data.getData()).
+
+
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+
+        switch (requestCode) {
+            case 0: {
+                //what you want to do
+                String FileName;
+                String selectedFile = null;
+                String selectedFile0 = null;
+
+                try {
+                    selectedFile = data.getData().getPath();
+                    selectedFile0 = selectedFile.substring(selectedFile.lastIndexOf(":") + 1);
+                    Log.i("OnActivityResult", String.valueOf(selectedFile));
+                } catch (NullPointerException e) {
+                    System.out.print("Caught the NullPointerException");
+                }
+
+
+//                /** Gets the file name from the path, only option code not implemented below**/
+//                Path path = null;
+//                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+//                    path = Paths.get(selectedFile);
+//                    FileName = path.getFileName().toString();
+//                }
+
+                System.out.println();
+
+
+                String finalSelectedPath = Environment.getExternalStorageDirectory().getPath() + "/" + selectedFile0;
+                File file1 = new File(String.valueOf(finalSelectedPath));
+
+                ExportImportDB.importIntoDb(getApplication(), file1);
+//                Toast.makeText(getBaseContext(), "DataBase Imported",
+//                        Toast.LENGTH_LONG).show();
+
+
+                Log.i("OnActivityResult", String.valueOf(finalSelectedPath));
+                Log.i("OnActivityResult", String.valueOf(backupDB));
+            }
+        }
     }
 
 }

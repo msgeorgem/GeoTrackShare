@@ -269,7 +269,7 @@ public class RunListFragment extends Fragment implements LoaderManager.LoaderCal
                     @Override
                     public void onClick(View v) {
                         if (isExternalStorageWritable()) {
-                            ExportImportDB.importIntoDb(mContext);
+                            ExportImportDB.importIntoDb1(mContext);
                             Toast.makeText(mContext, "DataBase Imported",
                                     Toast.LENGTH_LONG).show();
                         } else {

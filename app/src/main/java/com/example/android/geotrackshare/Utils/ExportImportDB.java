@@ -15,6 +15,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.net.URLConnection;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 
@@ -58,21 +59,69 @@ public class ExportImportDB extends Activity {
     public static final String PACKAGE_NAME = CONTENT_AUTHORITY;
 
 
-    protected static final String backupDBPath = "/BackupFolder/Geotrackshare/geotrackshare.db";
+    public static final String backupDBPath = "/BackupFolder/Geotrackshare/";
+    public static final File backupPath = new File(sd, backupDBPath);
+    public static final File appDB = new File(data, currentDBPath);
     protected static final File sd = Environment.getExternalStorageDirectory();
-    protected static final File backupDB = new File(sd, backupDBPath);
+    protected static final String dbFileName = "geotrackshare.db";
+    protected static final String totalDBFilePath = backupDBPath + dbFileName;
     /**
      * Contains: /data/data/com.example.android.geotrackshare/databases/geotrackshare.db
      **/
     protected static final String currentDBPath = "//data//" + PACKAGE_NAME + "//databases//" + DATABASE_NAME;
     protected static final File data = Environment.getDataDirectory();
-    protected static final File appDB = new File(data, currentDBPath);
+    public static final File backupDB = new File(sd, totalDBFilePath);
     public static File appDir = new File(Environment.getExternalStorageDirectory() + "/BackupFolder/GeoTrackShare");
 
     /**
      * Imports the file at IMPORT_FILE
      **/
-    public static boolean importIntoDb(Context ctx) {
+    public static boolean importIntoDb(Context ctx, File choseFile) {
+
+
+        if (!SdIsPresent()) return false;
+
+        if (!checkDbIsValid(choseFile, ctx)) return false;
+
+        try {
+            SQLiteDatabase sqlDbBackup = SQLiteDatabase.openDatabase
+                    (choseFile.getPath(), null, SQLiteDatabase.OPEN_READONLY);
+
+            ContentResolver trackContentResolver = ctx.getContentResolver();
+            /* Delete old track data because we don't need to keep multiple tracks' data */
+            trackContentResolver.delete(
+                    CONTENT_URI_POST,
+                    null,
+                    null);
+
+            /* Insert backedup data into GeotrackShare's ContentProvider */
+            trackContentResolver.bulkInsert(
+                    CONTENT_URI_POST,
+                    readTableToArrayPost(sqlDbBackup, TABLE_NAME_POST_TRACKING));
+
+            trackContentResolver.delete(
+                    CONTENT_URI,
+                    null,
+                    null);
+
+            /* Insert backedup data into GeotrackShare's ContentProvider */
+            trackContentResolver.bulkInsert(
+                    CONTENT_URI,
+                    readTableToArray(sqlDbBackup, TABLE_NAME_TRACKING));
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * Imports the file at IMPORT_FILE
+     **/
+    public static boolean importIntoDb1(Context ctx) {
+
+
         if (!SdIsPresent()) return false;
 
         if (!checkDbIsValid(backupDB, ctx)) return false;
@@ -140,6 +189,10 @@ public class ExportImportDB extends Activity {
     private static void copyFile(File src, File dst) throws IOException {
         FileChannel inChannel = new FileInputStream(src).getChannel();
         FileChannel outChannel = new FileOutputStream(dst).getChannel();
+
+        String mime = URLConnection.guessContentTypeFromStream(new FileInputStream(dst));
+        if (mime == null) mime = URLConnection.guessContentTypeFromName(dst.getName());
+
         try {
             inChannel.transferTo(0, inChannel.size(), outChannel);
         } finally {
