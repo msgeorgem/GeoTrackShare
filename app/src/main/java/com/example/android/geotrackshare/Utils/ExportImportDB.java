@@ -59,16 +59,19 @@ public class ExportImportDB extends Activity {
     public static final String TAG = ExportImportDB.class.getName();
     public static final String PACKAGE_NAME = CONTENT_AUTHORITY;
 
-
+    public static final String currentDBPath = "//data//" + PACKAGE_NAME + "//databases//" + DATABASE_NAME;
     public static final String backupDBPath = "/BackupFolder/Geotrackshare/";
+
+    private static final File data = Environment.getDataDirectory();
+    private static final File sd = Environment.getExternalStorageDirectory();
+
     public static final File appDB = new File(data, currentDBPath);
     public static final File backupPath = new File(sd, backupDBPath);
-    protected static final File sd = Environment.getExternalStorageDirectory();
+
     /**
      * Contains: /data/data/com.example.android.geotrackshare/databases/geotrackshare.db
      **/
-    protected static final String currentDBPath = "//data//" + PACKAGE_NAME + "//databases//" + DATABASE_NAME;
-    protected static final File data = Environment.getDataDirectory();
+
     public static final File backupDBonlyPath = new File(sd, backupDBPath);
     protected static final String totalDBFilePath = backupDBPath + "geotrackshare.db";
     public static final File backupDBwithFIle = new File(sd, totalDBFilePath);
