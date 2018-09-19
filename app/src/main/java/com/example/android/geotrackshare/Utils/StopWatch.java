@@ -95,16 +95,20 @@ public class StopWatch {
     }
 
     public static String formatDate() {
-        Date currentTime = new Date();
-        SimpleDateFormat sdf = new SimpleDateFormat("EEE, MMM d, yyyy hh:mm:ss a z");
-        SimpleDateFormat sdf1 = new SimpleDateFormat("hh:mm:ss");
-        String tz = String.valueOf(TimeZone.getDefault());
-        sdf1.setTimeZone(TimeZone.getTimeZone(tz));
 
         long milis = System.currentTimeMillis();
         String date = DateFormat.getDateInstance(DateFormat.FULL).format(milis);
         String time = DateFormat.getTimeInstance().format(milis);
         return time + " " + date;
-//        return sdf1.format(currentTime);
+
+    }
+
+    public static String formatDateToFileName() {
+        Date currentTime = new Date();
+        SimpleDateFormat sdf2 = new SimpleDateFormat("yyyy-MM-dd_HH:mm:ss");
+        String tz = String.valueOf(TimeZone.getDefault());
+        sdf2.setTimeZone(TimeZone.getTimeZone(tz));
+
+        return sdf2.format(currentTime);
     }
 }

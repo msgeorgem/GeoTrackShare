@@ -52,6 +52,7 @@ import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.TABLE_NAME_POST_TRACKING;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.TABLE_NAME_TRACKING;
 import static com.example.android.geotrackshare.Data.TrackDbHelper.DATABASE_NAME;
+import static com.example.android.geotrackshare.Utils.StopWatch.formatDateToFileName;
 
 public class ExportImportDB extends Activity {
 
@@ -60,17 +61,17 @@ public class ExportImportDB extends Activity {
 
 
     public static final String backupDBPath = "/BackupFolder/Geotrackshare/";
-    public static final File backupPath = new File(sd, backupDBPath);
     public static final File appDB = new File(data, currentDBPath);
+    public static final File backupPath = new File(sd, backupDBPath);
     protected static final File sd = Environment.getExternalStorageDirectory();
-    protected static final String dbFileName = "geotrackshare.db";
-    protected static final String totalDBFilePath = backupDBPath + dbFileName;
     /**
      * Contains: /data/data/com.example.android.geotrackshare/databases/geotrackshare.db
      **/
     protected static final String currentDBPath = "//data//" + PACKAGE_NAME + "//databases//" + DATABASE_NAME;
     protected static final File data = Environment.getDataDirectory();
-    public static final File backupDB = new File(sd, totalDBFilePath);
+    public static final File backupDBonlyPath = new File(sd, backupDBPath);
+    protected static final String totalDBFilePath = backupDBPath + "geotrackshare.db";
+    public static final File backupDBwithFIle = new File(sd, totalDBFilePath);
     public static File appDir = new File(Environment.getExternalStorageDirectory() + "/BackupFolder/GeoTrackShare");
 
     /**
@@ -124,11 +125,11 @@ public class ExportImportDB extends Activity {
 
         if (!SdIsPresent()) return false;
 
-        if (!checkDbIsValid(backupDB, ctx)) return false;
+        if (!checkDbIsValid(backupDBwithFIle, ctx)) return false;
 
         try {
             SQLiteDatabase sqlDbBackup = SQLiteDatabase.openDatabase
-                    (backupDB.getPath(), null, SQLiteDatabase.OPEN_READONLY);
+                    (backupDBwithFIle.getPath(), null, SQLiteDatabase.OPEN_READONLY);
 
             ContentResolver trackContentResolver = ctx.getContentResolver();
             /* Delete old track data because we don't need to keep multiple tracks' data */
@@ -161,6 +162,9 @@ public class ExportImportDB extends Activity {
 
     //exporting database
     public static void exportDB() {
+        String dateTimeString = formatDateToFileName();
+        String dbFileName = "geotrackshare_" + dateTimeString + ".db";
+        File backupDB = new File(backupDBonlyPath, dbFileName);
 
         if (!appDir.exists() && !appDir.isDirectory()) {
             // create empty directory
@@ -419,16 +423,16 @@ public class ExportImportDB extends Activity {
 
         if (!SdIsPresent()) return false;
 
-        if (!checkDbIsValid(backupDB, ctx)) return false;
+        if (!checkDbIsValid(backupDBwithFIle, ctx)) return false;
 
-        if (!backupDB.exists()) {
+        if (!backupDBwithFIle.exists()) {
             Log.d(TAG, "File does not exist");
             return false;
         }
 
         try {
             appDB.createNewFile();
-            copyFile(backupDB, appDB);
+            copyFile(backupDBwithFIle, appDB);
             return true;
         } catch (IOException e) {
             e.printStackTrace();

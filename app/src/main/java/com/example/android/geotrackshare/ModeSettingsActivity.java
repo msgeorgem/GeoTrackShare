@@ -1,5 +1,6 @@
 package com.example.android.geotrackshare;
 
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
@@ -7,9 +8,11 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.preference.PreferenceManager;
 import android.support.v7.app.ActionBar;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -19,6 +22,7 @@ import com.example.android.geotrackshare.Utils.ExportImportDB;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.net.URLConnection;
 
@@ -32,7 +36,7 @@ import static com.example.android.geotrackshare.MainActivity.EXPORTIMPORT;
 import static com.example.android.geotrackshare.MainActivity.WALK;
 import static com.example.android.geotrackshare.MainActivity.mCategories;
 import static com.example.android.geotrackshare.Utils.ExportImportDB.appDB;
-import static com.example.android.geotrackshare.Utils.ExportImportDB.backupDB;
+import static com.example.android.geotrackshare.Utils.ExportImportDB.backupPath;
 import static com.example.android.geotrackshare.Utils.StopWatch.formatDate;
 
 /**
@@ -140,8 +144,8 @@ public class ModeSettingsActivity extends AppCompatActivity {
             importButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    showFileChooser();
-//                    ExportImportDB.importIntoDb(getApplication());
+//                    showFileChooser();
+                    showAlertDialogWithListOFFIles();
 
                 }
             });
@@ -157,15 +161,86 @@ public class ModeSettingsActivity extends AppCompatActivity {
     }
 
 
+    public ArrayAdapter<String> fileChooserList() {
+        ArrayAdapter<String> results = new ArrayAdapter<String>(ModeSettingsActivity.this, android.R.layout.select_dialog_singlechoice);
+
+        FilenameFilter fileFilter = new FilenameFilter() {
+            @Override
+            public boolean accept(File dir, String name) {
+                return name.endsWith(".db");
+            }
+        };
+
+        File[] listOfFiles = new File(String.valueOf(backupPath)).listFiles(fileFilter);
+
+        for (File file : listOfFiles) {
+            if (file.isFile()) {
+                results.add(file.getName());
+            }
+        }
+
+        return results;
+    }
+
+
+    private void showAlertDialogWithListOFFIles() {
+        AlertDialog.Builder builderSingle = new AlertDialog.Builder(ModeSettingsActivity.this);
+//        builderSingle.setIcon(R.drawable.ic_launcher);
+        builderSingle.setTitle(getResources().getString(R.string.select_database));
+
+        final ArrayAdapter<String> arrayAdapter = fileChooserList();
+
+        builderSingle.setNegativeButton(getResources().getString(R.string.cancel), new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.dismiss();
+            }
+        });
+
+        builderSingle.setAdapter(arrayAdapter, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                final String strName = arrayAdapter.getItem(which);
+                AlertDialog.Builder builderInner = new AlertDialog.Builder(ModeSettingsActivity.this);
+                builderInner.setMessage(strName);
+                builderInner.setTitle(getResources().getString(R.string.selected_database));
+                builderInner.setPositiveButton(getResources().getString(R.string.importt), new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+
+                        String finalSelectedPath = String.valueOf(backupPath) + "/" + strName;
+                        File file1 = new File(String.valueOf(finalSelectedPath));
+                        ExportImportDB.importIntoDb(getApplication(), file1);
+                        Toast.makeText(getBaseContext(), getResources().getString(R.string.database_imported), Toast.LENGTH_LONG).show();
+
+                        dialog.dismiss();
+                    }
+                });
+                builderInner.setNegativeButton(getResources().getString(R.string.cancel), new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                    }
+                });
+                builderInner.show();
+            }
+        });
+        builderSingle.show();
+    }
+
+    /**
+     * showFileChooser() works but not used in this case.
+     * In this case it is better to restrict choosing options to one catalog
+     * AlertDialog is more userfriendly solution in this app
+     * Therefore OnActivityResult is also unused
+     **/
+
     public void showFileChooser() {
 
-
-//        Uri selectedUri = Uri.parse(String.valueOf(backupPath));
-        Uri selectedUri = Uri.parse(Environment.getExternalStorageDirectory().getPath() + "/BackupFolder/Geotrackshare/");
+        Uri selectedUri = Uri.parse(String.valueOf(backupPath));
         String s = String.valueOf(selectedUri);
 
         Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-
 
         //        intent.setType("text/db");
 //        intent.setData(selectedUri);
@@ -200,7 +275,6 @@ public class ModeSettingsActivity extends AppCompatActivity {
 
 //        I can download contents from Dropbox and for Google Drive, by getContentResolver().openInputStream(data.getData()).
 
-
     }
 
     @Override
@@ -231,17 +305,15 @@ public class ModeSettingsActivity extends AppCompatActivity {
 
                 System.out.println();
 
-
                 String finalSelectedPath = Environment.getExternalStorageDirectory().getPath() + "/" + selectedFile0;
                 File file1 = new File(String.valueOf(finalSelectedPath));
 
                 ExportImportDB.importIntoDb(getApplication(), file1);
-//                Toast.makeText(getBaseContext(), "DataBase Imported",
-//                        Toast.LENGTH_LONG).show();
-
+                Toast.makeText(getBaseContext(), "DataBase Imported",
+                        Toast.LENGTH_LONG).show();
 
                 Log.i("OnActivityResult", String.valueOf(finalSelectedPath));
-                Log.i("OnActivityResult", String.valueOf(backupDB));
+
             }
         }
     }

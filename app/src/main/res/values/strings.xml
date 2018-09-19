@@ -163,6 +163,7 @@
 
     <string name="delete">Delete</string>
     <string name="cancel">Cancel</string>
+    <string name="importt">Import</string>
     <string name="delete_oneitem_dialog_msg">Are you sure to remove this run from favourites?</string>
     <string name="delete_one_item">Run removed from favourites</string>
 
@@ -231,5 +232,8 @@
     <string name="snap_taken">Snap taken</string>
     <string name="no_backup">Backup never done!</string>
     <string name="last_backup">Last backup done:</string>
+    <string name="selected_database">Your selected database is:</string>
+    <string name="select_database">Select database to import</string>
+    <string name="database_imported">Database imported</string>
 
 </resources>
