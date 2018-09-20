@@ -193,6 +193,37 @@ public class ExportImportDB extends Activity {
         }
     }
 
+    //exporting database
+    public static void autoExportDB() {
+        String dateTimeString = formatDateToFileName();
+        String dbFileName = "geotrackshare_" + "auto" + ".db";
+        File backupDB = new File(backupDBonlyPath, dbFileName);
+
+        if (!appDir.exists() && !appDir.isDirectory()) {
+            // create empty directory
+            if (appDir.mkdirs()) {
+                Log.i("CreateDir", "App dir created");
+            } else {
+                Log.w("CreateDir", "Unable to create app dir!");
+            }
+        } else {
+            Log.i("CreateDir", "App dir already exists");
+        }
+
+        try {
+
+            if (sd.canWrite()) {
+
+                copyFile(appDB, backupDB);
+            }
+
+        } catch (Exception e) {
+            Log.e("ExportDB", e.toString());
+
+        }
+    }
+
+
     private static void copyFile(File src, File dst) throws IOException {
         FileChannel inChannel = new FileInputStream(src).getChannel();
         FileChannel outChannel = new FileOutputStream(dst).getChannel();

@@ -22,6 +22,7 @@ import android.view.WindowManager;
 import android.widget.Toast;
 
 import com.example.android.geotrackshare.RunTypes.RunType;
+import com.example.android.geotrackshare.Sync.GeoTrackShareSyncUtils;
 import com.example.android.geotrackshare.TrackList.RunListFragment;
 
 import java.util.ArrayList;
@@ -49,6 +50,7 @@ public class MainActivity extends AppCompatActivity
         setContentView(R.layout.activity_main);
         switchScreenOn();
         mSharedPrefsRunType = getSharedPreferences("Run_Type", Context.MODE_PRIVATE);
+        GeoTrackShareSyncUtils.initialize(this);
 
         // Spinner Drop down elements
         mCategories = new ArrayList<RunType>();
