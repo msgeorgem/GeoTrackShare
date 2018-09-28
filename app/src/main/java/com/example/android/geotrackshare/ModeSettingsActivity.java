@@ -1,12 +1,16 @@
 package com.example.android.geotrackshare;
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.preference.PreferenceManager;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -18,6 +22,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.android.geotrackshare.RunTypes.RunTypesAdapterNoUI;
+import com.example.android.geotrackshare.Sync.GeoTrackShareFirebaseJobService;
 import com.example.android.geotrackshare.Utils.ExportImportDB;
 
 import java.io.File;
@@ -26,7 +31,9 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.net.URLConnection;
 
+import static com.example.android.geotrackshare.LocationService.LocationServiceConstants.isAutoExportDone;
 import static com.example.android.geotrackshare.LocationService.LocationServiceConstants.isExportDone;
+import static com.example.android.geotrackshare.LocationService.LocationServiceConstants.lastDBAutoExportTime;
 import static com.example.android.geotrackshare.LocationService.LocationServiceConstants.lastDBExportTime;
 import static com.example.android.geotrackshare.LocationService.LocationServiceConstants.setExportDone;
 import static com.example.android.geotrackshare.LocationService.LocationServiceConstants.setLastExportTime;
@@ -45,10 +52,14 @@ import static com.example.android.geotrackshare.Utils.StopWatch.formatDate;
 
 public class ModeSettingsActivity extends AppCompatActivity {
 
+    private static final String TAG = ModeSettingsActivity.class.getSimpleName();
     public static boolean preferenceBooleanTheme;
     RunTypesAdapterNoUI mAdapter;
     String description, description1;
     int interval;
+    private TextView lastAutoBackup;
+    // The BroadcastReceiver used to listen from broadcasts from the service.
+    private MyReceiver myReceiver;
 
     public static boolean isExternalStorageWritable() {
         String state = Environment.getExternalStorageState();
@@ -72,6 +83,7 @@ public class ModeSettingsActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         switchThemeS();
         setContentView(R.layout.mode_settings);
+        myReceiver = new MyReceiver();
 
         ActionBar actionBar = getSupportActionBar();
 
@@ -87,8 +99,11 @@ public class ModeSettingsActivity extends AppCompatActivity {
         TextView modeIntervalvalue = findViewById(R.id.interval_value);
         final TextView lastBackup = findViewById(R.id.last_backup);
         TextView lastBackupDesc = findViewById(R.id.last_backup_desc);
+        lastAutoBackup = findViewById(R.id.last_auto_backup);
+        TextView lastAutoBackupDesc = findViewById(R.id.last_auto_backup_desc);
         Button exportButton = findViewById(R.id.exportButton);
         Button importButton = findViewById(R.id.importButton);
+//        Button importAutoButton = findViewById(R.id.importAutoButton);
 
         Intent intent = getIntent();
         if ((WALK).equals(intent.getAction())) {
@@ -96,16 +111,19 @@ public class ModeSettingsActivity extends AppCompatActivity {
             interval = (int) mAdapter.getItem(0).getIntervalPreset();
             exportButton.setVisibility(View.INVISIBLE);
             importButton.setVisibility(View.INVISIBLE);
+//            importAutoButton.setVisibility(View.INVISIBLE);
         } else if ((BICYCLE).equals(intent.getAction())) {
             description = String.valueOf(mAdapter.getItem(1).getDescription());
             interval = (int) mAdapter.getItem(1).getIntervalPreset();
             exportButton.setVisibility(View.INVISIBLE);
             importButton.setVisibility(View.INVISIBLE);
+//            importAutoButton.setVisibility(View.INVISIBLE);
         } else if ((CAR).equals(intent.getAction())) {
             description = String.valueOf(mAdapter.getItem(2).getDescription());
             interval = (int) mAdapter.getItem(2).getIntervalPreset();
             exportButton.setVisibility(View.INVISIBLE);
             importButton.setVisibility(View.INVISIBLE);
+//            importAutoButton.setVisibility(View.INVISIBLE);
         } else if ((EXPORTIMPORT).equals(intent.getAction())) {
             description = getResources().getString(R.string.export_database_summary);
             description1 = getResources().getString(R.string.import_database_summary);
@@ -117,7 +135,13 @@ public class ModeSettingsActivity extends AppCompatActivity {
                 lastBackupDesc.setText(lastBackupString);
                 lastBackup.setText(lastDBExportTime(getApplicationContext()));
             }
-
+            if (!isAutoExportDone(getApplicationContext())) {
+                lastAutoBackup.setText(R.string.no_auto_backup);
+            } else {
+                String lastAutoBackupString = getResources().getString(R.string.last_auto_backup);
+                lastAutoBackupDesc.setText(lastAutoBackupString);
+                lastAutoBackup.setText(lastDBAutoExportTime(getApplicationContext()));
+            }
 
             exportButton.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -149,6 +173,17 @@ public class ModeSettingsActivity extends AppCompatActivity {
 
                 }
             });
+
+//            importAutoButton.setVisibility(View.VISIBLE);
+
+//            importAutoButton.setOnClickListener(new View.OnClickListener() {
+//                @Override
+//                public void onClick(View v) {
+//
+//                    GeoTrackShareSyncUtils.initialize(getApplicationContext());
+//                }
+//            });
+
 
             modeIntervaltext.setVisibility(View.INVISIBLE);
             modeIntervalvalue.setVisibility(View.INVISIBLE);
@@ -318,4 +353,32 @@ public class ModeSettingsActivity extends AppCompatActivity {
         }
     }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+        Log.d(TAG, "onResume");
+        LocalBroadcastManager.getInstance(getApplicationContext()).registerReceiver(myReceiver,
+                new IntentFilter(GeoTrackShareFirebaseJobService.ACTION_BROADCAST_TIME));
+
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        Log.d(TAG, "onPause()");
+        LocalBroadcastManager.getInstance(getApplicationContext()).unregisterReceiver(myReceiver);
+
+
+    }
+
+    /**
+     * Receiver for broadcasts sent by {@link GeoTrackShareFirebaseJobService}.
+     */
+    private class MyReceiver extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String timeDate = intent.getStringExtra(GeoTrackShareFirebaseJobService.EXTRA_TIME_DATE);
+            lastAutoBackup.setText(timeDate);
+        }
+    }
 }

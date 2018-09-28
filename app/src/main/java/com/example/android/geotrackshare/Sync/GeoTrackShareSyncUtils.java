@@ -17,8 +17,8 @@ package com.example.android.geotrackshare.Sync;
 
 import android.content.Context;
 import android.support.annotation.NonNull;
+import android.util.Log;
 
-import com.firebase.jobdispatcher.Constraint;
 import com.firebase.jobdispatcher.Driver;
 import com.firebase.jobdispatcher.FirebaseJobDispatcher;
 import com.firebase.jobdispatcher.GooglePlayDriver;
@@ -34,7 +34,7 @@ public class GeoTrackShareSyncUtils {
      * Interval at which to sync with the weather. Use TimeUnit for convenience, rather than
      * writing out a bunch of multiplication ourselves and risk making a silly mistake.
      */
-    private static final int SYNC_INTERVAL_HOURS = 1;
+    private static final int SYNC_INTERVAL_HOURS = 24;
     private static final int SYNC_INTERVAL_SECONDS = (int) TimeUnit.HOURS.toSeconds(SYNC_INTERVAL_HOURS);
     private static final int SYNC_FLEXTIME_SECONDS = SYNC_INTERVAL_SECONDS / 3;
     private static final String GTS_SYNC_TAG = "gts-sync";
@@ -48,12 +48,19 @@ public class GeoTrackShareSyncUtils {
      */
     static void scheduleFirebaseJobDispatcherSync(@NonNull final Context context) {
 
+//        FirebaseJobDispatcher dispatcher =
+//                new FirebaseJobDispatcher(
+//                        new GooglePlayDriver(context)
+//                );
+
+
         Driver driver = new GooglePlayDriver(context);
         FirebaseJobDispatcher dispatcher = new FirebaseJobDispatcher(driver);
+        Log.v("GeotrackUtils", "JobDispatcherSync");
 
-        /* Create the Job to periodically sync Sunshine */
+        /* Create the Job to periodically backupData */
         Job syncBackupJob = dispatcher.newJobBuilder()
-                /* The Service that will be used to sync Sunshine's data */
+                /* The Service that will be used to backupData */
                 .setService(GeoTrackShareFirebaseJobService.class)
                 /* Set the UNIQUE tag used to identify this Job */
                 .setTag(GTS_SYNC_TAG)
@@ -63,7 +70,7 @@ public class GeoTrackShareSyncUtils {
                  * device is charging. It might be a good idea to include a preference for this,
                  * as some users may not want to download any data on their mobile plan. ($$$)
                  */
-                .setConstraints(Constraint.DEVICE_CHARGING)
+//                .setConstraints(Constraint.DEVICE_CHARGING)
                 /*
                  * setLifetime sets how long this job should persist. The options are to keep the
                  * Job "forever" or to have it die the next time the device boots up.
@@ -83,6 +90,7 @@ public class GeoTrackShareSyncUtils {
                 .setTrigger(Trigger.executionWindow(
                         SYNC_INTERVAL_SECONDS,
                         SYNC_INTERVAL_SECONDS + SYNC_FLEXTIME_SECONDS))
+
                 /*
                  * If a Job with the tag with provided already exists, this new job will replace
                  * the old one.
@@ -92,7 +100,7 @@ public class GeoTrackShareSyncUtils {
                 .build();
 
         /* Schedule the Job with the dispatcher */
-        dispatcher.schedule(syncBackupJob);
+        dispatcher.mustSchedule(syncBackupJob);
     }
 
     /**
@@ -108,6 +116,7 @@ public class GeoTrackShareSyncUtils {
          * Only perform initialization once per app lifetime. If initialization has already been
          * performed, we have nothing to do in this method.
          */
+        Log.v("GeotrackUtils", String.valueOf(sInitialized));
         if (sInitialized) return;
 
         sInitialized = true;

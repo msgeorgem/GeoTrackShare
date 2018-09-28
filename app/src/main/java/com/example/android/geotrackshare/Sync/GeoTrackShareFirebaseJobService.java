@@ -15,7 +15,10 @@
  */
 package com.example.android.geotrackshare.Sync;
 
+import android.content.Intent;
 import android.os.AsyncTask;
+import android.support.v4.content.LocalBroadcastManager;
+import android.util.Log;
 
 import com.example.android.geotrackshare.Utils.ExportImportDB;
 import com.firebase.jobdispatcher.Job;
@@ -23,10 +26,17 @@ import com.firebase.jobdispatcher.JobParameters;
 import com.firebase.jobdispatcher.JobService;
 import com.firebase.jobdispatcher.RetryStrategy;
 
+import static com.example.android.geotrackshare.LocationService.LocationServiceConstants.setAutoExportDone;
+import static com.example.android.geotrackshare.LocationService.LocationServiceConstants.setLastAutoExportTime;
+import static com.example.android.geotrackshare.Utils.StopWatch.formatDate;
+
 
 public class GeoTrackShareFirebaseJobService extends JobService {
 
-    private static AsyncTask<Void, Void, Void> mFetchWeatherTask;
+    public static final String EXTRA_TIME_DATE = "EXTRA_TIME_DATE";
+    public static final String ACTION_BROADCAST_TIME = "ACTION_BROADCAST_TIME";
+    private static AsyncTask<Void, Void, Void> mBackupTask;
+
 
     /**
      * The entry point to your Job. Implementations should offload work to another thread of
@@ -41,12 +51,21 @@ public class GeoTrackShareFirebaseJobService extends JobService {
     @Override
     public boolean onStartJob(final JobParameters jobParameters) {
 
-        mFetchWeatherTask = new AsyncTask<Void, Void, Void>() {
+        mBackupTask = new AsyncTask<Void, Void, Void>() {
             @Override
             protected Void doInBackground(Void... voids) {
 
-                ExportImportDB.autoExportDB();
+                String currentDateTimeString = formatDate();
+                // Notify anyone listening for broadcasts about the new location.
+                Intent intent = new Intent(ACTION_BROADCAST_TIME);
+                intent.putExtra(EXTRA_TIME_DATE, currentDateTimeString);
+                LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(intent);
 
+                setLastAutoExportTime(getApplicationContext(), currentDateTimeString);
+                setAutoExportDone(getApplicationContext(), true);
+
+                ExportImportDB.autoExportDB();
+                Log.i("OnStartJob", "doInBackground");
                 jobFinished(jobParameters, false);
                 return null;
             }
@@ -57,7 +76,12 @@ public class GeoTrackShareFirebaseJobService extends JobService {
             }
         };
 
-        mFetchWeatherTask.execute();
+        mBackupTask.execute();
+
+//        ExportImportDB.autoExportDB();
+        Log.i("OnStartJob", "doInBackground");
+        jobFinished(jobParameters, false);
+
         return true;
     }
 
@@ -71,8 +95,8 @@ public class GeoTrackShareFirebaseJobService extends JobService {
      */
     @Override
     public boolean onStopJob(JobParameters jobParameters) {
-        if (mFetchWeatherTask != null) {
-            mFetchWeatherTask.cancel(true);
+        if (mBackupTask != null) {
+            mBackupTask.cancel(true);
         }
         return true;
     }

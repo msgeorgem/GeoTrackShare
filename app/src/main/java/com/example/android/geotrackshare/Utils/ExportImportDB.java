@@ -196,7 +196,7 @@ public class ExportImportDB extends Activity {
     //exporting database
     public static void autoExportDB() {
         String dateTimeString = formatDateToFileName();
-        String dbFileName = "geotrackshare_" + "auto" + ".db";
+        String dbFileName = "geotrackshare_auto_backup" + ".db";
         File backupDB = new File(backupDBonlyPath, dbFileName);
 
         if (!appDir.exists() && !appDir.isDirectory()) {

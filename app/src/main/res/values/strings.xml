@@ -232,6 +232,8 @@
     <string name="snap_taken">Snap taken</string>
     <string name="no_backup">Backup never done!</string>
     <string name="last_backup">Last backup done:</string>
+    <string name="no_auto_backup">Auto backup never done!</string>
+    <string name="last_auto_backup">Last auto backup done:</string>
     <string name="selected_database">Your selected database is:</string>
     <string name="select_database">Select database to import</string>
     <string name="database_imported">Database imported</string>

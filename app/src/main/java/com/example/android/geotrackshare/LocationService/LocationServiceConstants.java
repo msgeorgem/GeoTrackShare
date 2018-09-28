@@ -37,7 +37,9 @@ public class LocationServiceConstants {
     private static final String KEY_START_TIME_TRACK = "KEY_START_TIME_TRACK";
     private static final String KEY_PAUSE_TIME_TRACK = "KEY_PAUSE_TIME_TRACK";
     private static final String KEY_LAST_DB_EXPORT = "KEY_LAST_DB_EXPORT";
+    private static final String KEY_LAST_DB_AUTO_EXPORT = "KEY_LAST_DB_AUTO_EXPORT";
     private static final String KEY_IS_DB_EXPORT_DONE = "KEY_IS_DB_EXPORT_DONE";
+    private static final String KEY_IS_DB_AUTO_EXPORT_DONE = "KEY_IS_DB_AUTO_EXPORT_DONE";
 
 
 
@@ -276,6 +278,51 @@ public class LocationServiceConstants {
         PreferenceManager.getDefaultSharedPreferences(context)
                 .edit()
                 .putBoolean(KEY_IS_DB_EXPORT_DONE, exportDone)
+                .apply();
+    }
+
+    /**
+     * Returns last backup date and time in string, otherwise .
+     *
+     * @param context The {@link Context}.
+     */
+    public static String lastDBAutoExportTime(Context context) {
+        return PreferenceManager.getDefaultSharedPreferences(context)
+                .getString(KEY_LAST_DB_AUTO_EXPORT, String.valueOf(R.string.no_backup));
+    }
+
+    /**
+     * Stores the backup date and time  in SharedPreferences.
+     *
+     * @param dateTimeOfExport Last backup date and time.
+     */
+    public static void setLastAutoExportTime(Context context, String dateTimeOfExport) {
+        PreferenceManager.getDefaultSharedPreferences(context)
+                .edit()
+                .putString(KEY_LAST_DB_AUTO_EXPORT, dateTimeOfExport)
+                .apply();
+    }
+
+
+    /**
+     * Returns true if db export done, otherwise returns false.
+     *
+     * @param context The {@link Context}.
+     */
+    public static boolean isAutoExportDone(Context context) {
+        return PreferenceManager.getDefaultSharedPreferences(context)
+                .getBoolean(KEY_IS_DB_AUTO_EXPORT_DONE, false);
+    }
+
+    /**
+     * Stores flag if export was done state in SharedPreferences.
+     *
+     * @param exportDone The export updates state.
+     */
+    public static void setAutoExportDone(Context context, boolean exportDone) {
+        PreferenceManager.getDefaultSharedPreferences(context)
+                .edit()
+                .putBoolean(KEY_IS_DB_AUTO_EXPORT_DONE, exportDone)
                 .apply();
     }
 
