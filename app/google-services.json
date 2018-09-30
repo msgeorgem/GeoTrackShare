@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "1070556748881",
+    "firebase_url": "https://geotrackshare.firebaseio.com",
+    "project_id": "geotrackshare",
+    "storage_bucket": "geotrackshare.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1070556748881:android:0d705a98b68e6d09",
+        "android_client_info": {
+          "package_name": "com.example.android.geotrackshare"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1070556748881-jkain1rlr26mjdlup0gpbeljktmni6op.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.android.geotrackshare",
+            "certificate_hash": "4e1fa210b3f50c72e7e9ad29393bc6136f09a399"
+          }
+        },
+        {
+          "client_id": "1070556748881-6frl4vrtc9gvfbkd28uq3laamrllarqp.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAKdAV2jzcqgPPeQaO5KOV8E8grPxJpYoU"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1070556748881-6frl4vrtc9gvfbkd28uq3laamrllarqp.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

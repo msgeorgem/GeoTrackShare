@@ -64,12 +64,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:text="@string/import_database"></Button>
-        <!--<Button xmlns:android="http://schemas.android.com/apk/res/android"-->
-        <!--android:id="@+id/importAutoButton"-->
-        <!--android:layout_width="wrap_content"-->
-        <!--android:layout_height="wrap_content"-->
-        <!--android:layout_gravity="center"-->
-        <!--android:text="AutoImport"></Button>-->
+
         <TextView
             android:id="@+id/last_auto_backup_desc"
             android:layout_width="match_parent"
@@ -99,6 +94,13 @@
             android:layout_margin="16dp"
             android:textSize="18sp"
             android:textStyle="bold|italic" />
+
+        <Button xmlns:android="http://schemas.android.com/apk/res/android"
+            android:id="@+id/importAutoButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:text="UploadToFireBase" />
 
         <LinearLayout
             android:layout_width="match_parent"

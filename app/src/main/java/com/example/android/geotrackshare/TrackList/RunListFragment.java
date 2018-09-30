@@ -347,5 +347,4 @@ public class RunListFragment extends Fragment implements LoaderManager.LoaderCal
 
         startActivity(intent);
     }
-
 }

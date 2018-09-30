@@ -42,6 +42,7 @@ public class MainActivity extends AppCompatActivity
     public static ArrayList<RunType> mCategories;
     public static SharedPreferences mSharedPrefsRunType;
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -51,6 +52,7 @@ public class MainActivity extends AppCompatActivity
         switchScreenOn();
         mSharedPrefsRunType = getSharedPreferences("Run_Type", Context.MODE_PRIVATE);
         GeoTrackShareSyncUtils.initialize(this);
+
 
         // Spinner Drop down elements
         mCategories = new ArrayList<RunType>();
@@ -181,6 +183,5 @@ public class MainActivity extends AppCompatActivity
         drawer.closeDrawer(GravityCompat.START);
         return true;
     }
-
 
 }

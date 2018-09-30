@@ -103,7 +103,7 @@ public class ModeSettingsActivity extends AppCompatActivity {
         TextView lastAutoBackupDesc = findViewById(R.id.last_auto_backup_desc);
         Button exportButton = findViewById(R.id.exportButton);
         Button importButton = findViewById(R.id.importButton);
-//        Button importAutoButton = findViewById(R.id.importAutoButton);
+        Button uploadToFirebase = findViewById(R.id.importAutoButton);
 
         Intent intent = getIntent();
         if ((WALK).equals(intent.getAction())) {
@@ -174,15 +174,15 @@ public class ModeSettingsActivity extends AppCompatActivity {
                 }
             });
 
-//            importAutoButton.setVisibility(View.VISIBLE);
+            uploadToFirebase.setVisibility(View.VISIBLE);
 
-//            importAutoButton.setOnClickListener(new View.OnClickListener() {
-//                @Override
-//                public void onClick(View v) {
-//
-//                    GeoTrackShareSyncUtils.initialize(getApplicationContext());
-//                }
-//            });
+            uploadToFirebase.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+
+                    ExportImportDB.uploadToFirebaseStorage();
+                }
+            });
 
 
             modeIntervaltext.setVisibility(View.INVISIBLE);

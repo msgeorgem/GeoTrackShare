@@ -36,7 +36,9 @@ public class GeoTrackShareFirebaseJobService extends JobService {
     public static final String EXTRA_TIME_DATE = "EXTRA_TIME_DATE";
     public static final String ACTION_BROADCAST_TIME = "ACTION_BROADCAST_TIME";
     private static AsyncTask<Void, Void, Void> mBackupTask;
-
+    //    private GoogleApiClient mGoogleApiClient;
+    public static final String TAG = GeoTrackShareFirebaseJobService.class.getName();
+    private ExportImportDB exportImportDB;
 
     /**
      * The entry point to your Job. Implementations should offload work to another thread of
@@ -54,6 +56,16 @@ public class GeoTrackShareFirebaseJobService extends JobService {
         mBackupTask = new AsyncTask<Void, Void, Void>() {
             @Override
             protected Void doInBackground(Void... voids) {
+
+                exportImportDB = new ExportImportDB();
+
+                if (exportImportDB.mGoogleApiClient != null) {
+                    exportImportDB.upload_to_drive();
+                } else {
+                    Log.e("OnStartJob", "Could not fucking connect to google drive manager");
+                }
+
+
 
                 String currentDateTimeString = formatDate();
                 // Notify anyone listening for broadcasts about the new location.
@@ -100,4 +112,5 @@ public class GeoTrackShareFirebaseJobService extends JobService {
         }
         return true;
     }
+
 }
