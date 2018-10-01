@@ -57,13 +57,6 @@ public class GeoTrackShareFirebaseJobService extends JobService {
             @Override
             protected Void doInBackground(Void... voids) {
 
-                exportImportDB = new ExportImportDB();
-
-                if (exportImportDB.mGoogleApiClient != null) {
-                    exportImportDB.upload_to_drive();
-                } else {
-                    Log.e("OnStartJob", "Could not fucking connect to google drive manager");
-                }
 
 
 
@@ -77,6 +70,7 @@ public class GeoTrackShareFirebaseJobService extends JobService {
                 setAutoExportDone(getApplicationContext(), true);
 
                 ExportImportDB.autoExportDB();
+                ExportImportDB.uploadToFirebaseStorage();
                 Log.i("OnStartJob", "doInBackground");
                 jobFinished(jobParameters, false);
                 return null;
