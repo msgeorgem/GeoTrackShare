@@ -17,6 +17,8 @@ import android.support.annotation.Nullable;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.example.android.geotrackshare.R;
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -32,15 +34,12 @@ import com.google.android.gms.drive.query.Query;
 import com.google.android.gms.drive.query.SearchableField;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.firebase.FirebaseApp;
-import com.google.firebase.FirebaseOptions;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -526,41 +525,26 @@ public class ExportImportDB extends Activity implements
         return count;
     }
 
+
     public static void uploadToFirebaseStorage() {
 
-        FileInputStream serviceAccount = null;
-        try {
-            serviceAccount = new FileInputStream("path/to/google-services.json");
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
 
-
-        FirebaseOptions options = null;
-        try {
-            options = new FirebaseOptions.Builder()
-                    .setCredentials(GoogleCredentials.fromStream(serviceAccount))
-                    .setDatabaseUrl("https://<DATABASE_NAME>.firebaseio.com/")
-                    .build();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        FirebaseApp.initializeApp(options);
-
-
-// 'bucket' is an object defined in the google-cloud-storage Java library.
-// See http://googlecloudplatform.github.io/google-cloud-java/latest/apidocs/com/google/cloud/storage/Bucket.html
-// for more details.
+//        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+//        if(user == null){
+//            //if user is not authenticated show authentication screen
+//            Intent i = new Intent();
+//            i.setClass(context, EmailPasswordAuthActivity.class);
+//            startActivity(i);
+//        }
 
 
         FirebaseStorage storage = FirebaseStorage.getInstance();
         Uri file = Uri.fromFile(appDB);
         // Create a storage reference from our app
         StorageReference storageRef = storage.getReference();
-        StorageReference riversRef = storageRef.child("Database/" + file.getLastPathSegment());
+        StorageReference uploadRef = storageRef.child("Database1779/" + file.getLastPathSegment());
 
-        UploadTask uploadTask = riversRef.putFile(file);
+        UploadTask uploadTask = uploadRef.putFile(file);
 
         // Register observers to listen for when the download is done or if it fails
         uploadTask.addOnFailureListener(new OnFailureListener() {
@@ -577,6 +561,14 @@ public class ExportImportDB extends Activity implements
             }
         });
         // [END upload_file]
+    }
+
+    public void googleSignIn() {
+        // Configure Google Sign In
+        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestIdToken(getString(R.string.default_web_client_id))
+                .requestEmail()
+                .build();
     }
 
     public void upload_to_drive() {
@@ -731,7 +723,6 @@ public class ExportImportDB extends Activity implements
         mGoogleApiClient.connect();
     }
 
-
     // [START upload_file]
 
     @Override
@@ -741,6 +732,5 @@ public class ExportImportDB extends Activity implements
         }
         super.onPause();
     }
-
 
 }
