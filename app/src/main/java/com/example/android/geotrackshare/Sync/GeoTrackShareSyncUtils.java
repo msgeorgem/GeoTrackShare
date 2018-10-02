@@ -19,6 +19,7 @@ import android.content.Context;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
+import com.firebase.jobdispatcher.Constraint;
 import com.firebase.jobdispatcher.Driver;
 import com.firebase.jobdispatcher.FirebaseJobDispatcher;
 import com.firebase.jobdispatcher.GooglePlayDriver;
@@ -71,6 +72,7 @@ public class GeoTrackShareSyncUtils {
                  * as some users may not want to download any data on their mobile plan. ($$$)
                  */
 //                .setConstraints(Constraint.DEVICE_CHARGING)
+                .setConstraints(Constraint.ON_UNMETERED_NETWORK)
                 /*
                  * setLifetime sets how long this job should persist. The options are to keep the
                  * Job "forever" or to have it die the next time the device boots up.

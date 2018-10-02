@@ -57,9 +57,6 @@ public class GeoTrackShareFirebaseJobService extends JobService {
             @Override
             protected Void doInBackground(Void... voids) {
 
-
-
-
                 String currentDateTimeString = formatDate();
                 // Notify anyone listening for broadcasts about the new location.
                 Intent intent = new Intent(ACTION_BROADCAST_TIME);

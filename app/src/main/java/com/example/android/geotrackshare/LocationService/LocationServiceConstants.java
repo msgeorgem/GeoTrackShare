@@ -40,7 +40,8 @@ public class LocationServiceConstants {
     private static final String KEY_LAST_DB_AUTO_EXPORT = "KEY_LAST_DB_AUTO_EXPORT";
     private static final String KEY_IS_DB_EXPORT_DONE = "KEY_IS_DB_EXPORT_DONE";
     private static final String KEY_IS_DB_AUTO_EXPORT_DONE = "KEY_IS_DB_AUTO_EXPORT_DONE";
-
+    private static final String KEY_IS_AUTH_TO_FIREBASE = "KEY_IS_AUTH_TO_FIREBASE";
+    private static final String KEY_AUTH_USERID = "KEY_AUTH_USERID";
 
 
     /**
@@ -326,4 +327,48 @@ public class LocationServiceConstants {
                 .apply();
     }
 
+    /**
+     * Returns true if authToFireBase, otherwise returns false.
+     *
+     * @param context The {@link Context}.
+     */
+    public static boolean isAuthToFirebase(Context context) {
+        return PreferenceManager.getDefaultSharedPreferences(context)
+                .getBoolean(KEY_IS_AUTH_TO_FIREBASE, false);
+    }
+
+    /**
+     * Stores flag if export was done state in SharedPreferences.
+     *
+     * @param authToFireBase The export updates state.
+     */
+    public static void setAuthToFirebase(Context context, boolean authToFireBase) {
+        PreferenceManager.getDefaultSharedPreferences(context)
+                .edit()
+                .putBoolean(KEY_IS_AUTH_TO_FIREBASE, authToFireBase)
+                .apply();
+    }
+
+
+    /**
+     * Returns userID in string, otherwise not logged.
+     *
+     * @param context The {@link Context}.
+     */
+    public static String getUserID(Context context) {
+        return PreferenceManager.getDefaultSharedPreferences(context)
+                .getString(KEY_AUTH_USERID, String.valueOf(R.string.not_logged));
+    }
+
+    /**
+     * Stores the userID  in SharedPreferences.
+     *
+     * @param userID Last backup date and time.
+     */
+    public static void setUserID(Context context, String userID) {
+        PreferenceManager.getDefaultSharedPreferences(context)
+                .edit()
+                .putString(KEY_AUTH_USERID, userID)
+                .apply();
+    }
 }

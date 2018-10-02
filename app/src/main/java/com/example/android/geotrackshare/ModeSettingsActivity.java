@@ -61,6 +61,7 @@ public class ModeSettingsActivity extends AppCompatActivity {
     // The BroadcastReceiver used to listen from broadcasts from the service.
     private MyReceiver myReceiver;
 
+
     public static boolean isExternalStorageWritable() {
         String state = Environment.getExternalStorageState();
         return Environment.MEDIA_MOUNTED.equals(state) && Environment.getExternalStorageDirectory()
@@ -104,6 +105,8 @@ public class ModeSettingsActivity extends AppCompatActivity {
         Button exportButton = findViewById(R.id.exportButton);
         Button importButton = findViewById(R.id.importButton);
         Button uploadToFirebase = findViewById(R.id.importAutoButton);
+        final Button signIN = findViewById(R.id.signIn);
+        Button signOUT = findViewById(R.id.signOut);
 
         Intent intent = getIntent();
         if ((WALK).equals(intent.getAction())) {
@@ -111,23 +114,35 @@ public class ModeSettingsActivity extends AppCompatActivity {
             interval = (int) mAdapter.getItem(0).getIntervalPreset();
             exportButton.setVisibility(View.INVISIBLE);
             importButton.setVisibility(View.INVISIBLE);
+            uploadToFirebase.setVisibility(View.INVISIBLE);
+            signIN.setVisibility(View.INVISIBLE);
+            signOUT.setVisibility(View.INVISIBLE);
 //            importAutoButton.setVisibility(View.INVISIBLE);
         } else if ((BICYCLE).equals(intent.getAction())) {
             description = String.valueOf(mAdapter.getItem(1).getDescription());
             interval = (int) mAdapter.getItem(1).getIntervalPreset();
             exportButton.setVisibility(View.INVISIBLE);
             importButton.setVisibility(View.INVISIBLE);
+            uploadToFirebase.setVisibility(View.INVISIBLE);
+            signIN.setVisibility(View.INVISIBLE);
+            signOUT.setVisibility(View.INVISIBLE);
 //            importAutoButton.setVisibility(View.INVISIBLE);
         } else if ((CAR).equals(intent.getAction())) {
             description = String.valueOf(mAdapter.getItem(2).getDescription());
             interval = (int) mAdapter.getItem(2).getIntervalPreset();
             exportButton.setVisibility(View.INVISIBLE);
             importButton.setVisibility(View.INVISIBLE);
+            uploadToFirebase.setVisibility(View.VISIBLE);
+            signIN.setVisibility(View.VISIBLE);
+            signOUT.setVisibility(View.VISIBLE);
 //            importAutoButton.setVisibility(View.INVISIBLE);
         } else if ((EXPORTIMPORT).equals(intent.getAction())) {
             description = getResources().getString(R.string.export_database_summary);
             description1 = getResources().getString(R.string.import_database_summary);
             exportButton.setVisibility(View.VISIBLE);
+            uploadToFirebase.setVisibility(View.VISIBLE);
+            signIN.setVisibility(View.INVISIBLE);
+            signOUT.setVisibility(View.INVISIBLE);
             if (!isExportDone(getApplicationContext())) {
                 lastBackup.setText(R.string.no_backup);
             } else {
@@ -174,13 +189,28 @@ public class ModeSettingsActivity extends AppCompatActivity {
                 }
             });
 
-            uploadToFirebase.setVisibility(View.VISIBLE);
 
             uploadToFirebase.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
 
                     ExportImportDB.uploadToFirebaseStorage();
+                }
+            });
+
+            signIN.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+
+
+                }
+            });
+
+            signOUT.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+
+
                 }
             });
 
@@ -353,6 +383,8 @@ public class ModeSettingsActivity extends AppCompatActivity {
         }
     }
 
+
+    // [END on_start_check_user]
     @Override
     public void onResume() {
         super.onResume();

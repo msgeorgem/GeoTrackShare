@@ -237,5 +237,6 @@
     <string name="selected_database">Your selected database is:</string>
     <string name="select_database">Select database to import</string>
     <string name="database_imported">Database imported</string>
+    <string name="not_logged">notLogged</string>
 
 </resources>
