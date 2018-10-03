@@ -492,6 +492,7 @@ public class RealTimeFragment extends Fragment implements
         }
     }
 
+
     /**
      * Updates fields based on data stored in the bundle.
      *

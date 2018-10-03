@@ -1116,7 +1116,7 @@ public class LocationUpdatesService extends Service implements SensorEventListen
             List<Address> addresses = geocoder.getFromLocation(LATITUDE, LONGITUDE, 1);
             if (addresses != null) {
                 Address returnedAddress = addresses.get(0);
-                StringBuilder strReturnedAddress = new StringBuilder("");
+                StringBuilder strReturnedAddress = new StringBuilder();
 
                 for (int i = 0; i <= returnedAddress.getMaxAddressLineIndex(); i++) {
                     strReturnedAddress.append(returnedAddress.getAddressLine(i)).append("\n");
@@ -1406,13 +1406,11 @@ public class LocationUpdatesService extends Service implements SensorEventListen
         Intent intent = new Intent(ACTION_BROADCAST);
         intent.putExtra(EXTRA_REQUESTING_UDPATES, requestingLocationUpdates(this));
         LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(intent);
-
     }
 
     @RequiresApi(api = Build.VERSION_CODES.O)
     private void onNewLocation(Location location) {
         Log.i(TAG, "New location: " + location);
-
 
         // Notify anyone listening for broadcasts about the new location.
         Intent intent = new Intent(ACTION_BROADCAST);

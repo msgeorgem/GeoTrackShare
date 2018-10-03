@@ -51,10 +51,10 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 
 import java.util.ArrayList;
-import java.util.concurrent.TimeUnit;
 
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_ALTITUDE;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_LATITUDE;
@@ -69,6 +69,7 @@ import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry
 import static com.example.android.geotrackshare.LocationService.LocationServiceConstants.lastTrackType;
 import static com.example.android.geotrackshare.LocationService.LocationServiceConstants.requestingLocationUpdates;
 import static com.example.android.geotrackshare.LocationService.LocationServiceConstants.serviceBound;
+import static com.example.android.geotrackshare.LocationService.LocationServiceConstants.setLastLocation;
 import static com.example.android.geotrackshare.LocationService.LocationServiceConstants.setServiceBound;
 import static com.example.android.geotrackshare.LocationService.LocationServiceConstants.setStartTimeCurrentTrack;
 import static com.example.android.geotrackshare.MainActivity.mCategories;
@@ -99,9 +100,11 @@ public class MapFragmentLive extends Fragment implements OnMapReadyCallback {
     View mView;
     private double[] mStartLocation = new double[2];
     private double[] mStopLocation = new double[2];
+    private double mCurrentLatitude, mCurrentLongitude;
     private Cursor cur;
     private int runIdInt, mRunType;
     private ArrayList<LatLng> coordinatesList;
+    private Polyline gpsTrack;
     private TextView mTimeTextView, mDistanceTextView;
     private FrameLayout mMapFrame;
     private MapView mMapView;
@@ -182,6 +185,7 @@ public class MapFragmentLive extends Fragment implements OnMapReadyCallback {
         fabStop = mView.findViewById(R.id.fab_stop);
         fabRecord = mView.findViewById(R.id.fab_record);
         mCurrentType = lastTrackType(mContext);
+        currentLocation();
 
         // Check that the user hasn't revoked permissions by going to Settings.
         mRequestingLocationUpdates = requestingLocationUpdates(mContext);
@@ -192,7 +196,7 @@ public class MapFragmentLive extends Fragment implements OnMapReadyCallback {
             }
         }
         myReceiver = new MyReceiver();
-        currentLocation();
+
         queryCoordinatesList(mCurrentId);
 
         if (!mRequestingLocationUpdates) {
@@ -269,24 +273,29 @@ public class MapFragmentLive extends Fragment implements OnMapReadyCallback {
         return mView;
     }
 
-    private void currentLocation() {
+    private LatLng currentLocation() {
+        LatLng currentLocation = null;
+
 
         LocationManager lm = (LocationManager) getActivity().getSystemService(Context.LOCATION_SERVICE);
         if (ActivityCompat.checkSelfPermission(mContext, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
                 ActivityCompat.checkSelfPermission(mContext, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-
+            Toast.makeText(getActivity(), "Permission not granted", Toast.LENGTH_SHORT).show();
         } else {
+            Toast.makeText(getActivity(), "go go go", Toast.LENGTH_SHORT).show();
             Location location = lm.getLastKnownLocation(LocationManager.GPS_PROVIDER);
             try {
-                double mLatitude = location.getLatitude();
-                double mLongitude = location.getLongitude();
-                mCurrentLocation = new LatLng(mLatitude, mLongitude);
+                mCurrentLatitude = location.getLatitude();
+                mCurrentLongitude = location.getLongitude();
+                Toast.makeText(getContext(), String.valueOf(mCurrentLatitude) + "/" + String.valueOf(mCurrentLongitude), Toast.LENGTH_SHORT).show();
+                currentLocation = new LatLng(mCurrentLatitude, mCurrentLongitude);
             } catch (NullPointerException e) {
                 System.out.print("Caught the NullPointerException");
                 Toast.makeText(getActivity(), "No location", Toast.LENGTH_SHORT).show();
             }
 
         }
+        return currentLocation;
     }
 
     @Override
@@ -330,15 +339,9 @@ public class MapFragmentLive extends Fragment implements OnMapReadyCallback {
         LatLngBounds TRIP = new LatLngBounds(mSouthWestPoint, mNorthEastPoint);
         LatLngBounds POZNAN = new LatLngBounds(poznan, poznan);
 
-        if (mSouthLatitude == 0 && mWestLongitude == 0) {
-            if (mCurrentLocation != null) {
-                mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(mCurrentLocation, 13));
-            } else {
-                mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(poznan, 13));
-            }
-        } else {
-            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(TRIP.getCenter(), 13));
-        }
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLocation(), 13));
+//        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(TRIP.getCenter(), 13));
+
 
         // Add a marker in Poznan, Poland, and move the camera.
         // mMap.addMarker(new MarkerOptions().position(here).title("arker in Poznań"));
@@ -358,8 +361,8 @@ public class MapFragmentLive extends Fragment implements OnMapReadyCallback {
             mPoint = coordinatesList.get(i);
             options.add(mPoint);
         }
-
-        mMap.addPolyline(options);
+        gpsTrack = mMap.addPolyline(options);
+//        mMap.addPolyline(options);
 
         mMap.addMarker(new MarkerOptions().position(mStopPoint).title("You are here")); //add Marker in current position
         mMap.setMinZoomPreference(1.0f);
@@ -381,9 +384,9 @@ public class MapFragmentLive extends Fragment implements OnMapReadyCallback {
      */
     public void setButtonsEnabledState(Intent intent) {
 
-        mRequestingLocationUpdates = intent.getBooleanExtra(LocationUpdatesService.EXTRA_REQUESTING_UDPATES, mRequestingLocationUpdates);
+//        mRequestingLocationUpdates = intent.getBooleanExtra(LocationUpdatesService.EXTRA_REQUESTING_UDPATES, mRequestingLocationUpdates);
 
-        if (!mRequestingLocationUpdates) {
+        if (!requestingLocationUpdates(getContext())) {
             fabPause.setVisibility(View.INVISIBLE);
             fabStop.setVisibility(View.INVISIBLE);
             fabRecord.setVisibility(View.VISIBLE);
@@ -543,13 +546,25 @@ public class MapFragmentLive extends Fragment implements OnMapReadyCallback {
             setButtonsEnabledState(intent);
             mCurrentId = intent.getIntExtra(LocationUpdatesService.EXTRA_CURRENT_ID, 0);
             mCurrentType = intent.getIntExtra(LocationUpdatesService.EXTRA_RUN_TYPE, 0);
+            Double latitude = intent.getDoubleExtra(LocationUpdatesService.EXTRA_LATITUDE, mCurrentLatitude);
+            Double longitude = intent.getDoubleExtra(LocationUpdatesService.EXTRA_LONGITUDE, mCurrentLongitude);
+            LatLng lastKnownLatLng = new LatLng(latitude, longitude);
+
+            ArrayList<LatLng> points = (ArrayList<LatLng>) gpsTrack.getPoints();
+            points.add(lastKnownLatLng);
+            gpsTrack.setPoints(points);
+
+            Long latitudeLong = latitude.longValue();
+            Long longitudeLong = longitude.longValue();
+            setLastLocation(getContext(), latitudeLong, longitudeLong);
 
 
-            long elapsedTimeMillis = intent.getLongExtra(LocationUpdatesService.EXTRA_TOTAL_TIME, 0);
-            String elapsedTimeString = String.format("%02d:%02d:%02d", TimeUnit.MILLISECONDS.toHours(elapsedTimeMillis),
-                    TimeUnit.MILLISECONDS.toMinutes(elapsedTimeMillis) % TimeUnit.HOURS.toMinutes(1),
-                    TimeUnit.MILLISECONDS.toSeconds(elapsedTimeMillis) % TimeUnit.MINUTES.toSeconds(1));
-            mTimeTextView.setText(elapsedTimeString);
+//            long elapsedTimeMillis = intent.getLongExtra(LocationUpdatesService.EXTRA_TOTAL_TIME, 0);
+//            String elapsedTimeString = String.format("%02d:%02d:%02d", TimeUnit.MILLISECONDS.toHours(elapsedTimeMillis),
+//                    TimeUnit.MILLISECONDS.toMinutes(elapsedTimeMillis) % TimeUnit.HOURS.toMinutes(1),
+//                    TimeUnit.MILLISECONDS.toSeconds(elapsedTimeMillis) % TimeUnit.MINUTES.toSeconds(1));
+//            mTimeTextView.setText(elapsedTimeString);
+
             double totalDistance = intent.getDoubleExtra(LocationUpdatesService.EXTRA_TOTAL_DISTANCE, 0);
             String totlaDistance3Dec = String.format("%.3f", totalDistance);
             String totalDistanceString = String.valueOf(totlaDistance3Dec + " km");
@@ -695,5 +710,6 @@ public class MapFragmentLive extends Fragment implements OnMapReadyCallback {
         return PackageManager.PERMISSION_GRANTED == ActivityCompat.checkSelfPermission(mContext,
                 Manifest.permission.ACCESS_FINE_LOCATION);
     }
+
 }
 

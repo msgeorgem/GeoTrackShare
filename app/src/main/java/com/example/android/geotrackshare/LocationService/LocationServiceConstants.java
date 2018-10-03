@@ -22,6 +22,7 @@ import android.location.Location;
 import android.preference.PreferenceManager;
 
 import com.example.android.geotrackshare.R;
+import com.google.android.gms.maps.model.LatLng;
 
 import java.text.DateFormat;
 import java.util.Date;
@@ -42,6 +43,8 @@ public class LocationServiceConstants {
     private static final String KEY_IS_DB_AUTO_EXPORT_DONE = "KEY_IS_DB_AUTO_EXPORT_DONE";
     private static final String KEY_IS_AUTH_TO_FIREBASE = "KEY_IS_AUTH_TO_FIREBASE";
     private static final String KEY_AUTH_USERID = "KEY_AUTH_USERID";
+    private static final String KEY_LAST_LATITUDE = "KEY_LAST_LATITUDE";
+    private static final String KEY_LAST_LONGITUDE = "KEY_LAST_LONGITUDE";
 
 
     /**
@@ -369,6 +372,33 @@ public class LocationServiceConstants {
         PreferenceManager.getDefaultSharedPreferences(context)
                 .edit()
                 .putString(KEY_AUTH_USERID, userID)
+                .apply();
+    }
+
+    /**
+     * Returns Last latitude and Last longitude, otherwise 0,0.
+     *
+     * @param context The {@link Context}.
+     */
+    public static LatLng getLastLocation(Context context) {
+        double latitude = PreferenceManager.getDefaultSharedPreferences(context)
+                .getLong(KEY_LAST_LATITUDE, 0);
+        double longitude = PreferenceManager.getDefaultSharedPreferences(context)
+                .getLong(KEY_LAST_LONGITUDE, 0);
+        return new LatLng(latitude, longitude);
+    }
+
+    /**
+     * Stores the userID  in SharedPreferences.
+     *
+     * @param latitude  Last latitude.
+     * @param longitude Last longitude.
+     */
+    public static void setLastLocation(Context context, Long latitude, Long longitude) {
+        PreferenceManager.getDefaultSharedPreferences(context)
+                .edit()
+                .putLong(KEY_LAST_LATITUDE, latitude)
+                .putLong(KEY_LAST_LONGITUDE, longitude)
                 .apply();
     }
 }
