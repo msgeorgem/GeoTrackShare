@@ -248,7 +248,7 @@ public class LocationUpdatesService extends Service implements SensorEventListen
     public Cursor mTrackingCursor;
     public Cursor mPostTrackingCursor;
     static StopWatch timer = new StopWatch();
-    private static long DISPLACEMENT = 0;
+    private static long DISPLACEMENT = 10;
     // Start and end times in milliseconds
     private static long startTime;
     private static long endTime;

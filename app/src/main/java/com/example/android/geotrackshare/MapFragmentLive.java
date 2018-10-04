@@ -53,6 +53,7 @@ import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
+import com.google.android.gms.maps.model.RoundCap;
 
 import java.util.ArrayList;
 
@@ -100,7 +101,7 @@ public class MapFragmentLive extends Fragment implements OnMapReadyCallback {
     View mView;
     private double[] mStartLocation = new double[2];
     private double[] mStopLocation = new double[2];
-    private double mCurrentLatitude, mCurrentLongitude;
+    private double mCurrentLatitude, mCurrentLongitude, mStopLatitude, mStopLongitude;
     private Cursor cur;
     private int runIdInt, mRunType;
     private ArrayList<LatLng> coordinatesList;
@@ -185,19 +186,22 @@ public class MapFragmentLive extends Fragment implements OnMapReadyCallback {
         fabStop = mView.findViewById(R.id.fab_stop);
         fabRecord = mView.findViewById(R.id.fab_record);
         mCurrentType = lastTrackType(mContext);
-        currentLocation();
+
+        mCurrentLocation = currentLocation();
 
         // Check that the user hasn't revoked permissions by going to Settings.
         mRequestingLocationUpdates = requestingLocationUpdates(mContext);
         if (mRequestingLocationUpdates) {
             mStopWatchHandler.sendEmptyMessage(MSG_UPDATE_TIMER_MAP_LIVE);
+            mCurrentId = queryLastRow();
+            queryCoordinatesList(mCurrentId);
             if (!checkPermissions()) {
                 requestPermissions();
             }
+        } else {
+            mCurrentId = queryLastRow() + 1;
         }
         myReceiver = new MyReceiver();
-
-        queryCoordinatesList(mCurrentId);
 
         if (!mRequestingLocationUpdates) {
             fabPause.setVisibility(View.INVISIBLE);
@@ -264,6 +268,10 @@ public class MapFragmentLive extends Fragment implements OnMapReadyCallback {
                 mService.stopUpdatesButtonHandler();
                 mStopWatchHandler.sendEmptyMessage(MSG_STOP_TIMER_MAP_LIVE);
 
+                double stopLatitude = stopLocation(mCurrentId)[0];
+                double stopLongitude = stopLocation(mCurrentId)[1];
+                LatLng lastKnownLatLng = new LatLng(stopLatitude, stopLongitude);
+                mMap.addMarker(new MarkerOptions().position(lastKnownLatLng).title("STOP")); //add Marker in current position
             }
         });
 
@@ -276,15 +284,15 @@ public class MapFragmentLive extends Fragment implements OnMapReadyCallback {
     private LatLng currentLocation() {
         LatLng currentLocation = null;
 
-
         LocationManager lm = (LocationManager) getActivity().getSystemService(Context.LOCATION_SERVICE);
         if (ActivityCompat.checkSelfPermission(mContext, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
                 ActivityCompat.checkSelfPermission(mContext, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             Toast.makeText(getActivity(), "Permission not granted", Toast.LENGTH_SHORT).show();
         } else {
             Toast.makeText(getActivity(), "go go go", Toast.LENGTH_SHORT).show();
-            Location location = lm.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+
             try {
+                Location location = lm.getLastKnownLocation(LocationManager.GPS_PROVIDER);
                 mCurrentLatitude = location.getLatitude();
                 mCurrentLongitude = location.getLongitude();
                 Toast.makeText(getContext(), String.valueOf(mCurrentLatitude) + "/" + String.valueOf(mCurrentLongitude), Toast.LENGTH_SHORT).show();
@@ -293,7 +301,6 @@ public class MapFragmentLive extends Fragment implements OnMapReadyCallback {
                 System.out.print("Caught the NullPointerException");
                 Toast.makeText(getActivity(), "No location", Toast.LENGTH_SHORT).show();
             }
-
         }
         return currentLocation;
     }
@@ -339,7 +346,8 @@ public class MapFragmentLive extends Fragment implements OnMapReadyCallback {
         LatLngBounds TRIP = new LatLngBounds(mSouthWestPoint, mNorthEastPoint);
         LatLngBounds POZNAN = new LatLngBounds(poznan, poznan);
 
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLocation(), 13));
+//        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(getLastLocation(getContext()), 13));
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(mCurrentLocation, 13));
 //        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(TRIP.getCenter(), 13));
 
 
@@ -356,15 +364,21 @@ public class MapFragmentLive extends Fragment implements OnMapReadyCallback {
                 .add(new LatLng(37.45, -122.2))  // Same latitude, and 30km to the west
                 .add(new LatLng(37.35, -122.2))  // Same longitude, and 16km to the south
                 .add(new LatLng(37.35, -122.0)); // Closes the polyline.
-
-        for (int i = 0; i < coordinatesList.size(); i++) {
-            mPoint = coordinatesList.get(i);
-            options.add(mPoint);
+        if (mRequestingLocationUpdates) {
+            for (int i = 0; i < coordinatesList.size(); i++) {
+                mPoint = coordinatesList.get(i);
+                options.add(mPoint);
+            }
+        } else {
+            options.add(mCurrentLocation);
         }
+        options.startCap(new RoundCap());
+        options.endCap(new RoundCap());
         gpsTrack = mMap.addPolyline(options);
 //        mMap.addPolyline(options);
 
-        mMap.addMarker(new MarkerOptions().position(mStopPoint).title("You are here")); //add Marker in current position
+
+        mMap.addMarker(new MarkerOptions().position(mStartPoint).title("START")); //add Marker in current position
         mMap.setMinZoomPreference(1.0f);
         mMap.setMaxZoomPreference(20.0f);
 
@@ -537,39 +551,31 @@ public class MapFragmentLive extends Fragment implements OnMapReadyCallback {
         return coordinatesList;
     }
 
-    /**
-     * Receiver for broadcasts sent by {@link LocationUpdatesService}.
-     */
-    private class MyReceiver extends BroadcastReceiver {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            setButtonsEnabledState(intent);
-            mCurrentId = intent.getIntExtra(LocationUpdatesService.EXTRA_CURRENT_ID, 0);
-            mCurrentType = intent.getIntExtra(LocationUpdatesService.EXTRA_RUN_TYPE, 0);
-            Double latitude = intent.getDoubleExtra(LocationUpdatesService.EXTRA_LATITUDE, mCurrentLatitude);
-            Double longitude = intent.getDoubleExtra(LocationUpdatesService.EXTRA_LONGITUDE, mCurrentLongitude);
-            LatLng lastKnownLatLng = new LatLng(latitude, longitude);
+    private int queryLastRow() {
+        int runId = 0, runType;
+        long startTimeinMillis, currentElapsedTime;
+        double currentMaxAlt, currentMaxSpeed, currentAvrSpeed, currentTotalDistance;
+        String ORDER = " " + _ID + " DESC LIMIT 1";
+        try {
+            cur = getActivity().getContentResolver()
+                    .query(CONTENT_URI, null, null, null, ORDER);
 
-            ArrayList<LatLng> points = (ArrayList<LatLng>) gpsTrack.getPoints();
-            points.add(lastKnownLatLng);
-            gpsTrack.setPoints(points);
-
-            Long latitudeLong = latitude.longValue();
-            Long longitudeLong = longitude.longValue();
-            setLastLocation(getContext(), latitudeLong, longitudeLong);
+            if (cur != null && cur.moveToFirst()) {
+                do {
+                    int runIdColumnIndex = cur.getColumnIndex(COLUMN_RUN_ID);
+                    runId = cur.getInt(runIdColumnIndex);
 
 
-//            long elapsedTimeMillis = intent.getLongExtra(LocationUpdatesService.EXTRA_TOTAL_TIME, 0);
-//            String elapsedTimeString = String.format("%02d:%02d:%02d", TimeUnit.MILLISECONDS.toHours(elapsedTimeMillis),
-//                    TimeUnit.MILLISECONDS.toMinutes(elapsedTimeMillis) % TimeUnit.HOURS.toMinutes(1),
-//                    TimeUnit.MILLISECONDS.toSeconds(elapsedTimeMillis) % TimeUnit.MINUTES.toSeconds(1));
-//            mTimeTextView.setText(elapsedTimeString);
+                } while (cur.moveToNext());
+            }
+            if (cur != null) {
+                cur.close();
+            }
 
-            double totalDistance = intent.getDoubleExtra(LocationUpdatesService.EXTRA_TOTAL_DISTANCE, 0);
-            String totlaDistance3Dec = String.format("%.3f", totalDistance);
-            String totalDistanceString = String.valueOf(totlaDistance3Dec + " km");
-            mDistanceTextView.setText(totalDistanceString);
+        } catch (Exception e) {
+            Log.e("Path Error", e.toString());
         }
+        return runId;
     }
 
     /**
@@ -710,6 +716,45 @@ public class MapFragmentLive extends Fragment implements OnMapReadyCallback {
         return PackageManager.PERMISSION_GRANTED == ActivityCompat.checkSelfPermission(mContext,
                 Manifest.permission.ACCESS_FINE_LOCATION);
     }
+
+    /**
+     * Receiver for broadcasts sent by {@link LocationUpdatesService}.
+     */
+    private class MyReceiver extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            setButtonsEnabledState(intent);
+            mCurrentId = intent.getIntExtra(LocationUpdatesService.EXTRA_CURRENT_ID, 0);
+            mCurrentType = intent.getIntExtra(LocationUpdatesService.EXTRA_RUN_TYPE, 0);
+            Double latitude = intent.getDoubleExtra(LocationUpdatesService.EXTRA_LATITUDE, mCurrentLatitude);
+            Double longitude = intent.getDoubleExtra(LocationUpdatesService.EXTRA_LONGITUDE, mCurrentLongitude);
+            LatLng lastKnownLatLng = new LatLng(latitude, longitude);
+
+            ArrayList<LatLng> points = (ArrayList<LatLng>) gpsTrack.getPoints();
+            if (latitude != 0) {
+                points.add(lastKnownLatLng);
+                gpsTrack.setPoints(points);
+                mMap.moveCamera(CameraUpdateFactory.newLatLng(lastKnownLatLng));
+            }
+
+            Long latitudeLong = latitude.longValue();
+            Long longitudeLong = longitude.longValue();
+            setLastLocation(getContext(), latitudeLong, longitudeLong);
+
+
+//            long elapsedTimeMillis = intent.getLongExtra(LocationUpdatesService.EXTRA_TOTAL_TIME, 0);
+//            String elapsedTimeString = String.format("%02d:%02d:%02d", TimeUnit.MILLISECONDS.toHours(elapsedTimeMillis),
+//                    TimeUnit.MILLISECONDS.toMinutes(elapsedTimeMillis) % TimeUnit.HOURS.toMinutes(1),
+//                    TimeUnit.MILLISECONDS.toSeconds(elapsedTimeMillis) % TimeUnit.MINUTES.toSeconds(1));
+//            mTimeTextView.setText(elapsedTimeString);
+
+            double totalDistance = intent.getDoubleExtra(LocationUpdatesService.EXTRA_TOTAL_DISTANCE, 0);
+            String totlaDistance3Dec = String.format("%.3f", totalDistance);
+            String totalDistanceString = String.valueOf(totlaDistance3Dec + " km");
+            mDistanceTextView.setText(totalDistanceString);
+        }
+    }
+
 
 }
 

@@ -474,4 +474,5 @@ public class DetailFragment extends Fragment implements OnMapReadyCallback {
         intent.putExtra(EXTRA_RUNTYPE, runType);
         startActivity(intent);
     }
+
 }

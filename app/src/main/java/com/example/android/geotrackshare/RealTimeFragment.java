@@ -236,7 +236,7 @@ public class RealTimeFragment extends Fragment implements
         // Check that the user hasn't revoked permissions by going to Settings.
         if (mRequestingLocationUpdates) {
             mStopWatchHandler.sendEmptyMessage(MSG_UPDATE_TIMER_REAL_TIME);
-            if (!checkPermissions()) {
+            if (!checkPermissionsFIneLocation()) {
                 requestPermissions();
             }
         }
@@ -400,7 +400,7 @@ public class RealTimeFragment extends Fragment implements
         mRequestLocationUpdatesButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (!checkPermissions()) {
+                if (!checkPermissionsFIneLocation()) {
                     requestPermissions();
                 } else {
 
@@ -491,7 +491,6 @@ public class RealTimeFragment extends Fragment implements
 
         }
     }
-
 
     /**
      * Updates fields based on data stored in the bundle.
@@ -737,7 +736,7 @@ public class RealTimeFragment extends Fragment implements
     /**
      * Returns the current state of the permissions needed.
      */
-    private boolean checkPermissions() {
+    private boolean checkPermissionsFIneLocation() {
         return PackageManager.PERMISSION_GRANTED == ActivityCompat.checkSelfPermission(mContext,
                 Manifest.permission.ACCESS_FINE_LOCATION);
     }
