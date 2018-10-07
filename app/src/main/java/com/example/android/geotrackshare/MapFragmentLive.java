@@ -257,7 +257,7 @@ public class MapFragmentLive extends Fragment implements OnMapReadyCallback {
                 }
 //                updateConstants();
                 mRequestingLocationUpdates = true;
-
+                mMap.addMarker(new MarkerOptions().position(currentLocation()).title("START"));
             }
         });
 

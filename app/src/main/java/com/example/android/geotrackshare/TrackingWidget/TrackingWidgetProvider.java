@@ -27,23 +27,31 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.widget.RemoteViews;
 
 import com.example.android.geotrackshare.LocationService.LocationUpdatesService;
 import com.example.android.geotrackshare.MainActivity;
 import com.example.android.geotrackshare.R;
+import com.example.android.geotrackshare.Utils.MyAppContext;
+import com.example.android.geotrackshare.Utils.StopWatchHandler;
 
 import static com.example.android.geotrackshare.LocationService.LocationServiceConstants.requestingLocationUpdates;
+import static com.example.android.geotrackshare.LocationService.LocationServiceConstants.serviceBound;
 import static com.example.android.geotrackshare.LocationService.LocationUpdatesService.EXTRA_CURRENT_ID;
 import static com.example.android.geotrackshare.MainActivity.mSharedPrefsRunType;
 import static com.example.android.geotrackshare.RealTimeFragment.RUN_TYPE_PICTURE_KEY;
+import static com.example.android.geotrackshare.Utils.StopWatchHandler.MSG_UPDATE_TIMER_WIDGET;
 
 
 public class TrackingWidgetProvider extends AppWidgetProvider {
 
     private static final String TAG = TrackingWidgetProvider.class.getSimpleName();
+    // Handler to update the UI every second when the timer is running
+    private final Handler mStopWatchHandler = new StopWatchHandler(this);
 
     public static String ACTION_FROM_SERVICE = "ACTION_FROM_SERVICE";
+    String mElapsedTime;
 
     private RemoteViews mRemoteViews;
     private int mRunId;
@@ -71,8 +79,9 @@ public class TrackingWidgetProvider extends AppWidgetProvider {
             mRemoteViews.setTextViewText(R.id.run_number, runNumber);
 
             Long mElapsedTimeMillis = intent.getLongExtra(LocationUpdatesService.EXTRA_TOTAL_TIME, 0);
-            String mElapsedTime = LocationUpdatesService.getDateFromMillis(mElapsedTimeMillis);
-            mRemoteViews.setTextViewText(R.id.tracking_time_dynamic, mElapsedTime);
+//            String mElapsedTime = LocationUpdatesService.getDateFromMillis(mElapsedTimeMillis);
+
+//            mRemoteViews.setTextViewText(R.id.tracking_time_dynamic, mElapsedTime);
 
             Double mMaxAltitudeDouble = intent.getDoubleExtra(LocationUpdatesService.EXTRA_MAX_ALTITUDE, 0);
             String maxAltDecimal = String.format("%.1f", mMaxAltitudeDouble);
@@ -108,6 +117,7 @@ public class TrackingWidgetProvider extends AppWidgetProvider {
         if (!requestingLocationUpdates(context)) {
             String runNumber = context.getString(R.string.no_tracking);
             mRemoteViews.setTextViewText(R.id.run_number, runNumber);
+            mRemoteViews.setTextViewText(R.id.tracking_time_dynamic, mElapsedTime);
         }
 
         for (int widgetId : appWidgetIds) {
@@ -141,6 +151,23 @@ public class TrackingWidgetProvider extends AppWidgetProvider {
     @Override
     public void onDisabled(Context context) {
         // Perform any action when the last AppWidget instance for this provider is deleted
+    }
+
+    public void updateStopWatchStop() {
+        mStopWatchHandler.removeMessages(MSG_UPDATE_TIMER_WIDGET);
+        mRemoteViews.setTextViewText(R.id.tracking_time_dynamic, "Stopped");
+
+    }
+
+    /**
+     * Updates the StopWatch readout in the UI; the service must be bound
+     */
+    public String updateStopWatch(String elapsedTime) {
+
+        if (serviceBound(MyAppContext.getAppContext())) {
+            mElapsedTime = elapsedTime;
+        }
+        return mElapsedTime;
     }
 
 }
