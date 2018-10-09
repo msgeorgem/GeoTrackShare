@@ -231,6 +231,7 @@
     <string name="darkness_mode">Darkness mode</string>
     <string name="snap_taken">Snap taken</string>
     <string name="no_backup">Backup never done!</string>
+    <string name="no_backup_no">no</string>
     <string name="last_backup">Last backup done:</string>
     <string name="no_auto_backup">Auto backup never done!</string>
     <string name="last_auto_backup">Last auto backup done:</string>

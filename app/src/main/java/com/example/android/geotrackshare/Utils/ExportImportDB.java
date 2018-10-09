@@ -17,6 +17,7 @@ import com.example.android.geotrackshare.LocationService.LocationServiceConstant
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.storage.FileDownloadTask;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
@@ -85,7 +86,7 @@ public class ExportImportDB extends Activity {
      **/
 
     public static final File backupDBonlyPath = new File(sd, backupDBPath);
-    protected static final String totalDBFilePath = backupDBPath + "geotrackshare.db";
+    protected static final String totalDBFilePath = backupDBPath + "gts.db";
     public static final File backupDBwithFIle = new File(sd, totalDBFilePath);
     public static File appDir = new File(Environment.getExternalStorageDirectory() + "/BackupFolder/GeoTrackShare");
 
@@ -189,7 +190,7 @@ public class ExportImportDB extends Activity {
     //exporting database
     public static void exportDB() {
         String dateTimeString = formatDateToFileName();
-        String dbFileName = "geotrackshare_" + dateTimeString + ".db";
+        String dbFileName = "gts_" + dateTimeString + ".db";
         File backupDB = new File(backupDBonlyPath, dbFileName);
 
         if (!appDir.exists() && !appDir.isDirectory()) {
@@ -219,7 +220,7 @@ public class ExportImportDB extends Activity {
     //exporting database
     public static void autoExportDB() {
         String dateTimeString = formatDateToFileName();
-        String dbFileName = "geotrackshare_auto_backup" + ".db";
+        String dbFileName = "gts_auto" + ".db";
         backupDB = new File(backupDBonlyPath, dbFileName);
 
         if (!appDir.exists() && !appDir.isDirectory()) {
@@ -515,6 +516,7 @@ public class ExportImportDB extends Activity {
         // Create a storage reference from our app
         StorageReference storageRef = storage.getReference();
         StorageReference uploadRef = storageRef.child("user/" + userId + "/" + file.getLastPathSegment());
+        LocationServiceConstants.setBackupFileName(MyAppContext.getAppContext(), file.getLastPathSegment());
 
         UploadTask uploadTask = uploadRef.putFile(file);
 
@@ -533,6 +535,86 @@ public class ExportImportDB extends Activity {
             }
         });
         // [END upload_file]
+    }
+
+    public static void downloadFromFirebaseStorage() {
+
+        String filename = LocationServiceConstants.getBackupFileName(getAppContext());
+        Log.e(TAG, filename);
+        String dbFileName = "gts_fb" + ".db";
+        File downloaded_gts_fb = new File(backupDBonlyPath, dbFileName);
+
+        String userId = LocationServiceConstants.getUserID(getAppContext());
+
+        FirebaseStorage storage = FirebaseStorage.getInstance();
+        Uri localFile = Uri.fromFile(downloaded_gts_fb);
+        // Create a storage reference from our app
+        StorageReference storageRef = storage.getReference();
+
+
+        if (!appDir.exists() && !appDir.isDirectory()) {
+            // create empty directory
+            if (appDir.mkdirs()) {
+                Log.i("CreateDir", "App dir created");
+            } else {
+                Log.w("CreateDir", "Unable to create app dir!");
+            }
+        } else {
+            Log.i("CreateDir", "App dir already exists");
+            Log.i(TAG, String.valueOf(appDir));
+        }
+
+        try {
+
+            if (!filename.equals("no")) {
+
+                StorageReference onlineRef = storageRef.child("user/" + userId + "/" + filename);
+
+                FileDownloadTask downloadTask = onlineRef.getFile(localFile);
+
+                downloadTask.addOnSuccessListener(new OnSuccessListener<FileDownloadTask.TaskSnapshot>() {
+                    @Override
+                    public void onSuccess(FileDownloadTask.TaskSnapshot taskSnapshot) {
+                        // Local temp file has been created
+                    }
+                }).addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception exception) {
+                        // Handle any errors
+                        Log.e(TAG, "downloadToFirebaseStorage:" + " unsuccessful download");
+                    }
+                });
+
+            } else {
+                String filename1 = "geotrackshare.db";
+
+                StorageReference onlineRef = storageRef.child("user/" + userId + "/" + filename1);
+
+                Log.e(TAG, String.valueOf(onlineRef));
+
+                FileDownloadTask downloadTask = onlineRef.getFile(localFile);
+
+                downloadTask.addOnSuccessListener(new OnSuccessListener<FileDownloadTask.TaskSnapshot>() {
+                    @Override
+                    public void onSuccess(FileDownloadTask.TaskSnapshot taskSnapshot) {
+                        // Local temp file has been created
+                    }
+                }).addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception exception) {
+                        // Handle any errors
+                        Log.e(TAG, "downloadToFirebaseStorage:" + " unsuccessful download");
+                    }
+                });
+            }
+            // [END upload_file]
+
+
+        } catch (Exception e) {
+            Log.e("ExportDB", e.toString());
+
+        }
+
     }
 
 }

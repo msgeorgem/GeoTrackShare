@@ -22,6 +22,7 @@ import android.location.Location;
 import android.preference.PreferenceManager;
 
 import com.example.android.geotrackshare.R;
+import com.example.android.geotrackshare.Utils.MyAppContext;
 import com.google.android.gms.maps.model.LatLng;
 
 import java.text.DateFormat;
@@ -45,6 +46,7 @@ public class LocationServiceConstants {
     private static final String KEY_AUTH_USERID = "KEY_AUTH_USERID";
     private static final String KEY_LAST_LATITUDE = "KEY_LAST_LATITUDE";
     private static final String KEY_LAST_LONGITUDE = "KEY_LAST_LONGITUDE";
+    private static final String KEY_BACKUP_FILE = "KEY_BACKUP_FILE";
 
 
     /**
@@ -360,7 +362,7 @@ public class LocationServiceConstants {
      */
     public static String getUserID(Context context) {
         return PreferenceManager.getDefaultSharedPreferences(context)
-                .getString(KEY_AUTH_USERID, String.valueOf(R.string.not_logged));
+                .getString(KEY_AUTH_USERID, String.valueOf(MyAppContext.getAppContext().getResources().getString(R.string.not_logged)));
     }
 
     /**
@@ -399,6 +401,28 @@ public class LocationServiceConstants {
                 .edit()
                 .putLong(KEY_LAST_LATITUDE, latitude)
                 .putLong(KEY_LAST_LONGITUDE, longitude)
+                .apply();
+    }
+
+    /**
+     * Returns last filename in string, otherwise no_backup .
+     *
+     * @param context The {@link Context}.
+     */
+    public static String getBackupFileName(Context context) {
+        return PreferenceManager.getDefaultSharedPreferences(context)
+                .getString(KEY_BACKUP_FILE, String.valueOf(MyAppContext.getAppContext().getResources().getString(R.string.no_backup_no)));
+    }
+
+    /**
+     * Stores the backup filename  in SharedPreferences.
+     *
+     * @param filename Last backup date and time.
+     */
+    public static void setBackupFileName(Context context, String filename) {
+        PreferenceManager.getDefaultSharedPreferences(context)
+                .edit()
+                .putString(KEY_BACKUP_FILE, filename)
                 .apply();
     }
 }

@@ -89,8 +89,10 @@ public class MainActivity extends AppCompatActivity
 
         mGoogleSignInClient = GoogleSignIn.getClient(this, gso);
 
+
         // [START initialize_auth]
         mAuth = FirebaseAuth.getInstance();
+
         // [END initialize_auth]
         if (!checkPermissionsFIneLocation() || !checkPermissionsStorage()) {
             requestPermissions();

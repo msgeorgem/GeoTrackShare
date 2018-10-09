@@ -45,6 +45,10 @@ public class StopWatchHandler extends Handler {
 
     }
 
+    public StopWatchHandler() {
+
+    }
+
     // Define how to handle any incoming messages here
     @Override
     public void handleMessage(Message msg) {

@@ -192,7 +192,6 @@ public class LocationUpdatesService extends Service implements SensorEventListen
     private final int GET_GEOLOCATION_LAST_ROWS = 5;
     private String CHANNEL_NAME = "GeoTracker Channel";
     private String DESCRIPTION = "GeoTracking";
-    public static StopWatchHandler mStopWatchHandler;
     /**
      * Used to check whether the bound activity has really gone away and not unbound as part of an
      * orientation change. We create a foreground service notification only if the former takes
@@ -257,6 +256,7 @@ public class LocationUpdatesService extends Service implements SensorEventListen
     private String mElapsedTime;
     private Handler mServiceHandler;
     private HandlerThread stopWatchThread;
+    private final Handler mStopWatchHandler = new StopWatchHandler();
     /**
      * Stores the types of location services the client is interested in using. Used for checking
      * settings to determine if the device has optimal location settings.
@@ -1281,7 +1281,7 @@ public class LocationUpdatesService extends Service implements SensorEventListen
         PendingIntent pStopIntent = PendingIntent.getService(context, 0,
                 stopIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
-        int RUN_TYPE_PICTURE = mSharedPrefsRunType.getInt(RUN_TYPE_PICTURE_KEY, -1);
+        int RUN_TYPE_PICTURE = mSharedPrefsRunType.getInt(RUN_TYPE_PICTURE_KEY, 1);
         Bitmap icon = BitmapFactory.decodeResource(context.getResources(), RUN_TYPE_PICTURE);
 
         notification = new NotificationCompat.Builder(context, CHANNEL_ID)
@@ -1340,7 +1340,7 @@ public class LocationUpdatesService extends Service implements SensorEventListen
         PendingIntent pStartIntent = PendingIntent.getService(context, 0,
                 startIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
-        int RUN_TYPE_PICTURE = mSharedPrefsRunType.getInt(RUN_TYPE_PICTURE_KEY, -1);
+        int RUN_TYPE_PICTURE = mSharedPrefsRunType.getInt(RUN_TYPE_PICTURE_KEY, 1);
 
         Bitmap icon = BitmapFactory.decodeResource(context.getResources(), RUN_TYPE_PICTURE);
 
@@ -1380,7 +1380,6 @@ public class LocationUpdatesService extends Service implements SensorEventListen
             mNotificationInformation = getResources().getString(R.string.Tracking_started_at) + getFormatedTimeInString() + "      STARTED...";
             mNotificationRunInformation = getResources().getString(R.string.Current_run) + mCurrentId;
             sendNotificationAfterStart(this, mNotificationInformation, mNotificationRunInformation);
-
 
             // Notify anyone listening for broadcasts about the new location.
             Intent intent = new Intent(ACTION_BROADCAST);

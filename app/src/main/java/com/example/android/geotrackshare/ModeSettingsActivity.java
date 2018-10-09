@@ -1,15 +1,21 @@
 package com.example.android.geotrackshare;
 
+import android.Manifest;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.preference.PreferenceManager;
+import android.provider.Settings;
+import android.support.annotation.NonNull;
+import android.support.design.widget.Snackbar;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AlertDialog;
@@ -60,6 +66,11 @@ public class ModeSettingsActivity extends AppCompatActivity {
     private TextView lastAutoBackup;
     // The BroadcastReceiver used to listen from broadcasts from the service.
     private MyReceiver myReceiver;
+    /**
+     * Code used in requesting runtime permissions.
+     */
+    public static final int REQUEST_PERMISSIONS_REQUEST_CODE = 34;
+    private Context mContext;
 
 
     public static boolean isExternalStorageWritable() {
@@ -85,6 +96,7 @@ public class ModeSettingsActivity extends AppCompatActivity {
         switchThemeS();
         setContentView(R.layout.mode_settings);
         myReceiver = new MyReceiver();
+        mContext = getApplication();
 
         ActionBar actionBar = getSupportActionBar();
 
@@ -105,7 +117,7 @@ public class ModeSettingsActivity extends AppCompatActivity {
         Button exportButton = findViewById(R.id.exportButton);
         Button importButton = findViewById(R.id.importButton);
         Button uploadToFirebase = findViewById(R.id.importAutoButton);
-        final Button signIN = findViewById(R.id.signIn);
+        final Button downloadFromFirebase = findViewById(R.id.downloadFromFireBase);
         Button signOUT = findViewById(R.id.signOut);
 
         Intent intent = getIntent();
@@ -115,7 +127,7 @@ public class ModeSettingsActivity extends AppCompatActivity {
             exportButton.setVisibility(View.INVISIBLE);
             importButton.setVisibility(View.INVISIBLE);
             uploadToFirebase.setVisibility(View.INVISIBLE);
-            signIN.setVisibility(View.INVISIBLE);
+            downloadFromFirebase.setVisibility(View.INVISIBLE);
             signOUT.setVisibility(View.INVISIBLE);
 //            importAutoButton.setVisibility(View.INVISIBLE);
         } else if ((BICYCLE).equals(intent.getAction())) {
@@ -124,7 +136,7 @@ public class ModeSettingsActivity extends AppCompatActivity {
             exportButton.setVisibility(View.INVISIBLE);
             importButton.setVisibility(View.INVISIBLE);
             uploadToFirebase.setVisibility(View.INVISIBLE);
-            signIN.setVisibility(View.INVISIBLE);
+            downloadFromFirebase.setVisibility(View.INVISIBLE);
             signOUT.setVisibility(View.INVISIBLE);
 //            importAutoButton.setVisibility(View.INVISIBLE);
         } else if ((CAR).equals(intent.getAction())) {
@@ -133,7 +145,7 @@ public class ModeSettingsActivity extends AppCompatActivity {
             exportButton.setVisibility(View.INVISIBLE);
             importButton.setVisibility(View.INVISIBLE);
             uploadToFirebase.setVisibility(View.VISIBLE);
-            signIN.setVisibility(View.VISIBLE);
+            downloadFromFirebase.setVisibility(View.VISIBLE);
             signOUT.setVisibility(View.VISIBLE);
 //            importAutoButton.setVisibility(View.INVISIBLE);
         } else if ((EXPORTIMPORT).equals(intent.getAction())) {
@@ -141,7 +153,7 @@ public class ModeSettingsActivity extends AppCompatActivity {
             description1 = getResources().getString(R.string.import_database_summary);
             exportButton.setVisibility(View.VISIBLE);
             uploadToFirebase.setVisibility(View.VISIBLE);
-            signIN.setVisibility(View.INVISIBLE);
+            downloadFromFirebase.setVisibility(View.VISIBLE);
             signOUT.setVisibility(View.INVISIBLE);
             if (!isExportDone(getApplicationContext())) {
                 lastBackup.setText(R.string.no_backup);
@@ -198,10 +210,13 @@ public class ModeSettingsActivity extends AppCompatActivity {
                 }
             });
 
-            signIN.setOnClickListener(new View.OnClickListener() {
+            downloadFromFirebase.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-
+                    if (!checkPermissionsStorage()) {
+                        requestPermissions();
+                    }
+                    ExportImportDB.downloadFromFirebaseStorage();
 
                 }
             });
@@ -238,10 +253,16 @@ public class ModeSettingsActivity extends AppCompatActivity {
 
         File[] listOfFiles = new File(String.valueOf(backupPath)).listFiles(fileFilter);
 
-        for (File file : listOfFiles) {
-            if (file.isFile()) {
-                results.add(file.getName());
+        try {
+            for (File file : listOfFiles) {
+                if (file.isFile()) {
+                    results.add(file.getName());
+                }
             }
+        } catch (NullPointerException e) {
+            e.printStackTrace();
+            Toast.makeText(this, "No backups in Folder",
+                    Toast.LENGTH_SHORT).show();
         }
 
         return results;
@@ -411,6 +432,112 @@ public class ModeSettingsActivity extends AppCompatActivity {
         public void onReceive(Context context, Intent intent) {
             String timeDate = intent.getStringExtra(GeoTrackShareFirebaseJobService.EXTRA_TIME_DATE);
             lastAutoBackup.setText(timeDate);
+        }
+    }
+
+    /**
+     * Returns the current state of the permissions needed.
+     */
+    private boolean checkPermissionsStorage() {
+        return PackageManager.PERMISSION_GRANTED == ActivityCompat.checkSelfPermission(this,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE);
+    }
+
+    /**
+     * Shows a {@link Snackbar}.
+     *
+     * @param mainTextStringId The id for the string resource for the Snackbar text.
+     * @param actionStringId   The text of the action item.
+     * @param listener         The listener associated with the Snackbar action.
+     */
+    private void showSnackbar(final int mainTextStringId, final int actionStringId,
+                              View.OnClickListener listener) {
+        Snackbar.make(
+                findViewById(android.R.id.content),
+                getString(mainTextStringId),
+                Snackbar.LENGTH_INDEFINITE)
+                .setAction(getString(actionStringId), listener).show();
+    }
+
+
+    public void requestPermissions() {
+        boolean shouldProvideRationale1 =
+                ActivityCompat.shouldShowRequestPermissionRationale(ModeSettingsActivity.this,
+                        Manifest.permission.WRITE_EXTERNAL_STORAGE);
+
+        // Provide an additional rationale to the user. This would happen if the user denied the
+        // request previously, but didn't check the "Don't ask again" checkbox.
+        if (shouldProvideRationale1) {
+            Log.i(TAG, "Displaying permission rationale to provide additional context.");
+            showSnackbar(R.string.permission_rationale,
+                    android.R.string.ok, new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            // Request permission
+                            ActivityCompat.requestPermissions(ModeSettingsActivity.this,
+                                    new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                                    REQUEST_PERMISSIONS_REQUEST_CODE);
+
+                        }
+                    });
+        } else {
+            Log.i(TAG, "Requesting permission");
+            // Request permission. It's possible this can be auto answered if device policy
+            // sets the permission in a given state or the user denied the permission
+            // previously and checked "Never ask again".
+            ActivityCompat.requestPermissions(ModeSettingsActivity.this,
+                    new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                    REQUEST_PERMISSIONS_REQUEST_CODE);
+
+        }
+    }
+
+    /**
+     * Callback received when a permissions request has been completed.
+     */
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
+                                           @NonNull int[] grantResults) {
+        Log.i(TAG, "onRequestPermissionResult");
+        if (requestCode == REQUEST_PERMISSIONS_REQUEST_CODE) {
+            if (grantResults.length <= 0) {
+                // If user interaction was interrupted, the permission request is cancelled and you
+                // receive empty arrays.
+                Log.i(TAG, "User interaction was cancelled.");
+            } else if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+
+                Log.i(TAG, "Permission granted, download requested, starting location updates");
+
+                ExportImportDB.downloadFromFirebaseStorage();
+
+            } else {
+                // Permission denied.
+//                setButtonsEnabledState(false);
+                // Notify the user via a SnackBar that they have rejected a core permission for the
+                // app, which makes the Activity useless. In a real app, core permissions would
+                // typically be best requested during a welcome-screen flow.
+
+                // Additionally, it is important to remember that a permission might have been
+                // rejected without asking the user for permission (device policy or "Never ask
+                // again" prompts). Therefore, a user interface affordance is typically implemented
+                // when permissions are denied. Otherwise, your app could appear unresponsive to
+                // touches or interactions which have required permissions.
+                showSnackbar(R.string.permission_denied_explanation,
+                        R.string.settings, new View.OnClickListener() {
+                            @Override
+                            public void onClick(View view) {
+                                // Build intent that displays the App settings screen.
+                                Intent intent = new Intent();
+                                intent.setAction(
+                                        Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+                                Uri uri = Uri.fromParts("package",
+                                        BuildConfig.APPLICATION_ID, null);
+                                intent.setData(uri);
+                                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                                startActivity(intent);
+                            }
+                        });
+            }
         }
     }
 }

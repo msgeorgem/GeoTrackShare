@@ -403,9 +403,9 @@ public class RealTimeFragment extends Fragment implements
                 if (!checkPermissionsFIneLocation()) {
                     requestPermissions();
                 } else {
-
                     mService.startUpdatesButtonHandler();
                     mStopWatchHandler.sendEmptyMessage(MSG_START_TIMER);
+
                     setStartTimeCurrentTrack(mContext, LocationUpdatesService.startTimeStopWatch);
 
                 }
@@ -426,6 +426,7 @@ public class RealTimeFragment extends Fragment implements
                 mService.stopUpdatesButtonHandler();
                 mRunNumber.setText(String.format(Locale.ENGLISH, "%s: %s",
                         mLastRunLabel, mCurrentId));
+
                 mStopWatchHandler.sendEmptyMessage(MSG_STOP_TIMER_REAL_TIME);
 
             }

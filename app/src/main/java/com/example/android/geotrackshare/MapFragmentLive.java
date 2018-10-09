@@ -252,6 +252,7 @@ public class MapFragmentLive extends Fragment implements OnMapReadyCallback {
                     requestPermissions();
                 } else {
                     mService.startUpdatesButtonHandler();
+
                     mStopWatchHandler.sendEmptyMessage(MSG_START_TIMER);
                     setStartTimeCurrentTrack(mContext, LocationUpdatesService.startTimeStopWatch);
                 }
@@ -266,6 +267,7 @@ public class MapFragmentLive extends Fragment implements OnMapReadyCallback {
             public void onClick(View view) {
                 mRequestingLocationUpdates = false;
                 mService.stopUpdatesButtonHandler();
+
                 mStopWatchHandler.sendEmptyMessage(MSG_STOP_TIMER_MAP_LIVE);
 
                 double stopLatitude = stopLocation(mCurrentId)[0];
@@ -288,6 +290,7 @@ public class MapFragmentLive extends Fragment implements OnMapReadyCallback {
         if (ActivityCompat.checkSelfPermission(mContext, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
                 ActivityCompat.checkSelfPermission(mContext, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             Toast.makeText(getActivity(), "Permission not granted", Toast.LENGTH_SHORT).show();
+            requestPermissions();
         } else {
             Toast.makeText(getActivity(), "go go go", Toast.LENGTH_SHORT).show();
 
@@ -300,6 +303,8 @@ public class MapFragmentLive extends Fragment implements OnMapReadyCallback {
             } catch (NullPointerException e) {
                 System.out.print("Caught the NullPointerException");
                 Toast.makeText(getActivity(), "No location", Toast.LENGTH_SHORT).show();
+
+                currentLocation = new LatLng(52.406374, 16.9251681);
             }
         }
         return currentLocation;
@@ -348,7 +353,7 @@ public class MapFragmentLive extends Fragment implements OnMapReadyCallback {
 
 //        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(getLastLocation(getContext()), 13));
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(mCurrentLocation, 13));
-//        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(TRIP.getCenter(), 13));
+//        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(getLastLocation(getContext()), 13));
 
 
         // Add a marker in Poznan, Poland, and move the camera.
@@ -374,7 +379,12 @@ public class MapFragmentLive extends Fragment implements OnMapReadyCallback {
         }
         options.startCap(new RoundCap());
         options.endCap(new RoundCap());
-        gpsTrack = mMap.addPolyline(options);
+        try {
+            gpsTrack = mMap.addPolyline(options);
+        } catch (NullPointerException e) {
+            System.out.print("Caught the NullPointerException");
+            Toast.makeText(getActivity(), "No location", Toast.LENGTH_SHORT).show();
+        }
 //        mMap.addPolyline(options);
 
 
@@ -730,12 +740,18 @@ public class MapFragmentLive extends Fragment implements OnMapReadyCallback {
             Double longitude = intent.getDoubleExtra(LocationUpdatesService.EXTRA_LONGITUDE, mCurrentLongitude);
             LatLng lastKnownLatLng = new LatLng(latitude, longitude);
 
-            ArrayList<LatLng> points = (ArrayList<LatLng>) gpsTrack.getPoints();
-            if (latitude != 0) {
-                points.add(lastKnownLatLng);
-                gpsTrack.setPoints(points);
-                mMap.moveCamera(CameraUpdateFactory.newLatLng(lastKnownLatLng));
+            try {
+                ArrayList<LatLng> points = (ArrayList<LatLng>) gpsTrack.getPoints();
+                if (latitude != 0) {
+                    points.add(lastKnownLatLng);
+                    gpsTrack.setPoints(points);
+                    mMap.moveCamera(CameraUpdateFactory.newLatLng(lastKnownLatLng));
+                }
+            } catch (NullPointerException e) {
+                System.out.print("Caught the NullPointerException");
+                Toast.makeText(getActivity(), "No location", Toast.LENGTH_SHORT).show();
             }
+
 
             Long latitudeLong = latitude.longValue();
             Long longitudeLong = longitude.longValue();
@@ -754,7 +770,6 @@ public class MapFragmentLive extends Fragment implements OnMapReadyCallback {
             mDistanceTextView.setText(totalDistanceString);
         }
     }
-
 
 }
 
