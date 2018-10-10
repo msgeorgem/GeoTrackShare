@@ -6,6 +6,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.location.Location;
+import android.location.LocationManager;
 import android.net.ConnectivityManager;
 import android.net.Uri;
 import android.os.Bundle;
@@ -37,6 +39,7 @@ import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.common.api.ApiException;
+import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthCredential;
@@ -53,6 +56,7 @@ import static com.example.android.geotrackshare.LocationService.LocationServiceC
 import static com.example.android.geotrackshare.LocationService.LocationServiceConstants.setAuthToFirebase;
 import static com.example.android.geotrackshare.LocationService.LocationServiceConstants.setUserID;
 import static com.example.android.geotrackshare.RealTimeFragment.REQUEST_PERMISSIONS_REQUEST_CODE;
+import static com.example.android.geotrackshare.Utils.ExportImportDB.checkIfBackupExistsOnFirebase;
 
 
 public class MainActivity extends AppCompatActivity
@@ -68,6 +72,8 @@ public class MainActivity extends AppCompatActivity
     private static final int RC_SIGN_IN = 9001;
     private FirebaseAuth mAuth;
     private GoogleSignInClient mGoogleSignInClient;
+    public static LatLng mCurrentLocation;
+    public static double mCurrentLatitude, mCurrentLongitude, mStopLatitude, mStopLongitude;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -78,6 +84,7 @@ public class MainActivity extends AppCompatActivity
         switchScreenOn();
         mSharedPrefsRunType = getSharedPreferences("Run_Type", Context.MODE_PRIVATE);
         GeoTrackShareSyncUtils.initialize(this);
+
 
         // [START config_signin]
         // Configure Google Sign In
@@ -163,6 +170,7 @@ public class MainActivity extends AppCompatActivity
         NavigationView navigationView = findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
         signIn();
+        checkIfBackupExistsOnFirebase();
     }
 
     public void switchTheme() {
@@ -372,19 +380,19 @@ public class MainActivity extends AppCompatActivity
         boolean shouldProvideRationale =
                 ActivityCompat.shouldShowRequestPermissionRationale(this,
                         Manifest.permission.ACCESS_FINE_LOCATION);
-        boolean shouldProvideRationale1 =
-                ActivityCompat.shouldShowRequestPermissionRationale(this,
-                        Manifest.permission.READ_PHONE_STATE);
-        boolean shouldProvideRationale2 =
-                ActivityCompat.shouldShowRequestPermissionRationale(this,
-                        Manifest.permission.WRITE_EXTERNAL_STORAGE);
-        boolean shouldProvideRationale3 =
-                ActivityCompat.shouldShowRequestPermissionRationale(this,
-                        Manifest.permission.GET_ACCOUNTS);
+//        boolean shouldProvideRationale1 =
+//                ActivityCompat.shouldShowRequestPermissionRationale(this,
+//                        Manifest.permission.READ_PHONE_STATE);
+//        boolean shouldProvideRationale2 =
+//                ActivityCompat.shouldShowRequestPermissionRationale(this,
+//                        Manifest.permission.WRITE_EXTERNAL_STORAGE);
+//        boolean shouldProvideRationale3 =
+//                ActivityCompat.shouldShowRequestPermissionRationale(this,
+//                        Manifest.permission.GET_ACCOUNTS);
 
         // Provide an additional rationale to the user. This would happen if the user denied the
         // request previously, but didn't check the "Don't ask again" checkbox.
-        if (shouldProvideRationale || shouldProvideRationale1 || shouldProvideRationale2 || shouldProvideRationale3) {
+        if (shouldProvideRationale) {
             Log.i(TAG, "Displaying permission rationale to provide additional context.");
             showSnackbar(R.string.permission_rationale,
                     android.R.string.ok, new View.OnClickListener() {
@@ -394,18 +402,19 @@ public class MainActivity extends AppCompatActivity
                             ActivityCompat.requestPermissions(MainActivity.this,
                                     new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
                                     REQUEST_PERMISSIONS_REQUEST_CODE);
-                            // Request permission
-                            ActivityCompat.requestPermissions(MainActivity.this,
-                                    new String[]{Manifest.permission.READ_PHONE_STATE},
-                                    REQUEST_PERMISSIONS_REQUEST_CODE);
-                            // Request permission
-                            ActivityCompat.requestPermissions(MainActivity.this,
-                                    new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
-                                    REQUEST_PERMISSIONS_REQUEST_CODE);
-                            // Request permission
-                            ActivityCompat.requestPermissions(MainActivity.this,
-                                    new String[]{Manifest.permission.GET_ACCOUNTS},
-                                    REQUEST_PERMISSIONS_REQUEST_CODE);
+
+//                            // Request permission
+//                            ActivityCompat.requestPermissions(MainActivity.this,
+//                                    new String[]{Manifest.permission.READ_PHONE_STATE},
+//                                    REQUEST_PERMISSIONS_REQUEST_CODE);
+//                            // Request permission
+//                            ActivityCompat.requestPermissions(MainActivity.this,
+//                                    new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+//                                    REQUEST_PERMISSIONS_REQUEST_CODE);
+//                            // Request permission
+//                            ActivityCompat.requestPermissions(MainActivity.this,
+//                                    new String[]{Manifest.permission.GET_ACCOUNTS},
+//                                    REQUEST_PERMISSIONS_REQUEST_CODE);
                         }
                     });
         } else {
@@ -416,15 +425,15 @@ public class MainActivity extends AppCompatActivity
             ActivityCompat.requestPermissions(MainActivity.this,
                     new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
                     REQUEST_PERMISSIONS_REQUEST_CODE);
-            ActivityCompat.requestPermissions(MainActivity.this,
-                    new String[]{Manifest.permission.READ_PHONE_STATE},
-                    REQUEST_PERMISSIONS_REQUEST_CODE);
-            ActivityCompat.requestPermissions(MainActivity.this,
-                    new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
-                    REQUEST_PERMISSIONS_REQUEST_CODE);
-            ActivityCompat.requestPermissions(MainActivity.this,
-                    new String[]{Manifest.permission.GET_ACCOUNTS},
-                    REQUEST_PERMISSIONS_REQUEST_CODE);
+//            ActivityCompat.requestPermissions(MainActivity.this,
+//                    new String[]{Manifest.permission.READ_PHONE_STATE},
+//                    REQUEST_PERMISSIONS_REQUEST_CODE);
+//            ActivityCompat.requestPermissions(MainActivity.this,
+//                    new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+//                    REQUEST_PERMISSIONS_REQUEST_CODE);
+//            ActivityCompat.requestPermissions(MainActivity.this,
+//                    new String[]{Manifest.permission.GET_ACCOUNTS},
+//                    REQUEST_PERMISSIONS_REQUEST_CODE);
         }
     }
 
@@ -441,6 +450,7 @@ public class MainActivity extends AppCompatActivity
                 // receive empty arrays.
                 Log.i(TAG, "User interaction was cancelled.");
             } else if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                mCurrentLocation = currentLocation();
                 if (requestingLocationUpdates(this)) {
                     Log.i(TAG, "Permission granted, updates requested, starting location updates");
 //                    mService.startUpdatesButtonHandler();
@@ -490,5 +500,32 @@ public class MainActivity extends AppCompatActivity
     private boolean checkPermissionsStorage() {
         return PackageManager.PERMISSION_GRANTED == ActivityCompat.checkSelfPermission(this,
                 Manifest.permission.WRITE_EXTERNAL_STORAGE);
+    }
+
+    private LatLng currentLocation() {
+        LatLng currentLocation = null;
+
+        LocationManager lm = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+                ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            Toast.makeText(this, "Permission not granted", Toast.LENGTH_SHORT).show();
+            requestPermissions();
+        } else {
+            Toast.makeText(this, "go go go", Toast.LENGTH_SHORT).show();
+
+            try {
+                Location location = lm.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+                mCurrentLatitude = location.getLatitude();
+                mCurrentLongitude = location.getLongitude();
+                Toast.makeText(this, String.valueOf(mCurrentLatitude) + "/" + String.valueOf(mCurrentLongitude), Toast.LENGTH_SHORT).show();
+                currentLocation = new LatLng(mCurrentLatitude, mCurrentLongitude);
+            } catch (NullPointerException e) {
+                System.out.print("Caught the NullPointerException");
+                Toast.makeText(this, "No location", Toast.LENGTH_SHORT).show();
+
+                currentLocation = new LatLng(52.406374, 16.9251681);
+            }
+        }
+        return currentLocation;
     }
 }

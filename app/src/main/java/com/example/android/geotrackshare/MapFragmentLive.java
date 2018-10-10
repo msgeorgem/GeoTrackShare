@@ -74,6 +74,7 @@ import static com.example.android.geotrackshare.LocationService.LocationServiceC
 import static com.example.android.geotrackshare.LocationService.LocationServiceConstants.setServiceBound;
 import static com.example.android.geotrackshare.LocationService.LocationServiceConstants.setStartTimeCurrentTrack;
 import static com.example.android.geotrackshare.MainActivity.mCategories;
+import static com.example.android.geotrackshare.MainActivity.mCurrentLocation;
 import static com.example.android.geotrackshare.RealTimeFragment.REQUEST_PERMISSIONS_REQUEST_CODE;
 import static com.example.android.geotrackshare.RealTimeFragment.RUN_TYPE_PICTURE;
 import static com.example.android.geotrackshare.Utils.StopWatchHandler.MSG_START_TIMER;
@@ -101,7 +102,7 @@ public class MapFragmentLive extends Fragment implements OnMapReadyCallback {
     View mView;
     private double[] mStartLocation = new double[2];
     private double[] mStopLocation = new double[2];
-    private double mCurrentLatitude, mCurrentLongitude, mStopLatitude, mStopLongitude;
+
     private Cursor cur;
     private int runIdInt, mRunType;
     private ArrayList<LatLng> coordinatesList;
@@ -117,7 +118,7 @@ public class MapFragmentLive extends Fragment implements OnMapReadyCallback {
     private MyReceiver myReceiver;
     private Context mContext;
     private int mCurrentType, mCurrentId;
-    private LatLng mCurrentLocation;
+
     private RunTypesAdapterNoUI mAdapter;
 
     // A reference to the service used to get location updates.
@@ -296,10 +297,10 @@ public class MapFragmentLive extends Fragment implements OnMapReadyCallback {
 
             try {
                 Location location = lm.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-                mCurrentLatitude = location.getLatitude();
-                mCurrentLongitude = location.getLongitude();
-                Toast.makeText(getContext(), String.valueOf(mCurrentLatitude) + "/" + String.valueOf(mCurrentLongitude), Toast.LENGTH_SHORT).show();
-                currentLocation = new LatLng(mCurrentLatitude, mCurrentLongitude);
+                MainActivity.mCurrentLatitude = location.getLatitude();
+                MainActivity.mCurrentLongitude = location.getLongitude();
+                Toast.makeText(getContext(), String.valueOf(MainActivity.mCurrentLatitude) + "/" + String.valueOf(MainActivity.mCurrentLongitude), Toast.LENGTH_SHORT).show();
+                currentLocation = new LatLng(MainActivity.mCurrentLatitude, MainActivity.mCurrentLongitude);
             } catch (NullPointerException e) {
                 System.out.print("Caught the NullPointerException");
                 Toast.makeText(getActivity(), "No location", Toast.LENGTH_SHORT).show();
@@ -352,7 +353,7 @@ public class MapFragmentLive extends Fragment implements OnMapReadyCallback {
         LatLngBounds POZNAN = new LatLngBounds(poznan, poznan);
 
 //        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(getLastLocation(getContext()), 13));
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(mCurrentLocation, 13));
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLocation(), 13));
 //        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(getLastLocation(getContext()), 13));
 
 
@@ -736,8 +737,8 @@ public class MapFragmentLive extends Fragment implements OnMapReadyCallback {
             setButtonsEnabledState(intent);
             mCurrentId = intent.getIntExtra(LocationUpdatesService.EXTRA_CURRENT_ID, 0);
             mCurrentType = intent.getIntExtra(LocationUpdatesService.EXTRA_RUN_TYPE, 0);
-            Double latitude = intent.getDoubleExtra(LocationUpdatesService.EXTRA_LATITUDE, mCurrentLatitude);
-            Double longitude = intent.getDoubleExtra(LocationUpdatesService.EXTRA_LONGITUDE, mCurrentLongitude);
+            Double latitude = intent.getDoubleExtra(LocationUpdatesService.EXTRA_LATITUDE, MainActivity.mCurrentLatitude);
+            Double longitude = intent.getDoubleExtra(LocationUpdatesService.EXTRA_LONGITUDE, MainActivity.mCurrentLongitude);
             LatLng lastKnownLatLng = new LatLng(latitude, longitude);
 
             try {

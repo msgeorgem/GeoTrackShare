@@ -43,6 +43,7 @@ public class LocationServiceConstants {
     private static final String KEY_IS_DB_EXPORT_DONE = "KEY_IS_DB_EXPORT_DONE";
     private static final String KEY_IS_DB_AUTO_EXPORT_DONE = "KEY_IS_DB_AUTO_EXPORT_DONE";
     private static final String KEY_IS_AUTH_TO_FIREBASE = "KEY_IS_AUTH_TO_FIREBASE";
+    private static final String KEY_IS_BACKUP_ON_FIREBASE = "KEY_IS_BACKUP_ON_FIREBASE";
     private static final String KEY_AUTH_USERID = "KEY_AUTH_USERID";
     private static final String KEY_LAST_LATITUDE = "KEY_LAST_LATITUDE";
     private static final String KEY_LAST_LONGITUDE = "KEY_LAST_LONGITUDE";
@@ -425,4 +426,27 @@ public class LocationServiceConstants {
                 .putString(KEY_BACKUP_FILE, filename)
                 .apply();
     }
+
+    /**
+     * Returns true if db export done, otherwise returns false.
+     *
+     * @param context The {@link Context}.
+     */
+    public static boolean isDBBackupOnFirebase(Context context) {
+        return PreferenceManager.getDefaultSharedPreferences(context)
+                .getBoolean(KEY_IS_BACKUP_ON_FIREBASE, false);
+    }
+
+    /**
+     * Stores flag if export was done state in SharedPreferences.
+     *
+     * @param backupExists The export updates state.
+     */
+    public static void setDBBackupOnFirebaseDone(Context context, boolean backupExists) {
+        PreferenceManager.getDefaultSharedPreferences(context)
+                .edit()
+                .putBoolean(KEY_IS_BACKUP_ON_FIREBASE, backupExists)
+                .apply();
+    }
+
 }

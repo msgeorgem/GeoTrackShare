@@ -216,7 +216,8 @@ public class ModeSettingsActivity extends AppCompatActivity {
                     if (!checkPermissionsStorage()) {
                         requestPermissions();
                     }
-                    ExportImportDB.downloadFromFirebaseStorage();
+//                    Download runs downloading backup DB and importing rows from BackupDB to AppDB
+                    ExportImportDB.downloadFromFirebaseStorageDeleteReplace();
 
                 }
             });
@@ -296,7 +297,7 @@ public class ModeSettingsActivity extends AppCompatActivity {
 
                         String finalSelectedPath = String.valueOf(backupPath) + "/" + strName;
                         File file1 = new File(String.valueOf(finalSelectedPath));
-                        ExportImportDB.importIntoDb(getApplication(), file1);
+                        ExportImportDB.importIntoDbReplace(getApplication(), file1);
                         Toast.makeText(getBaseContext(), getResources().getString(R.string.database_imported), Toast.LENGTH_LONG).show();
 
                         dialog.dismiss();
@@ -394,7 +395,7 @@ public class ModeSettingsActivity extends AppCompatActivity {
                 String finalSelectedPath = Environment.getExternalStorageDirectory().getPath() + "/" + selectedFile0;
                 File file1 = new File(String.valueOf(finalSelectedPath));
 
-                ExportImportDB.importIntoDb(getApplication(), file1);
+                ExportImportDB.importIntoDbReplace(getApplication(), file1);
                 Toast.makeText(getBaseContext(), "DataBase Imported",
                         Toast.LENGTH_LONG).show();
 

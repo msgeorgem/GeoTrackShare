@@ -63,6 +63,7 @@ import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.TABLE_NAME_POST_TRACKING;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.TABLE_NAME_TRACKING;
 import static com.example.android.geotrackshare.Data.TrackDbHelper.DATABASE_NAME;
+import static com.example.android.geotrackshare.LocationService.LocationServiceConstants.setDBBackupOnFirebaseDone;
 import static com.example.android.geotrackshare.Utils.MyAppContext.getAppContext;
 import static com.example.android.geotrackshare.Utils.StopWatch.formatDateToFileName;
 
@@ -86,7 +87,7 @@ public class ExportImportDB extends Activity {
      **/
 
     public static final File backupDBonlyPath = new File(sd, backupDBPath);
-    protected static final String totalDBFilePath = backupDBPath + "gts.db";
+    protected static final String totalDBFilePath = backupDBPath + "gts_fb.db";
     public static final File backupDBwithFIle = new File(sd, totalDBFilePath);
     public static File appDir = new File(Environment.getExternalStorageDirectory() + "/BackupFolder/GeoTrackShare");
 
@@ -104,7 +105,7 @@ public class ExportImportDB extends Activity {
     /**
      * Imports the file at IMPORT_FILE
      **/
-    public static boolean importIntoDb(Context ctx, File choseFile) {
+    public static boolean importIntoDbReplace(Context ctx, File choseFile) {
 
 
         if (!SdIsPresent()) return false;
@@ -131,6 +132,39 @@ public class ExportImportDB extends Activity {
                     CONTENT_URI,
                     null,
                     null);
+
+            /* Insert backedup data into GeotrackShare's ContentProvider */
+            trackContentResolver.bulkInsert(
+                    CONTENT_URI,
+                    readTableToArray(sqlDbBackup, TABLE_NAME_TRACKING));
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * Imports the file at IMPORT_FILE
+     **/
+    public static boolean importIntoEmptyDb(Context ctx, File choseFile) {
+
+
+        if (!SdIsPresent()) return false;
+
+        if (!checkDbIsValid(choseFile, ctx)) return false;
+
+        try {
+            SQLiteDatabase sqlDbBackup = SQLiteDatabase.openDatabase
+                    (choseFile.getPath(), null, SQLiteDatabase.OPEN_READONLY);
+
+            ContentResolver trackContentResolver = ctx.getContentResolver();
+
+            /* Insert backedup data into GeotrackShare's ContentProvider */
+            trackContentResolver.bulkInsert(
+                    CONTENT_URI_POST,
+                    readTableToArrayPost(sqlDbBackup, TABLE_NAME_POST_TRACKING));
 
             /* Insert backedup data into GeotrackShare's ContentProvider */
             trackContentResolver.bulkInsert(
@@ -174,6 +208,40 @@ public class ExportImportDB extends Activity {
                     CONTENT_URI,
                     null,
                     null);
+
+            /* Insert backedup data into GeotrackShare's ContentProvider */
+            trackContentResolver.bulkInsert(
+                    CONTENT_URI,
+                    readTableToArray(sqlDbBackup, TABLE_NAME_TRACKING));
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * Imports the file at IMPORT_FILE
+     **/
+    public static boolean importIntoEmptyDbFromLocalBackup(Context ctx) {
+
+
+        if (!SdIsPresent()) return false;
+
+        if (!checkDbIsValid(backupDBwithFIle, ctx)) return false;
+
+        try {
+            SQLiteDatabase sqlDbBackup = SQLiteDatabase.openDatabase
+                    (backupDBwithFIle.getPath(), null, SQLiteDatabase.OPEN_READONLY);
+
+            ContentResolver trackContentResolver = ctx.getContentResolver();
+
+            /* Insert backedup data into GeotrackShare's ContentProvider */
+            trackContentResolver.bulkInsert(
+                    CONTENT_URI_POST,
+                    readTableToArrayPost(sqlDbBackup, TABLE_NAME_POST_TRACKING));
+
 
             /* Insert backedup data into GeotrackShare's ContentProvider */
             trackContentResolver.bulkInsert(
@@ -542,12 +610,12 @@ public class ExportImportDB extends Activity {
         String filename = LocationServiceConstants.getBackupFileName(getAppContext());
         Log.e(TAG, filename);
         String dbFileName = "gts_fb" + ".db";
-        File downloaded_gts_fb = new File(backupDBonlyPath, dbFileName);
+        final File downloaded_gts_fb = new File(backupDBonlyPath, dbFileName);
 
         String userId = LocationServiceConstants.getUserID(getAppContext());
 
         FirebaseStorage storage = FirebaseStorage.getInstance();
-        Uri localFile = Uri.fromFile(downloaded_gts_fb);
+        final Uri localFile = Uri.fromFile(downloaded_gts_fb);
         // Create a storage reference from our app
         StorageReference storageRef = storage.getReference();
 
@@ -575,7 +643,8 @@ public class ExportImportDB extends Activity {
                 downloadTask.addOnSuccessListener(new OnSuccessListener<FileDownloadTask.TaskSnapshot>() {
                     @Override
                     public void onSuccess(FileDownloadTask.TaskSnapshot taskSnapshot) {
-                        // Local temp file has been created
+                        // Copy all records from downloaded database to app database!
+                        ExportImportDB.importIntoEmptyDb(getAppContext(), downloaded_gts_fb);
                     }
                 }).addOnFailureListener(new OnFailureListener() {
                     @Override
@@ -586,9 +655,8 @@ public class ExportImportDB extends Activity {
                 });
 
             } else {
-                String filename1 = "geotrackshare.db";
 
-                StorageReference onlineRef = storageRef.child("user/" + userId + "/" + filename1);
+                StorageReference onlineRef = storageRef.child("user/" + userId + "/" + DATABASE_NAME);
 
                 Log.e(TAG, String.valueOf(onlineRef));
 
@@ -598,6 +666,8 @@ public class ExportImportDB extends Activity {
                     @Override
                     public void onSuccess(FileDownloadTask.TaskSnapshot taskSnapshot) {
                         // Local temp file has been created
+                        // Copy all records from downloaded database to app database!
+                        ExportImportDB.importIntoEmptyDb(getAppContext(), downloaded_gts_fb);
                     }
                 }).addOnFailureListener(new OnFailureListener() {
                     @Override
@@ -617,4 +687,109 @@ public class ExportImportDB extends Activity {
 
     }
 
+    public static void downloadFromFirebaseStorageDeleteReplace() {
+
+        String filename = LocationServiceConstants.getBackupFileName(getAppContext());
+        Log.e(TAG, filename);
+        String dbFileName = "gts_fb" + ".db";
+        final File downloaded_gts_fb = new File(backupDBonlyPath, dbFileName);
+
+        String userId = LocationServiceConstants.getUserID(getAppContext());
+
+        FirebaseStorage storage = FirebaseStorage.getInstance();
+        final Uri localFile = Uri.fromFile(downloaded_gts_fb);
+        // Create a storage reference from our app
+        StorageReference storageRef = storage.getReference();
+
+
+        if (!appDir.exists() && !appDir.isDirectory()) {
+            // create empty directory
+            if (appDir.mkdirs()) {
+                Log.i("CreateDir", "App dir created");
+            } else {
+                Log.w("CreateDir", "Unable to create app dir!");
+            }
+        } else {
+            Log.i("CreateDir", "App dir already exists");
+            Log.i(TAG, String.valueOf(appDir));
+        }
+
+        try {
+
+            if (!filename.equals("no")) {
+
+                StorageReference onlineRef = storageRef.child("user/" + userId + "/" + filename);
+
+                FileDownloadTask downloadTask = onlineRef.getFile(localFile);
+
+                downloadTask.addOnSuccessListener(new OnSuccessListener<FileDownloadTask.TaskSnapshot>() {
+                    @Override
+                    public void onSuccess(FileDownloadTask.TaskSnapshot taskSnapshot) {
+                        // Copy all records from downloaded database to app database!
+                        ExportImportDB.importIntoDbReplace(getAppContext(), downloaded_gts_fb);
+                    }
+                }).addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception exception) {
+                        // Handle any errors
+                        Log.e(TAG, "downloadToFirebaseStorage:" + " unsuccessful download");
+                    }
+                });
+
+            } else {
+
+                StorageReference onlineRef = storageRef.child("user/" + userId + "/" + DATABASE_NAME);
+
+                Log.e(TAG, String.valueOf(onlineRef));
+
+                FileDownloadTask downloadTask = onlineRef.getFile(localFile);
+
+                downloadTask.addOnSuccessListener(new OnSuccessListener<FileDownloadTask.TaskSnapshot>() {
+                    @Override
+                    public void onSuccess(FileDownloadTask.TaskSnapshot taskSnapshot) {
+                        // Local temp file has been created
+                        // Copy all records from downloaded database to app database!
+                        ExportImportDB.importIntoDbReplace(getAppContext(), downloaded_gts_fb);
+                    }
+                }).addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception exception) {
+                        // Handle any errors
+                        Log.e(TAG, "downloadToFirebaseStorage:" + " unsuccessful download");
+                    }
+                });
+            }
+            // [END upload_file]
+
+
+        } catch (Exception e) {
+            Log.e("ExportDB", e.toString());
+
+        }
+
+    }
+
+    public static void checkIfBackupExistsOnFirebase() {
+
+        String userId = LocationServiceConstants.getUserID(getAppContext());
+        FirebaseStorage storage = FirebaseStorage.getInstance();
+
+        // Create a storage reference from our app
+        StorageReference storageRef = storage.getReference();
+        StorageReference onlineRef = storageRef.child("user/" + userId + "/" + DATABASE_NAME);
+
+        onlineRef.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+            @Override
+            public void onSuccess(Uri uri) {
+                // Got the download URL for 'users/me/profile.png'
+                setDBBackupOnFirebaseDone(MyAppContext.getAppContext(), true);
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception exception) {
+                // Handle any errors
+                setDBBackupOnFirebaseDone(MyAppContext.getAppContext(), false);
+            }
+        });
+    }
 }
