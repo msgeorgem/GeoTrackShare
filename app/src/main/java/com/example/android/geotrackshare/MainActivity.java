@@ -6,8 +6,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.location.Location;
-import android.location.LocationManager;
 import android.net.ConnectivityManager;
 import android.net.Uri;
 import android.os.Bundle;
@@ -39,7 +37,6 @@ import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.common.api.ApiException;
-import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthCredential;
@@ -69,108 +66,27 @@ public class MainActivity extends AppCompatActivity
     public static String EXPORTIMPORT = "EXPORTIMPORT";
     public static ArrayList<RunType> mCategories;
     public static SharedPreferences mSharedPrefsRunType;
-    private static final int RC_SIGN_IN = 9001;
+    public static final int RC_SIGN_IN = 9001;
+    public static String userId;
     private FirebaseAuth mAuth;
     private GoogleSignInClient mGoogleSignInClient;
-    public static LatLng mCurrentLocation;
-    public static double mCurrentLatitude, mCurrentLongitude, mStopLatitude, mStopLongitude;
+    // The request code used in ActivityCompat.requestPermissions()
+// and returned in the Activity's onRequestPermissionsResult()
+    int PERMISSION_ALL = 1;
+    String[] PERMISSIONS = {
+            Manifest.permission.ACCESS_FINE_LOCATION,
+            Manifest.permission.WRITE_EXTERNAL_STORAGE,
+    };
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-
-        switchTheme();
-        setContentView(R.layout.activity_main);
-        switchScreenOn();
-        mSharedPrefsRunType = getSharedPreferences("Run_Type", Context.MODE_PRIVATE);
-        GeoTrackShareSyncUtils.initialize(this);
-
-
-        // [START config_signin]
-        // Configure Google Sign In
-        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                .requestIdToken(getString(R.string.default_web_client_id))
-                .requestEmail()
-                .build();
-        // [END config_signin]
-
-        mGoogleSignInClient = GoogleSignIn.getClient(this, gso);
-
-
-        // [START initialize_auth]
-        mAuth = FirebaseAuth.getInstance();
-
-        // [END initialize_auth]
-        if (!checkPermissionsFIneLocation() || !checkPermissionsStorage()) {
-            requestPermissions();
+    public static boolean hasPermissions(Context context, String... permissions) {
+        if (context != null && permissions != null) {
+            for (String permission : permissions) {
+                if (ActivityCompat.checkSelfPermission(context, permission) != PackageManager.PERMISSION_GRANTED) {
+                    return false;
+                }
+            }
         }
-
-        // Spinner Drop down elements
-        mCategories = new ArrayList<RunType>();
-        mCategories.add(new RunType(R.drawable.ic_directions_walk_black_24dp,
-                R.string.Run_type_walk, R.string.Run_type_walk_desc, 5000, 0.0));
-        mCategories.add(new RunType(R.drawable.ic_directions_bike_black_24dp,
-                R.string.Run_type_bike, R.string.Run_type_bike_desc, 6000, 0.0));
-        mCategories.add(new RunType(R.drawable.ic_directions_car_black_24dp,
-                R.string.Run_type_car, R.string.Run_type_car_desc, 10000, 0.0));
-        mCategories.add(new RunType(R.drawable.ic_developer_board_black_48dp,
-                R.string.Run_type_custom, R.string.Run_type_custom_desc, 9999, 0.0));
-
-        BottomNavigationView bottomNavigationView = findViewById(R.id.navigation);
-
-        bottomNavigationView.setOnNavigationItemSelectedListener
-                (new BottomNavigationView.OnNavigationItemSelectedListener() {
-                    @Override
-                    public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-                        Fragment selectedFragment = null;
-                        switch (item.getItemId()) {
-                            case R.id.navigation_map:
-                                selectedFragment = MapFragmentLive.newInstance();
-                                break;
-                            case R.id.navigation_data:
-                                selectedFragment = RealTimeFragment.newInstance();
-                                break;
-                            case R.id.navigation_list:
-                                selectedFragment = RunListFragment.newInstance();
-                                break;
-                            case R.id.navigation_buddies:
-                                selectedFragment = RunListFragment.newInstance();
-                                break;
-                        }
-                        FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
-//                        transaction.setCustomAnimations(android.R.animator.fade_in, android.R.animator.fade_out, android.R.animator.fade_in, android.R.animator.fade_out);
-                        transaction.replace(R.id.container, selectedFragment);
-                        transaction.commit();
-                        return true;
-                    }
-                });
-
-        //Manually displaying the first fragment - one time only
-        FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
-//        transaction.setCustomAnimations(android.R.animator.fade_in, android.R.animator.fade_out, android.R.animator.fade_in, android.R.animator.fade_out);
-        transaction.replace(R.id.container, MapFragmentLive.newInstance());
-        transaction.commit();
-
-        // Find the toolbar view inside the activity layout
-        Toolbar toolbar = findViewById(R.id.toolbar);
-        // Sets the Toolbar to act as the ActionBar for this Activity window.
-        // Make sure the toolbar exists in the activity and is not null
-        setSupportActionBar(toolbar);
-
-        cm = (ConnectivityManager)
-                getSystemService(Context.CONNECTIVITY_SERVICE);
-
-
-        DrawerLayout drawer = findViewById(R.id.drawer_layout);
-        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
-                this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
-        drawer.addDrawerListener(toggle);
-        toggle.syncState();
-
-        NavigationView navigationView = findViewById(R.id.nav_view);
-        navigationView.setNavigationItemSelectedListener(this);
-        signIn();
-        checkIfBackupExistsOnFirebase();
+        return true;
     }
 
     public void switchTheme() {
@@ -271,37 +187,106 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    // [END onactivityresult]
-// [START auth_with_google]
-    private void firebaseAuthWithGoogle(GoogleSignInAccount acct) {
-        Log.d(TAG, "firebaseAuthWithGoogle:" + acct.getId());
-        // [START_EXCLUDE silent]
-//        showProgressDialog();
-        // [END_EXCLUDE]
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
 
-        AuthCredential credential = GoogleAuthProvider.getCredential(acct.getIdToken(), null);
-        mAuth.signInWithCredential(credential)
-                .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
+        switchTheme();
+        setContentView(R.layout.activity_main);
+        switchScreenOn();
+        mSharedPrefsRunType = getSharedPreferences("Run_Type", Context.MODE_PRIVATE);
+        GeoTrackShareSyncUtils.initialize(this);
+
+
+        // [START config_signin]
+        // Configure Google Sign In
+        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestIdToken(getString(R.string.default_web_client_id))
+                .requestEmail()
+                .build();
+        // [END config_signin]
+
+        mGoogleSignInClient = GoogleSignIn.getClient(this, gso);
+
+
+        // [START initialize_auth]
+        mAuth = FirebaseAuth.getInstance();
+
+        // [END initialize_auth]
+//        if (!checkPermissionsFIneLocation() || !checkPermissionsStorage()) {
+//            requestPermissions();
+//        }
+
+        if (!hasPermissions(this, PERMISSIONS)) {
+            ActivityCompat.requestPermissions(this, PERMISSIONS, PERMISSION_ALL);
+        }
+
+        // Spinner Drop down elements
+        mCategories = new ArrayList<RunType>();
+        mCategories.add(new RunType(R.drawable.ic_directions_walk_black_24dp,
+                R.string.Run_type_walk, R.string.Run_type_walk_desc, 5000, 0.0));
+        mCategories.add(new RunType(R.drawable.ic_directions_bike_black_24dp,
+                R.string.Run_type_bike, R.string.Run_type_bike_desc, 6000, 0.0));
+        mCategories.add(new RunType(R.drawable.ic_directions_car_black_24dp,
+                R.string.Run_type_car, R.string.Run_type_car_desc, 10000, 0.0));
+        mCategories.add(new RunType(R.drawable.ic_developer_board_black_48dp,
+                R.string.Run_type_custom, R.string.Run_type_custom_desc, 9999, 0.0));
+
+        BottomNavigationView bottomNavigationView = findViewById(R.id.navigation);
+
+        bottomNavigationView.setOnNavigationItemSelectedListener
+                (new BottomNavigationView.OnNavigationItemSelectedListener() {
                     @Override
-                    public void onComplete(@NonNull Task<AuthResult> task) {
-                        if (task.isSuccessful()) {
-                            // Sign in success, update UI with the signed-in user's information
-                            Log.d(TAG, "signInWithCredential:success");
-                            FirebaseUser user = mAuth.getCurrentUser();
-                            setUserID(getApplicationContext(), user.getUid());
-                            updateUI(user);
-                        } else {
-                            // If sign in fails, display a message to the user.
-                            Log.w(TAG, "signInWithCredential:failure", task.getException());
-                            Snackbar.make(findViewById(R.id.main_layout), "Authentication Failed.", Snackbar.LENGTH_SHORT).show();
-                            updateUI(null);
+                    public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+                        Fragment selectedFragment = null;
+                        switch (item.getItemId()) {
+                            case R.id.navigation_map:
+                                selectedFragment = MapFragmentLive.newInstance();
+                                break;
+                            case R.id.navigation_data:
+                                selectedFragment = RealTimeFragment.newInstance();
+                                break;
+                            case R.id.navigation_list:
+                                selectedFragment = RunListFragment.newInstance();
+                                break;
+                            case R.id.navigation_buddies:
+                                selectedFragment = RunListFragment.newInstance();
+                                break;
                         }
-
-                        // [START_EXCLUDE]
-//                        hideProgressDialog();
-                        // [END_EXCLUDE]
+                        FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
+//                        transaction.setCustomAnimations(android.R.animator.fade_in, android.R.animator.fade_out, android.R.animator.fade_in, android.R.animator.fade_out);
+                        transaction.replace(R.id.container, selectedFragment);
+                        transaction.commit();
+                        return true;
                     }
                 });
+
+        //Manually displaying the first fragment - one time only
+        FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
+//        transaction.setCustomAnimations(android.R.animator.fade_in, android.R.animator.fade_out, android.R.animator.fade_in, android.R.animator.fade_out);
+        transaction.replace(R.id.container, MapFragmentLive.newInstance());
+        transaction.commit();
+
+        // Find the toolbar view inside the activity layout
+        Toolbar toolbar = findViewById(R.id.toolbar);
+        // Sets the Toolbar to act as the ActionBar for this Activity window.
+        // Make sure the toolbar exists in the activity and is not null
+        setSupportActionBar(toolbar);
+
+        cm = (ConnectivityManager)
+                getSystemService(Context.CONNECTIVITY_SERVICE);
+
+
+        DrawerLayout drawer = findViewById(R.id.drawer_layout);
+        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
+                this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+        drawer.addDrawerListener(toggle);
+        toggle.syncState();
+
+        NavigationView navigationView = findViewById(R.id.nav_view);
+        navigationView.setNavigationItemSelectedListener(this);
+        signIn();
+        checkIfBackupExistsOnFirebase();
     }
 
     // [END auth_with_google]
@@ -310,7 +295,7 @@ public class MainActivity extends AppCompatActivity
         Intent signInIntent = mGoogleSignInClient.getSignInIntent();
         startActivityForResult(signInIntent, RC_SIGN_IN);
     }
-    // [END signin]
+
 
     public void signOut() {
         // Firebase sign out
@@ -437,6 +422,56 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
+    // [END onactivityresult]
+// [START auth_with_google]
+    private void firebaseAuthWithGoogle(GoogleSignInAccount acct) {
+        Log.d(TAG, "firebaseAuthWithGoogle:" + acct.getId());
+        // [START_EXCLUDE silent]
+//        showProgressDialog();
+        // [END_EXCLUDE]
+
+        AuthCredential credential = GoogleAuthProvider.getCredential(acct.getIdToken(), null);
+        mAuth.signInWithCredential(credential)
+                .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
+                    @Override
+                    public void onComplete(@NonNull Task<AuthResult> task) {
+                        if (task.isSuccessful()) {
+                            // Sign in success, update UI with the signed-in user's information
+                            Log.d(TAG, "signInWithCredential:success");
+                            FirebaseUser user = mAuth.getCurrentUser();
+                            userId = user.getUid();
+                            setUserID(getApplicationContext(), userId);
+                            updateUI(user);
+                        } else {
+                            // If sign in fails, display a message to the user.
+                            Log.w(TAG, "signInWithCredential:failure", task.getException());
+                            Snackbar.make(findViewById(R.id.main_layout), "Authentication Failed.", Snackbar.LENGTH_SHORT).show();
+                            updateUI(null);
+                        }
+
+                        // [START_EXCLUDE]
+//                        hideProgressDialog();
+                        // [END_EXCLUDE]
+                    }
+                });
+    }
+
+    /**
+     * Returns the current state of the permissions needed.
+     */
+    private boolean checkPermissionsFIneLocation() {
+        return PackageManager.PERMISSION_GRANTED == ActivityCompat.checkSelfPermission(this,
+                Manifest.permission.ACCESS_FINE_LOCATION);
+    }
+
+    /**
+     * Returns the current state of the permissions needed.
+     */
+    private boolean checkPermissionsStorage() {
+        return PackageManager.PERMISSION_GRANTED == ActivityCompat.checkSelfPermission(this,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE);
+    }
+
     /**
      * Callback received when a permissions request has been completed.
      */
@@ -450,7 +485,7 @@ public class MainActivity extends AppCompatActivity
                 // receive empty arrays.
                 Log.i(TAG, "User interaction was cancelled.");
             } else if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                mCurrentLocation = currentLocation();
+
                 if (requestingLocationUpdates(this)) {
                     Log.i(TAG, "Permission granted, updates requested, starting location updates");
 //                    mService.startUpdatesButtonHandler();
@@ -486,46 +521,4 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    /**
-     * Returns the current state of the permissions needed.
-     */
-    private boolean checkPermissionsFIneLocation() {
-        return PackageManager.PERMISSION_GRANTED == ActivityCompat.checkSelfPermission(this,
-                Manifest.permission.ACCESS_FINE_LOCATION);
-    }
-
-    /**
-     * Returns the current state of the permissions needed.
-     */
-    private boolean checkPermissionsStorage() {
-        return PackageManager.PERMISSION_GRANTED == ActivityCompat.checkSelfPermission(this,
-                Manifest.permission.WRITE_EXTERNAL_STORAGE);
-    }
-
-    private LatLng currentLocation() {
-        LatLng currentLocation = null;
-
-        LocationManager lm = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
-                ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            Toast.makeText(this, "Permission not granted", Toast.LENGTH_SHORT).show();
-            requestPermissions();
-        } else {
-            Toast.makeText(this, "go go go", Toast.LENGTH_SHORT).show();
-
-            try {
-                Location location = lm.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-                mCurrentLatitude = location.getLatitude();
-                mCurrentLongitude = location.getLongitude();
-                Toast.makeText(this, String.valueOf(mCurrentLatitude) + "/" + String.valueOf(mCurrentLongitude), Toast.LENGTH_SHORT).show();
-                currentLocation = new LatLng(mCurrentLatitude, mCurrentLongitude);
-            } catch (NullPointerException e) {
-                System.out.print("Caught the NullPointerException");
-                Toast.makeText(this, "No location", Toast.LENGTH_SHORT).show();
-
-                currentLocation = new LatLng(52.406374, 16.9251681);
-            }
-        }
-        return currentLocation;
-    }
 }

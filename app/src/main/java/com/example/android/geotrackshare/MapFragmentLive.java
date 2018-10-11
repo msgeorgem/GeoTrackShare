@@ -74,7 +74,6 @@ import static com.example.android.geotrackshare.LocationService.LocationServiceC
 import static com.example.android.geotrackshare.LocationService.LocationServiceConstants.setServiceBound;
 import static com.example.android.geotrackshare.LocationService.LocationServiceConstants.setStartTimeCurrentTrack;
 import static com.example.android.geotrackshare.MainActivity.mCategories;
-import static com.example.android.geotrackshare.MainActivity.mCurrentLocation;
 import static com.example.android.geotrackshare.RealTimeFragment.REQUEST_PERMISSIONS_REQUEST_CODE;
 import static com.example.android.geotrackshare.RealTimeFragment.RUN_TYPE_PICTURE;
 import static com.example.android.geotrackshare.Utils.StopWatchHandler.MSG_START_TIMER;
@@ -114,6 +113,8 @@ public class MapFragmentLive extends Fragment implements OnMapReadyCallback {
     private MapFragment mapFragment;
     private SupportMapFragment mSupportMapFragment;
     private ImageView mapScreenShottedTemp, mRunTypeIcon;
+    public static LatLng mCurrentLocation;
+    public static double mCurrentLatitude, mCurrentLongitude, mStopLatitude, mStopLongitude;
     // The BroadcastReceiver used to listen from broadcasts from the service.
     private MyReceiver myReceiver;
     private Context mContext;
@@ -297,10 +298,10 @@ public class MapFragmentLive extends Fragment implements OnMapReadyCallback {
 
             try {
                 Location location = lm.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-                MainActivity.mCurrentLatitude = location.getLatitude();
-                MainActivity.mCurrentLongitude = location.getLongitude();
-                Toast.makeText(getContext(), String.valueOf(MainActivity.mCurrentLatitude) + "/" + String.valueOf(MainActivity.mCurrentLongitude), Toast.LENGTH_SHORT).show();
-                currentLocation = new LatLng(MainActivity.mCurrentLatitude, MainActivity.mCurrentLongitude);
+                mCurrentLatitude = location.getLatitude();
+                mCurrentLongitude = location.getLongitude();
+                Toast.makeText(getContext(), String.valueOf(mCurrentLatitude) + "/" + String.valueOf(mCurrentLongitude), Toast.LENGTH_SHORT).show();
+                currentLocation = new LatLng(mCurrentLatitude, mCurrentLongitude);
             } catch (NullPointerException e) {
                 System.out.print("Caught the NullPointerException");
                 Toast.makeText(getActivity(), "No location", Toast.LENGTH_SHORT).show();
@@ -737,8 +738,8 @@ public class MapFragmentLive extends Fragment implements OnMapReadyCallback {
             setButtonsEnabledState(intent);
             mCurrentId = intent.getIntExtra(LocationUpdatesService.EXTRA_CURRENT_ID, 0);
             mCurrentType = intent.getIntExtra(LocationUpdatesService.EXTRA_RUN_TYPE, 0);
-            Double latitude = intent.getDoubleExtra(LocationUpdatesService.EXTRA_LATITUDE, MainActivity.mCurrentLatitude);
-            Double longitude = intent.getDoubleExtra(LocationUpdatesService.EXTRA_LONGITUDE, MainActivity.mCurrentLongitude);
+            Double latitude = intent.getDoubleExtra(LocationUpdatesService.EXTRA_LATITUDE, mCurrentLatitude);
+            Double longitude = intent.getDoubleExtra(LocationUpdatesService.EXTRA_LONGITUDE, mCurrentLongitude);
             LatLng lastKnownLatLng = new LatLng(latitude, longitude);
 
             try {

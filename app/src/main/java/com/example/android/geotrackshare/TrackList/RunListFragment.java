@@ -44,6 +44,10 @@ import com.example.android.geotrackshare.R;
 import com.example.android.geotrackshare.ScreenShotActivity;
 import com.example.android.geotrackshare.Utils.ExportImportDB;
 import com.example.android.geotrackshare.Utils.SqliteExporter;
+import com.google.android.gms.auth.api.signin.GoogleSignIn;
+import com.google.android.gms.auth.api.signin.GoogleSignInClient;
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
+import com.google.firebase.auth.FirebaseAuth;
 
 import java.io.File;
 import java.util.Arrays;
@@ -106,6 +110,8 @@ public class RunListFragment extends Fragment implements LoaderManager.LoaderCal
     private RecyclerView tracksRecyclerView;
     private TrackDbHelper mDbHelper;
     private Button importButtonLocal, importButtonFirebase;
+    private FirebaseAuth mAuth;
+    private GoogleSignInClient mGoogleSignInClient;
 
     /* Checks if external storage is available for read and write */
     public static boolean isExternalStorageWritable() {
@@ -156,6 +162,18 @@ public class RunListFragment extends Fragment implements LoaderManager.LoaderCal
         importButtonFirebase = view.findViewById(R.id.importButtonFirebase);
         importButtonFirebase.setVisibility(View.INVISIBLE);
 
+        // [START config_signin]
+        // Configure Google Sign In
+        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestIdToken(getString(R.string.default_web_client_id))
+                .requestEmail()
+                .build();
+        // [END config_signin]
+
+        mGoogleSignInClient = GoogleSignIn.getClient(getActivity(), gso);
+
+        // [START initialize_auth]
+        mAuth = FirebaseAuth.getInstance();
         return view;
     }
 
@@ -272,6 +290,7 @@ public class RunListFragment extends Fragment implements LoaderManager.LoaderCal
 
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+
         // Update {@link ItemCursor Adapter with this new cursor containing updated item data
         if (!data.moveToFirst()) {
             Log.e(LOG_TAG, "NO DATA");
@@ -321,6 +340,7 @@ public class RunListFragment extends Fragment implements LoaderManager.LoaderCal
         }
         mTracksAdapter.swapCursor(data);
     }
+
 
     @Override
     public void onViewStateRestored(Bundle savedInstanceState) {
@@ -485,5 +505,8 @@ public class RunListFragment extends Fragment implements LoaderManager.LoaderCal
                         });
             }
         }
-    }
+    }  // [END auth_with_google]
+    // [START signin]
+
+
 }
