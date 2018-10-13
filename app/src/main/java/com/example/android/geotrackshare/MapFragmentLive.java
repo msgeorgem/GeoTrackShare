@@ -197,9 +197,9 @@ public class MapFragmentLive extends Fragment implements OnMapReadyCallback {
             mStopWatchHandler.sendEmptyMessage(MSG_UPDATE_TIMER_MAP_LIVE);
             mCurrentId = queryLastRow();
             queryCoordinatesList(mCurrentId);
-            if (!checkPermissions()) {
-                requestPermissions();
-            }
+//            if (!checkPermissions()) {
+//                requestPermissions();
+//            }
         } else {
             mCurrentId = queryLastRow() + 1;
         }
@@ -365,6 +365,7 @@ public class MapFragmentLive extends Fragment implements OnMapReadyCallback {
         // Instantiates a new Polyline object and adds points to define a rectangle
         PolylineOptions options = new PolylineOptions().width(10).color(Color.BLUE).geodesic(true);
 
+
         PolylineOptions rectOptions = new PolylineOptions()
                 .add(new LatLng(37.35, -122.0))
                 .add(new LatLng(37.45, -122.0))  // North of the previous point, but at the same longitude
@@ -429,6 +430,9 @@ public class MapFragmentLive extends Fragment implements OnMapReadyCallback {
         Log.d(TAG, "onResume");
         LocalBroadcastManager.getInstance(mContext).registerReceiver(myReceiver,
                 new IntentFilter(LocationUpdatesService.ACTION_BROADCAST));
+        mCurrentLocation = currentLocation();
+        mSupportMapFragment.getMapAsync(this);
+
 //        mMapView.onResume();
         super.onResume();
     }

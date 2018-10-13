@@ -8,6 +8,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteException;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
 import android.support.annotation.NonNull;
@@ -225,34 +226,47 @@ public class ExportImportDB extends Activity {
     /**
      * Imports the file at IMPORT_FILE
      **/
-    public static boolean importIntoEmptyDbFromLocalBackup(Context ctx) {
+    public static boolean importIntoEmptyDbFromLocalBackup(final Context ctx) {
 
 
         if (!SdIsPresent()) return false;
 
         if (!checkDbIsValid(backupDBwithFIle, ctx)) return false;
 
+
         try {
-            SQLiteDatabase sqlDbBackup = SQLiteDatabase.openDatabase
-                    (backupDBwithFIle.getPath(), null, SQLiteDatabase.OPEN_READONLY);
+            // Database operations should not be done on the main thread
+            AsyncTask<Void, Void, Void> bulkInsert = new AsyncTask<Void, Void, Void>() {
 
-            ContentResolver trackContentResolver = ctx.getContentResolver();
+                @Override
+                protected Void doInBackground(Void... voids) {
 
-            /* Insert backedup data into GeotrackShare's ContentProvider */
-            trackContentResolver.bulkInsert(
-                    CONTENT_URI_POST,
-                    readTableToArrayPost(sqlDbBackup, TABLE_NAME_POST_TRACKING));
+                    SQLiteDatabase sqlDbBackup = SQLiteDatabase.openDatabase
+                            (backupDBwithFIle.getPath(), null, SQLiteDatabase.OPEN_READONLY);
+
+                    ContentResolver trackContentResolver = ctx.getContentResolver();
+
+                    /* Insert backedup data into GeotrackShare's ContentProvider */
+                    trackContentResolver.bulkInsert(
+                            CONTENT_URI_POST,
+                            readTableToArrayPost(sqlDbBackup, TABLE_NAME_POST_TRACKING));
 
 
-            /* Insert backedup data into GeotrackShare's ContentProvider */
-            trackContentResolver.bulkInsert(
-                    CONTENT_URI,
-                    readTableToArray(sqlDbBackup, TABLE_NAME_TRACKING));
+                    /* Insert backedup data into GeotrackShare's ContentProvider */
+                    trackContentResolver.bulkInsert(
+                            CONTENT_URI,
+                            readTableToArray(sqlDbBackup, TABLE_NAME_TRACKING));
+
+                    return null;
+                }
+            };
+            bulkInsert.execute();
 
         } catch (Exception e) {
             e.printStackTrace();
             return false;
         }
+
         return true;
     }
 

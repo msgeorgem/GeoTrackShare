@@ -638,7 +638,7 @@ public class LocationUpdatesService extends Service implements SensorEventListen
         if (mPreviousLatitude != 0.0 && mPreviousLongitude != 0.0 &&
                 (mXYZDelta != 0.0)) {
             mDistance = DistanceCalculator.greatCircleInKilometers(mRoundedPreviousLatitude,
-                    mRoundedPreviousLongitude, mRoundedCurrentLatitude, mRoundedCurrentLongitude);
+                    mRoundedPreviousLongitude, mRoundedCurrentLatitude, mRoundedCurrentLongitude, 'K');
             Log.i("Print PreviousLatitude", String.valueOf(mRoundedPreviousLatitude));
             Log.i("Print PreviousLongitude", String.valueOf(mRoundedPreviousLongitude));
             Log.i("Print CurrentLatitude", String.valueOf(mRoundedCurrentLatitude));
