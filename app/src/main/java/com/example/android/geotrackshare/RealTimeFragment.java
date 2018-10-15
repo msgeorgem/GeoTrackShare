@@ -11,6 +11,7 @@ import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
 import android.location.Location;
 import android.location.LocationManager;
 import android.net.Uri;
@@ -36,6 +37,7 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.android.geotrackshare.Data.TrackContract;
 import com.example.android.geotrackshare.LocationService.LocationServiceConstants;
 import com.example.android.geotrackshare.LocationService.LocationUpdatesService;
 import com.example.android.geotrackshare.RunTypes.RunTypesAdapter;
@@ -48,8 +50,19 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 import static com.example.android.geotrackshare.AdvancedSettingsActivity.preferenceBooleanDisableAutoStop;
+import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_ALTITUDE;
+import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_AVR_SPEED;
+import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_MAX_ALT;
+import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_MAX_SPEED;
+import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_RUNTYPE;
+import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_RUN_ID;
+import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_SPEED;
+import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_TIME_COUNTER;
+import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_TOTAL_DISTANCE;
+import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry._ID;
 import static com.example.android.geotrackshare.LocationService.LocationServiceConstants.requestingLocationUpdates;
 import static com.example.android.geotrackshare.LocationService.LocationServiceConstants.serviceBound;
 import static com.example.android.geotrackshare.LocationService.LocationServiceConstants.setLastTrackType;
@@ -428,7 +441,8 @@ public class RealTimeFragment extends Fragment implements
                         mLastRunLabel, mCurrentId));
 
                 mStopWatchHandler.sendEmptyMessage(MSG_STOP_TIMER_REAL_TIME);
-
+                mContext.getApplicationContext().unbindService(mServiceConnection);
+                setServiceBound(mContext, false);
             }
         });
 
@@ -448,7 +462,7 @@ public class RealTimeFragment extends Fragment implements
             mSpinner.setSelection(RUN_TYPE_VALUE);
         }
         RUN_TYPE_INTERVAL = mSharedPrefsRunType.getLong(RUN_TYPE_INTERVAL_KEY, 20000);
-        RUN_TYPE_NOISE = mSharedPrefsRunType.getLong(RUN_TYPE_NOISE_KEY, (long) 0.4);
+//        RUN_TYPE_NOISE = mSharedPrefsRunType.getLong(RUN_TYPE_NOISE_KEY, (long) 0.0);
 
         DELETE_LAST_ROWS_STRING = sharedPrefs.getString(
                 getString(R.string.delete_loops_by_key),
@@ -597,8 +611,8 @@ public class RealTimeFragment extends Fragment implements
             // Unbind from the service. This signals to the service that this activity is no longer
             // in the foreground, and the service can respond by promoting itself to a foreground
             // service.
-            mContext.getApplicationContext().unbindService(mServiceConnection);
-            setServiceBound(mContext, false);
+            //mContext.getApplicationContext().unbindService(mServiceConnection);
+            //setServiceBound(mContext, false);
         }
         PreferenceManager.getDefaultSharedPreferences(mContext)
                 .unregisterOnSharedPreferenceChangeListener(this);
@@ -618,6 +632,10 @@ public class RealTimeFragment extends Fragment implements
         Log.d(TAG, "onResume");
         LocalBroadcastManager.getInstance(mContext).registerReceiver(myReceiver,
                 new IntentFilter(LocationUpdatesService.ACTION_BROADCAST));
+
+        if (requestingLocationUpdates(mContext)) {
+            onGetDataFromDataBaseAndDisplay();
+        }
 
     }
 
@@ -748,6 +766,79 @@ public class RealTimeFragment extends Fragment implements
         if (s.equals(LocationServiceConstants.KEY_REQUESTING_LOCATION_UPDATES)) {
             setButtonsEnabledState(sharedPreferences.getBoolean(LocationServiceConstants.KEY_REQUESTING_LOCATION_UPDATES,
                     false));
+        }
+    }
+
+    public void onGetDataFromDataBaseAndDisplay() {
+
+        String ORDER = " " + _ID + " DESC LIMIT 1";
+        try {
+            Cursor cursor = getActivity().getContentResolver().query(TrackContract.TrackingEntry.CONTENT_URI, null, null, null, ORDER);
+
+            if (cursor != null && cursor.moveToFirst()) {
+                do {
+                    int runColumnIndex = cursor.getColumnIndex(COLUMN_RUN_ID);
+                    int runTypeColumnIndex = cursor.getColumnIndex(COLUMN_RUNTYPE);
+                    int totalDistanceColumnIndex = cursor.getColumnIndex(COLUMN_TOTAL_DISTANCE);
+                    int maxAltitudeColumnIndex = cursor.getColumnIndex(COLUMN_MAX_ALT);
+                    int maxSpeedColumnIndex = cursor.getColumnIndex(COLUMN_MAX_SPEED);
+                    int avrSpeedColumnIndex = cursor.getColumnIndex(COLUMN_AVR_SPEED);
+                    int totalTimeColumnIndex = cursor.getColumnIndex(COLUMN_TIME_COUNTER);
+                    int currentSpeedColumnIndex = cursor.getColumnIndex(COLUMN_SPEED);
+                    int currentAltColumnIndex = cursor.getColumnIndex(COLUMN_ALTITUDE);
+
+                    int runID = cursor.getInt(runColumnIndex);
+
+                    mTotalDistance = cursor.getDouble(totalDistanceColumnIndex);
+                    Double maxAltitude = cursor.getDouble(maxAltitudeColumnIndex);
+                    Double curAltitude = cursor.getDouble(currentAltColumnIndex);
+                    Double maxSpeed = cursor.getDouble(maxSpeedColumnIndex);
+                    Double curSpeed = cursor.getDouble(currentSpeedColumnIndex);
+                    Double mAvgSpeed = cursor.getDouble(avrSpeedColumnIndex);
+                    Long totalTime = cursor.getLong(totalTimeColumnIndex);
+
+                    String mTotalTime = String.format("%02d:%02d:%02d", TimeUnit.MILLISECONDS.toHours(totalTime),
+                            TimeUnit.MILLISECONDS.toMinutes(totalTime) % TimeUnit.HOURS.toMinutes(1),
+                            TimeUnit.MILLISECONDS.toSeconds(totalTime) % TimeUnit.MINUTES.toSeconds(1));
+
+                    String currentRun = String.valueOf(runID);
+                    String currentRunText = getResources().getString(R.string.Run_no) + currentRun;
+
+                    String totlaDistance3Dec = String.format("%.3f", mTotalDistance);
+                    String totalDistanceString = String.valueOf(totlaDistance3Dec + " km");
+
+                    String maxAltitudeNoDecimal = String.format("%.0f", maxAltitude);
+                    String maxAltitudeString = String.valueOf(maxAltitudeNoDecimal + " m");
+
+                    String curAltitudeNoDecimal = String.format("%.0f", curAltitude);
+                    String curAltitudeString = String.valueOf(curAltitudeNoDecimal + " m");
+
+                    String maxSpeed1Decimal = String.format("%.1f", maxSpeed);
+                    String maxSpeedString = String.valueOf(maxSpeed1Decimal + " km/h");
+
+                    String curSpeed1Decimal = String.format("%.1f", curSpeed);
+                    String curSpeedString = String.valueOf(curSpeed1Decimal + " km/h");
+
+                    String avrSpeed1Decimal = String.format("%.1f", mAvgSpeed);
+                    String avrSpeedString = String.valueOf(avrSpeed1Decimal + " km/h");
+
+                    mTotalDistanceTextView.setText(totalDistanceString);
+                    mRunNumber.setText(currentRunText);
+                    mAvgSpeedTextView.setText(avrSpeedString);
+                    mMaxSpeedTextView.setText(maxSpeedString);
+                    mSpeedTextView.setText(curSpeedString);
+                    mMaxAltitudeTextView.setText(maxAltitudeString);
+                    mAltitudeTextView.setText(curAltitudeString);
+                    mLastUpdateTimeTextView.setText(mTotalTime);
+
+                } while (cursor.moveToNext());
+            }
+            if (cursor != null) {
+                cursor.close();
+            }
+
+        } catch (Exception e) {
+            Log.e("Path Error123", e.toString());
         }
     }
 

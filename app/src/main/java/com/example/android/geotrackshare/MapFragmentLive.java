@@ -169,7 +169,7 @@ public class MapFragmentLive extends Fragment implements OnMapReadyCallback {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
-            mRequestingLocationUpdates = getArguments().getBoolean(ARG_PARAM1);
+//            mRequestingLocationUpdates = getArguments().getBoolean(ARG_PARAM1);
 //            mParam2 = getArguments().getString(ARG_PARAM2);
         }
     }
@@ -253,6 +253,7 @@ public class MapFragmentLive extends Fragment implements OnMapReadyCallback {
                 if (!checkPermissions()) {
                     requestPermissions();
                 } else {
+
                     mService.startUpdatesButtonHandler();
 
                     mStopWatchHandler.sendEmptyMessage(MSG_START_TIMER);
@@ -260,13 +261,14 @@ public class MapFragmentLive extends Fragment implements OnMapReadyCallback {
                 }
 //                updateConstants();
                 mRequestingLocationUpdates = true;
-                mMap.addMarker(new MarkerOptions().position(currentLocation()).title("START"));
+                mMap.addMarker(new MarkerOptions().position(mCurrentLocation).title("START"));
             }
         });
 
         fabStop.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+//                coordinatesList.clear();
                 mRequestingLocationUpdates = false;
                 mService.stopUpdatesButtonHandler();
 
@@ -276,6 +278,8 @@ public class MapFragmentLive extends Fragment implements OnMapReadyCallback {
                 double stopLongitude = stopLocation(mCurrentId)[1];
                 LatLng lastKnownLatLng = new LatLng(stopLatitude, stopLongitude);
                 mMap.addMarker(new MarkerOptions().position(lastKnownLatLng).title("STOP")); //add Marker in current position
+                mContext.getApplicationContext().unbindService(mServiceConnection);
+                setServiceBound(mContext, false);
             }
         });
 
@@ -354,7 +358,7 @@ public class MapFragmentLive extends Fragment implements OnMapReadyCallback {
         LatLngBounds POZNAN = new LatLngBounds(poznan, poznan);
 
 //        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(getLastLocation(getContext()), 13));
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLocation(), 13));
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(mCurrentLocation, 13));
 //        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(getLastLocation(getContext()), 13));
 
 
@@ -378,7 +382,7 @@ public class MapFragmentLive extends Fragment implements OnMapReadyCallback {
                 options.add(mPoint);
             }
         } else {
-            options.add(mCurrentLocation);
+//            options.add(mCurrentLocation);
         }
         options.startCap(new RoundCap());
         options.endCap(new RoundCap());
@@ -430,8 +434,11 @@ public class MapFragmentLive extends Fragment implements OnMapReadyCallback {
         Log.d(TAG, "onResume");
         LocalBroadcastManager.getInstance(mContext).registerReceiver(myReceiver,
                 new IntentFilter(LocationUpdatesService.ACTION_BROADCAST));
-        mCurrentLocation = currentLocation();
-        mSupportMapFragment.getMapAsync(this);
+        if (requestingLocationUpdates(mContext)) {
+            onGetDataFromDataBaseAndDisplay();
+        }
+//        mCurrentLocation = currentLocation();
+//        mSupportMapFragment.getMapAsync(this);
 
 //        mMapView.onResume();
         super.onResume();
@@ -459,6 +466,19 @@ public class MapFragmentLive extends Fragment implements OnMapReadyCallback {
         super.onLowMemory();
     }
 
+    @Override
+    public void onStop() {
+        super.onStop();
+        Log.d(TAG, "onStop()");
+        if (serviceBound(mContext)) {
+            // Unbind from the service. This signals to the service that this activity is no longer
+            // in the foreground, and the service can respond by promoting itself to a foreground
+            // service.
+            //mContext.getApplicationContext().unbindService(mServiceConnection);
+            //setServiceBound(mContext, false);
+        }
+
+    }
     private double[] startLocation(int id) {
 
         String specificID = String.valueOf(id);
@@ -776,6 +796,41 @@ public class MapFragmentLive extends Fragment implements OnMapReadyCallback {
             mDistanceTextView.setText(totalDistanceString);
         }
     }
+
+    public void onGetDataFromDataBaseAndDisplay() {
+
+        String ORDER = " " + _ID + " DESC LIMIT 1";
+        try {
+            Cursor cursor = getActivity().getContentResolver().query(TrackContract.TrackingEntry.CONTENT_URI, null, null, null, ORDER);
+
+            if (cursor != null && cursor.moveToFirst()) {
+                do {
+
+                    int totalDistanceColumnIndex = cursor.getColumnIndex(COLUMN_TOTAL_DISTANCE);
+//                    int maxAltitudeColumnIndex = cursor.getColumnIndex(COLUMN_MAX_ALT);
+//                    int maxSpeedColumnIndex = cursor.getColumnIndex(COLUMN_MAX_SPEED);
+//                    int avrSpeedColumnIndex = cursor.getColumnIndex(COLUMN_AVR_SPEED);
+//                    int totalTimeColumnIndex = cursor.getColumnIndex(COLUMN_TIME_COUNTER);
+
+                    Double mTotalDistance = cursor.getDouble(totalDistanceColumnIndex);
+
+                    String totalDistance3Dec = String.format("%.3f", mTotalDistance);
+                    String totalDistanceString = String.valueOf(totalDistance3Dec + " km");
+
+                    mDistanceTextView.setText(totalDistanceString);
+
+
+                } while (cursor.moveToNext());
+            }
+            if (cursor != null) {
+                cursor.close();
+            }
+
+        } catch (Exception e) {
+            Log.e("Path Error123", e.toString());
+        }
+    }
+
 
 }
 

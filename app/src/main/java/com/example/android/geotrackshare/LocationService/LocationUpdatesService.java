@@ -1297,7 +1297,7 @@ public class LocationUpdatesService extends Service implements SensorEventListen
                 .setOngoing(true)
                 .addAction(R.drawable.ic_stop, "Stop Tracking",
                         pStopIntent)
-                .setAutoCancel(false)
+                .setAutoCancel(true)
                 .build();
 
         startForeground(NOTIFICATION_ID, notification);
@@ -1357,7 +1357,7 @@ public class LocationUpdatesService extends Service implements SensorEventListen
                 .setOngoing(true)
                 .addAction(R.id.icon_only, "Start Tracking",
                         pStartIntent)
-                .setAutoCancel(false)
+                .setAutoCancel(true)
                 .build();
 
         startForeground(NOTIFICATION_ID, notification);
