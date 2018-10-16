@@ -635,6 +635,8 @@ public class RealTimeFragment extends Fragment implements
 
         if (requestingLocationUpdates(mContext)) {
             onGetDataFromDataBaseAndDisplay();
+        } else {
+            onGetDataFromDataBaseAndDisplayNotRunning();
         }
 
     }
@@ -789,7 +791,7 @@ public class RealTimeFragment extends Fragment implements
 
                     int runID = cursor.getInt(runColumnIndex);
 
-                    mTotalDistance = cursor.getDouble(totalDistanceColumnIndex);
+                    Double totalDistance = cursor.getDouble(totalDistanceColumnIndex);
                     Double maxAltitude = cursor.getDouble(maxAltitudeColumnIndex);
                     Double curAltitude = cursor.getDouble(currentAltColumnIndex);
                     Double maxSpeed = cursor.getDouble(maxSpeedColumnIndex);
@@ -800,27 +802,28 @@ public class RealTimeFragment extends Fragment implements
                     String mTotalTime = String.format("%02d:%02d:%02d", TimeUnit.MILLISECONDS.toHours(totalTime),
                             TimeUnit.MILLISECONDS.toMinutes(totalTime) % TimeUnit.HOURS.toMinutes(1),
                             TimeUnit.MILLISECONDS.toSeconds(totalTime) % TimeUnit.MINUTES.toSeconds(1));
+                    String totalTimeString = String.valueOf(mLastUpdateTimeLabel + " " + mTotalTime);
 
                     String currentRun = String.valueOf(runID);
                     String currentRunText = getResources().getString(R.string.Run_no) + currentRun;
 
-                    String totlaDistance3Dec = String.format("%.3f", mTotalDistance);
-                    String totalDistanceString = String.valueOf(totlaDistance3Dec + " km");
+                    String totlaDistance3Dec = String.format("%.3f", totalDistance);
+                    String totalDistanceString = String.valueOf(mDistanceLabel + " " + totlaDistance3Dec + " km");
 
                     String maxAltitudeNoDecimal = String.format("%.0f", maxAltitude);
-                    String maxAltitudeString = String.valueOf(maxAltitudeNoDecimal + " m");
+                    String maxAltitudeString = String.valueOf(mMaxAltitudeLabel + " " + maxAltitudeNoDecimal + " m");
 
                     String curAltitudeNoDecimal = String.format("%.0f", curAltitude);
-                    String curAltitudeString = String.valueOf(curAltitudeNoDecimal + " m");
+                    String curAltitudeString = String.valueOf(mAltitudeLabel + " " + curAltitudeNoDecimal + " m");
 
                     String maxSpeed1Decimal = String.format("%.1f", maxSpeed);
-                    String maxSpeedString = String.valueOf(maxSpeed1Decimal + " km/h");
+                    String maxSpeedString = String.valueOf(mMaxSpeedLabel + " " + maxSpeed1Decimal + " km/h");
 
                     String curSpeed1Decimal = String.format("%.1f", curSpeed);
-                    String curSpeedString = String.valueOf(curSpeed1Decimal + " km/h");
+                    String curSpeedString = String.valueOf(mSpeedLabel + " " + curSpeed1Decimal + " km/h");
 
                     String avrSpeed1Decimal = String.format("%.1f", mAvgSpeed);
-                    String avrSpeedString = String.valueOf(avrSpeed1Decimal + " km/h");
+                    String avrSpeedString = String.valueOf(mAvgSpeedLabel + " " + avrSpeed1Decimal + " km/h");
 
                     mTotalDistanceTextView.setText(totalDistanceString);
                     mRunNumber.setText(currentRunText);
@@ -829,7 +832,7 @@ public class RealTimeFragment extends Fragment implements
                     mSpeedTextView.setText(curSpeedString);
                     mMaxAltitudeTextView.setText(maxAltitudeString);
                     mAltitudeTextView.setText(curAltitudeString);
-                    mLastUpdateTimeTextView.setText(mTotalTime);
+                    mLastUpdateTimeTextView.setText(totalTimeString);
 
                 } while (cursor.moveToNext());
             }
@@ -840,6 +843,54 @@ public class RealTimeFragment extends Fragment implements
         } catch (Exception e) {
             Log.e("Path Error123", e.toString());
         }
+    }
+
+    public void onGetDataFromDataBaseAndDisplayNotRunning() {
+
+        Double totalDistance = 0.0;
+        Double maxAltitude = 0.0;
+        Double curAltitude = 0.0;
+        Double maxSpeed = 0.0;
+        Double curSpeed = 0.0;
+        Double mAvgSpeed = 0.0;
+        int runID = 0;
+        Long totalTime = new Long((long) 0.0);
+
+        String mTotalTime = String.format("%02d:%02d:%02d", TimeUnit.MILLISECONDS.toHours(totalTime),
+                TimeUnit.MILLISECONDS.toMinutes(totalTime) % TimeUnit.HOURS.toMinutes(1),
+                TimeUnit.MILLISECONDS.toSeconds(totalTime) % TimeUnit.MINUTES.toSeconds(1));
+        String totalTimeString = String.valueOf(mLastUpdateTimeLabel + " " + mTotalTime);
+
+        String currentRun = String.valueOf(runID);
+        String currentRunText = getResources().getString(R.string.Run_no) + currentRun;
+
+        String totlaDistance3Dec = String.format("%.3f", totalDistance);
+        String totalDistanceString = String.valueOf(mDistanceLabel + " " + totlaDistance3Dec + " km");
+
+        String maxAltitudeNoDecimal = String.format("%.0f", maxAltitude);
+        String maxAltitudeString = String.valueOf(mMaxAltitudeLabel + " " + maxAltitudeNoDecimal + " m");
+
+        String curAltitudeNoDecimal = String.format("%.0f", curAltitude);
+        String curAltitudeString = String.valueOf(mAltitudeLabel + " " + curAltitudeNoDecimal + " m");
+
+        String maxSpeed1Decimal = String.format("%.1f", maxSpeed);
+        String maxSpeedString = String.valueOf(mMaxSpeedLabel + " " + maxSpeed1Decimal + " km/h");
+
+        String curSpeed1Decimal = String.format("%.1f", curSpeed);
+        String curSpeedString = String.valueOf(mSpeedLabel + " " + curSpeed1Decimal + " km/h");
+
+        String avrSpeed1Decimal = String.format("%.1f", mAvgSpeed);
+        String avrSpeedString = String.valueOf(mAvgSpeedLabel + " " + avrSpeed1Decimal + " km/h");
+
+        mTotalDistanceTextView.setText(totalDistanceString);
+        mRunNumber.setText(currentRunText);
+        mAvgSpeedTextView.setText(avrSpeedString);
+        mMaxSpeedTextView.setText(maxSpeedString);
+        mSpeedTextView.setText(curSpeedString);
+        mMaxAltitudeTextView.setText(maxAltitudeString);
+        mAltitudeTextView.setText(curAltitudeString);
+        mLastUpdateTimeTextView.setText(totalTimeString);
+
     }
 
     private void onlyUIupdate(Intent intent) {
@@ -864,33 +915,40 @@ public class RealTimeFragment extends Fragment implements
             mCurrentAddress = intent.getStringExtra(LocationUpdatesService.EXTRA_ADDRESS);
             String mStopWatch = intent.getStringExtra(LocationUpdatesService.EXTRA_STOP_WATCH);
 //            Log.i("onlyUIupdate",mStopWatch);
-            mAltitudeTextView.setText(String.format(Locale.ENGLISH, "%s: %f", mAltitudeLabel,
-                    mCurrentAltitude));
-            mSpeedTextView.setText(String.format(Locale.ENGLISH, "%s: %.1f", mSpeedLabel,
-                    mCurrentSpeed));
 
-            mAvgSpeedTextView.setText(String.format(Locale.ENGLISH, "%s: %.1f",
-                    mAvgSpeedLabel, mAverageSpeed));
-            mMaxSpeedTextView.setText(String.format(Locale.ENGLISH, "%s: %.1f",
-                    mMaxSpeedLabel, mMaxSpeed));
-            mMaxAltitudeTextView.setText(String.format(Locale.ENGLISH, "%s: %f",
-                    mMaxAltitudeLabel, mMaxAltitude));
-            mTotalDistanceTextView.setText(String.format(Locale.ENGLISH, "%s: %.3f",
-                    mDistanceLabel, mTotalDistance));
+            String mTotalTime = new SimpleDateFormat("HH:mm:ss").format(new Date(mLastUpdateTimeMillis));
+            String totalTimeString = String.valueOf(mLastUpdateTimeLabel + " " + mTotalTime);
 
-//            mElapsedTime = String.format("%02d:%02d:%02d", TimeUnit.MILLISECONDS.toHours(mElapsedTimeMillisStopWatch),
-//                    TimeUnit.MILLISECONDS.toMinutes(mElapsedTimeMillisStopWatch) % TimeUnit.HOURS.toMinutes(1),
-//                    TimeUnit.MILLISECONDS.toSeconds(mElapsedTimeMillisStopWatch) % TimeUnit.MINUTES.toSeconds(1));
+            String currentRun = String.valueOf(mCurrentId);
+            String currentRunText = getResources().getString(R.string.Run_no) + currentRun;
 
-//            mElapsedTimeTextView.setText(String.format(Locale.ENGLISH, "%s: %s",
-//                    mElapsedTimeLabel, mStopWatch));
+            String totlaDistance3Dec = String.format("%.3f", mTotalDistance);
+            String totalDistanceString = String.valueOf(mDistanceLabel + " " + totlaDistance3Dec + " km");
 
-            String mHours = new SimpleDateFormat("HH:mm:ss").format(new Date(mLastUpdateTimeMillis));
-            mLastUpdateTimeTextView.setText(String.format(Locale.ENGLISH, "%s: %s",
-                    mLastUpdateTimeLabel, mHours));
+            String maxAltitudeNoDecimal = String.format("%.0f", mMaxAltitude);
+            String maxAltitudeString = String.valueOf(mMaxAltitudeLabel + " " + maxAltitudeNoDecimal + " m");
 
-            mRunNumber.setText(String.format(Locale.ENGLISH, "%s: %s",
-                    mCurrentRunLabel, mCurrentId));
+            String curAltitudeNoDecimal = String.format("%.0f", mCurrentAltitude);
+            String curAltitudeString = String.valueOf(mAltitudeLabel + " " + curAltitudeNoDecimal + " m");
+
+            String maxSpeed1Decimal = String.format("%.1f", mMaxSpeed);
+            String maxSpeedString = String.valueOf(mMaxSpeedLabel + " " + maxSpeed1Decimal + " km/h");
+
+            String curSpeed1Decimal = String.format("%.1f", mCurrentSpeed);
+            String curSpeedString = String.valueOf(mSpeedLabel + " " + curSpeed1Decimal + " km/h");
+
+            String avrSpeed1Decimal = String.format("%.1f", mAverageSpeed);
+            String avrSpeedString = String.valueOf(mAvgSpeedLabel + " " + avrSpeed1Decimal + " km/h");
+
+            mTotalDistanceTextView.setText(totalDistanceString);
+            mRunNumber.setText(currentRunText);
+            mAvgSpeedTextView.setText(avrSpeedString);
+            mMaxSpeedTextView.setText(maxSpeedString);
+            mSpeedTextView.setText(curSpeedString);
+            mMaxAltitudeTextView.setText(maxAltitudeString);
+            mAltitudeTextView.setText(curAltitudeString);
+            mLastUpdateTimeTextView.setText(totalTimeString);
+
             mLast_ID = mCurrentId;
 
             if (mCurrentAddress != "") {
