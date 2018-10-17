@@ -458,6 +458,10 @@ public class MapFragmentLive extends Fragment implements OnMapReadyCallback {
     public void onDestroy() {
 //        mMapView.onDestroy();
         super.onDestroy();
+        if (coordinatesList != null) {
+            coordinatesList.clear();
+        }
+        mSupportMapFragment.onDestroyView();
     }
 
     @Override
@@ -807,6 +811,7 @@ public class MapFragmentLive extends Fragment implements OnMapReadyCallback {
                 do {
 
                     int totalDistanceColumnIndex = cursor.getColumnIndex(COLUMN_TOTAL_DISTANCE);
+                    int id = cursor.getColumnIndex(_ID);
 //                    int maxAltitudeColumnIndex = cursor.getColumnIndex(COLUMN_MAX_ALT);
 //                    int maxSpeedColumnIndex = cursor.getColumnIndex(COLUMN_MAX_SPEED);
 //                    int avrSpeedColumnIndex = cursor.getColumnIndex(COLUMN_AVR_SPEED);
@@ -817,8 +822,14 @@ public class MapFragmentLive extends Fragment implements OnMapReadyCallback {
                     String totalDistance3Dec = String.format("%.3f", mTotalDistance);
                     String totalDistanceString = String.valueOf(totalDistance3Dec + " km");
 
-                    mDistanceTextView.setText(totalDistanceString);
+                    String totalDistance3DecZero = String.format("%.3f", 0);
+                    String totalDistanceStringZero = String.valueOf(totalDistance3DecZero + " km");
 
+                    if (id == mCurrentId) {
+                        mDistanceTextView.setText(totalDistanceString);
+                    } else {
+                        mDistanceTextView.setText(totalDistanceStringZero);
+                    }
 
                 } while (cursor.moveToNext());
             }

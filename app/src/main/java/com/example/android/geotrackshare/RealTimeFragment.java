@@ -825,14 +825,51 @@ public class RealTimeFragment extends Fragment implements
                     String avrSpeed1Decimal = String.format("%.1f", mAvgSpeed);
                     String avrSpeedString = String.valueOf(mAvgSpeedLabel + " " + avrSpeed1Decimal + " km/h");
 
-                    mTotalDistanceTextView.setText(totalDistanceString);
-                    mRunNumber.setText(currentRunText);
-                    mAvgSpeedTextView.setText(avrSpeedString);
-                    mMaxSpeedTextView.setText(maxSpeedString);
-                    mSpeedTextView.setText(curSpeedString);
-                    mMaxAltitudeTextView.setText(maxAltitudeString);
-                    mAltitudeTextView.setText(curAltitudeString);
-                    mLastUpdateTimeTextView.setText(totalTimeString);
+                    String mTotalTimeZero = String.format("%02d:%02d:%02d", TimeUnit.MILLISECONDS.toHours(0),
+                            TimeUnit.MILLISECONDS.toMinutes(0) % TimeUnit.HOURS.toMinutes(1),
+                            TimeUnit.MILLISECONDS.toSeconds(0) % TimeUnit.MINUTES.toSeconds(1));
+                    String totalTimeStringZero = String.valueOf(mLastUpdateTimeLabel + " " + mTotalTimeZero);
+
+                    String totlaDistance3DecZero = String.format("%.3f", totalDistance);
+                    String totalDistanceStringZero = String.valueOf(mDistanceLabel + " " + totlaDistance3DecZero + " km");
+
+                    String maxAltitudeNoDecimalZero = String.format("%.0f", maxAltitude);
+                    String maxAltitudeStringZero = String.valueOf(mMaxAltitudeLabel + " " + maxAltitudeNoDecimalZero + " m");
+
+                    String curAltitudeNoDecimalZero = String.format("%.0f", curAltitude);
+                    String curAltitudeStringZero = String.valueOf(mAltitudeLabel + " " + curAltitudeNoDecimalZero + " m");
+
+                    String maxSpeed1DecimalZero = String.format("%.1f", maxSpeed);
+                    String maxSpeedStringZero = String.valueOf(mMaxSpeedLabel + " " + maxSpeed1DecimalZero + " km/h");
+
+                    String curSpeed1DecimalZero = String.format("%.1f", curSpeed);
+                    String curSpeedStringZero = String.valueOf(mSpeedLabel + " " + curSpeed1DecimalZero + " km/h");
+
+                    String avrSpeed1DecimalZero = String.format("%.1f", mAvgSpeed);
+                    String avrSpeedStringZero = String.valueOf(mAvgSpeedLabel + " " + avrSpeed1DecimalZero + " km/h");
+
+                    // condition needed when starting new recording. Everywhere must be zeroes
+
+                    if (runID == mCurrentId) {
+                        mTotalDistanceTextView.setText(totalDistanceString);
+                        mRunNumber.setText(currentRunText);
+                        mAvgSpeedTextView.setText(avrSpeedString);
+                        mMaxSpeedTextView.setText(maxSpeedString);
+                        mSpeedTextView.setText(curSpeedString);
+                        mMaxAltitudeTextView.setText(maxAltitudeString);
+                        mAltitudeTextView.setText(curAltitudeString);
+                        mLastUpdateTimeTextView.setText(totalTimeString);
+
+                    } else {
+                        mTotalDistanceTextView.setText(totalDistanceStringZero);
+                        mRunNumber.setText(currentRunText);
+                        mAvgSpeedTextView.setText(avrSpeedStringZero);
+                        mMaxSpeedTextView.setText(maxSpeedStringZero);
+                        mSpeedTextView.setText(curSpeedStringZero);
+                        mMaxAltitudeTextView.setText(maxAltitudeStringZero);
+                        mAltitudeTextView.setText(curAltitudeStringZero);
+                        mLastUpdateTimeTextView.setText(totalTimeStringZero);
+                    }
 
                 } while (cursor.moveToNext());
             }
