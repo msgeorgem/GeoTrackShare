@@ -15,7 +15,6 @@ import android.support.annotation.NonNull;
 import android.util.Log;
 
 import com.example.android.geotrackshare.LocationService.LocationServiceConstants;
-import com.example.android.geotrackshare.MainActivity;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -784,14 +783,14 @@ public class ExportImportDB extends Activity {
 
     }
 
-    public static void checkIfBackupExistsOnFirebase() {
+    public static void checkIfBackupExistsOnFirebase(String userID) {
 
 //        String userId = LocationServiceConstants.getUserID(getAppContext());
         FirebaseStorage storage = FirebaseStorage.getInstance();
 
         // Create a storage reference from our app
         StorageReference storageRef = storage.getReference();
-        StorageReference onlineRef = storageRef.child("user/" + MainActivity.userId + "/" + DATABASE_NAME);
+        StorageReference onlineRef = storageRef.child("user/" + userID + "/" + DATABASE_NAME);
         Log.e(TAG, String.valueOf(onlineRef));
         onlineRef.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
             @Override

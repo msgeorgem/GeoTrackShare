@@ -67,6 +67,7 @@ import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_TOTAL_DISTANCE;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.CONTENT_URI;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry._ID;
+import static com.example.android.geotrackshare.LocationService.LocationServiceConstants.lastTrackID;
 import static com.example.android.geotrackshare.LocationService.LocationServiceConstants.lastTrackType;
 import static com.example.android.geotrackshare.LocationService.LocationServiceConstants.requestingLocationUpdates;
 import static com.example.android.geotrackshare.LocationService.LocationServiceConstants.serviceBound;
@@ -193,15 +194,17 @@ public class MapFragmentLive extends Fragment implements OnMapReadyCallback {
 
         // Check that the user hasn't revoked permissions by going to Settings.
         mRequestingLocationUpdates = requestingLocationUpdates(mContext);
+        mCurrentId = lastTrackID(mContext);
+
         if (mRequestingLocationUpdates) {
             mStopWatchHandler.sendEmptyMessage(MSG_UPDATE_TIMER_MAP_LIVE);
-            mCurrentId = queryLastRow();
+//            mCurrentId = queryLastRow();
             queryCoordinatesList(mCurrentId);
 //            if (!checkPermissions()) {
 //                requestPermissions();
 //            }
         } else {
-            mCurrentId = queryLastRow() + 1;
+//            mCurrentId = queryLastRow() + 1;
         }
         myReceiver = new MyReceiver();
 
@@ -811,24 +814,24 @@ public class MapFragmentLive extends Fragment implements OnMapReadyCallback {
                 do {
 
                     int totalDistanceColumnIndex = cursor.getColumnIndex(COLUMN_TOTAL_DISTANCE);
-                    int id = cursor.getColumnIndex(_ID);
+                    int runColumnIndex = cursor.getColumnIndex(COLUMN_RUN_ID);
+
+                    Double totalDistance = cursor.getDouble(totalDistanceColumnIndex);
+                    int runID = cursor.getInt(runColumnIndex);
 //                    int maxAltitudeColumnIndex = cursor.getColumnIndex(COLUMN_MAX_ALT);
 //                    int maxSpeedColumnIndex = cursor.getColumnIndex(COLUMN_MAX_SPEED);
 //                    int avrSpeedColumnIndex = cursor.getColumnIndex(COLUMN_AVR_SPEED);
 //                    int totalTimeColumnIndex = cursor.getColumnIndex(COLUMN_TIME_COUNTER);
 
-                    Double mTotalDistance = cursor.getDouble(totalDistanceColumnIndex);
+                    String totlaDistance3Dec = String.format("%.3f", totalDistance);
+                    String totalDistanceString = String.valueOf(totlaDistance3Dec + " km");
 
-                    String totalDistance3Dec = String.format("%.3f", mTotalDistance);
-                    String totalDistanceString = String.valueOf(totalDistance3Dec + " km");
 
-                    String totalDistance3DecZero = String.format("%.3f", 0);
-                    String totalDistanceStringZero = String.valueOf(totalDistance3DecZero + " km");
-
-                    if (id == mCurrentId) {
+                    if (runID == mCurrentId) {
                         mDistanceTextView.setText(totalDistanceString);
                     } else {
-                        mDistanceTextView.setText(totalDistanceStringZero);
+//                        mDistanceTextView.setText(totalDistanceStringZero);
+                        mDistanceTextView = mView.findViewById(R.id.total_distance);
                     }
 
                 } while (cursor.moveToNext());
@@ -838,7 +841,7 @@ public class MapFragmentLive extends Fragment implements OnMapReadyCallback {
             }
 
         } catch (Exception e) {
-            Log.e("Path Error123", e.toString());
+            Log.e("Path Error1235", e.toString());
         }
     }
 

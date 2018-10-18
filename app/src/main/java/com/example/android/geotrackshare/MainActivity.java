@@ -175,6 +175,7 @@ public class MainActivity extends AppCompatActivity
                 // Google Sign In was successful, authenticate with Firebase
                 GoogleSignInAccount account = task.getResult(ApiException.class);
                 firebaseAuthWithGoogle(account);
+
                 setAuthToFirebase(getApplicationContext(), true);
             } catch (ApiException e) {
                 // Google Sign In failed, update UI appropriately
@@ -286,7 +287,7 @@ public class MainActivity extends AppCompatActivity
         NavigationView navigationView = findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
         signIn();
-        checkIfBackupExistsOnFirebase();
+
     }
 
     // [END auth_with_google]
@@ -440,6 +441,7 @@ public class MainActivity extends AppCompatActivity
                             Log.d(TAG, "signInWithCredential:success");
                             FirebaseUser user = mAuth.getCurrentUser();
                             userId = user.getUid();
+                            checkIfBackupExistsOnFirebase(userId);
                             setUserID(getApplicationContext(), userId);
                             updateUI(user);
                         } else {
