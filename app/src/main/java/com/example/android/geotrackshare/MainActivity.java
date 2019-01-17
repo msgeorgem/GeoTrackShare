@@ -203,6 +203,7 @@ public class MainActivity extends AppCompatActivity
         // Configure Google Sign In
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                 .requestIdToken(getString(R.string.default_web_client_id))
+//                .requestIdToken("1070556748881-jkain1rlr26mjdlup0gpbeljktmni6op.apps.googleusercontent.com")
                 .requestEmail()
                 .build();
         // [END config_signin]
@@ -447,7 +448,7 @@ public class MainActivity extends AppCompatActivity
                         } else {
                             // If sign in fails, display a message to the user.
                             Log.w(TAG, "signInWithCredential:failure", task.getException());
-                            Snackbar.make(findViewById(R.id.main_layout), "Authentication Failed.", Snackbar.LENGTH_SHORT).show();
+//                            Snackbar.make(findViewById(R.id.main_layout), "Authentication Failed.", Snackbar.LENGTH_SHORT).show();
                             updateUI(null);
                         }
 

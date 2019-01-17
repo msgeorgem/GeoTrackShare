@@ -19,7 +19,6 @@ import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.ScrollView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.example.android.geotrackshare.Data.TrackContract;
 import com.example.android.geotrackshare.RunTypes.RunTypesAdapterNoUI;
@@ -454,8 +453,8 @@ public class DetailFragment extends Fragment implements OnMapReadyCallback {
                 mMap.snapshot(new GoogleMap.SnapshotReadyCallback() {
                     @Override
                     public void onSnapshotReady(Bitmap bitmap) {
-                        Toast.makeText(getActivityCast(), getResources().getString(R.string.map_is_loaded),
-                                Toast.LENGTH_SHORT).show();
+//                        Toast.makeText(getActivityCast(), getResources().getString(R.string.map_is_loaded),
+//                                Toast.LENGTH_SHORT).show();
                         mMapBitmap = bitmap;
 
                     }

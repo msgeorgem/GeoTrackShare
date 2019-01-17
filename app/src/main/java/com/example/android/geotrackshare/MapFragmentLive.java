@@ -281,7 +281,10 @@ public class MapFragmentLive extends Fragment implements OnMapReadyCallback {
                 double stopLongitude = stopLocation(mCurrentId)[1];
                 LatLng lastKnownLatLng = new LatLng(stopLatitude, stopLongitude);
                 mMap.addMarker(new MarkerOptions().position(lastKnownLatLng).title("STOP")); //add Marker in current position
-                mContext.getApplicationContext().unbindService(mServiceConnection);
+
+                if (mService != null) {
+                    mContext.getApplicationContext().unbindService(mServiceConnection);
+                }
                 setServiceBound(mContext, false);
             }
         });
@@ -464,7 +467,7 @@ public class MapFragmentLive extends Fragment implements OnMapReadyCallback {
         if (coordinatesList != null) {
             coordinatesList.clear();
         }
-        mSupportMapFragment.onDestroyView();
+//        mSupportMapFragment.onDestroyView();
     }
 
     @Override

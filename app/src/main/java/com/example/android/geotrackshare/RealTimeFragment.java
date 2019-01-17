@@ -442,7 +442,9 @@ public class RealTimeFragment extends Fragment implements
                         mLastRunLabel, mCurrentId));
 
                 mStopWatchHandler.sendEmptyMessage(MSG_STOP_TIMER_REAL_TIME);
-                mContext.getApplicationContext().unbindService(mServiceConnection);
+                if (mService != null) {
+                    mContext.getApplicationContext().unbindService(mServiceConnection);
+                }
                 setServiceBound(mContext, false);
             }
         });
