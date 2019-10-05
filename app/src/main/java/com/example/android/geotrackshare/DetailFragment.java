@@ -213,7 +213,7 @@ public class DetailFragment extends Fragment implements OnMapReadyCallback {
                     double latitude = cur.getDouble(cur.getColumnIndex(COLUMN_LATITUDE));
                     double longitude = cur.getDouble(cur.getColumnIndex(COLUMN_LONGITUDE));
                     here = new LatLng(latitude, longitude);
-                    Log.i("Print Current Location1", String.valueOf(here));
+//                    Log.i("Print Current Location1", String.valueOf(here));
                     coordinatesList.add(here);
                 }
             }

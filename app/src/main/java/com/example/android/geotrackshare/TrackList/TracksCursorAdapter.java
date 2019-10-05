@@ -146,11 +146,11 @@ public class TracksCursorAdapter extends CursorRecyclerAdapter<TracksCursorAdapt
 
         viewHolder.itemView.setTag(mRunId);
         Log.e("itemView.setTag", String.valueOf(mRunId));
-        viewHolder.itemView.setOnClickListener(new View.OnClickListener() {
+        viewHolder.item.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 fragment.onItemClick(mRunId);
-                Log.e("onclick in holder", String.valueOf(mRunId));
+                Log.e("enter track", String.valueOf(mRunId));
             }
         });
 
@@ -188,6 +188,7 @@ public class TracksCursorAdapter extends CursorRecyclerAdapter<TracksCursorAdapt
             public void onClick(View v) {
                 fileName = createBackupFileName(mRunId);
                 fragment.shareViaEmail(mRunId);
+                Log.e("viewHolder.shareEmail", String.valueOf(mRunId));
             }
         });
         viewHolder.shareImage.setOnClickListener(new View.OnClickListener() {
@@ -242,6 +243,7 @@ public class TracksCursorAdapter extends CursorRecyclerAdapter<TracksCursorAdapt
         public ToggleButton trashToggle, favToggle;
         public ImageView exportCSV;
         public ImageView shareImage;
+        View item;
 
 
         public ViewHolder(View view) {
@@ -259,6 +261,7 @@ public class TracksCursorAdapter extends CursorRecyclerAdapter<TracksCursorAdapt
             exportCSV = view.findViewById(R.id.csv);
             shareImage = view.findViewById(R.id.share);
             favToggle = view.findViewById(R.id.favListToggleButton);
+            item = view.findViewById(R.id.item);
         }
     }
 }

@@ -91,7 +91,8 @@ public class DetailActivity extends AppCompatActivity
                     mCursor.moveToPosition(position);
                 }
                 mSelectedItemId = mCursor.getLong(TrackLoader.Query.COLUMN_RUN_IDP);
-                Log.e(LOG_TAG, String.valueOf(mSelectedItemId));
+                Log.e(LOG_TAG +"_onPageSelected", String.valueOf(mSelectedItemId));
+
                 updateUpButtonPosition();
             }
         });
@@ -189,7 +190,7 @@ public class DetailActivity extends AppCompatActivity
         public Fragment getItem(int position) {
             mCursor.moveToPosition(position);
             int whatever = mCursor.getInt(TrackLoader.Query.COLUMN_RUN_IDP);
-            Log.e(LOG_TAG, String.valueOf(whatever));
+            Log.e(LOG_TAG +"_getItem_whatever", String.valueOf(whatever));
             return DetailFragment.newInstance(mCursor.getInt(TrackLoader.Query.COLUMN_RUN_IDP));
 
         }
