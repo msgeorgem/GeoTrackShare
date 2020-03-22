@@ -20,12 +20,6 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.design.widget.Snackbar;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.app.Fragment;
-import android.support.v4.content.LocalBroadcastManager;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -37,6 +31,12 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.core.app.ActivityCompat;
+import androidx.fragment.app.Fragment;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
+
 import com.example.android.geotrackshare.Data.TrackContract;
 import com.example.android.geotrackshare.LocationService.LocationServiceConstants;
 import com.example.android.geotrackshare.LocationService.LocationUpdatesService;
@@ -44,6 +44,7 @@ import com.example.android.geotrackshare.RunTypes.RunTypesAdapter;
 import com.example.android.geotrackshare.RunTypes.RunTypesAdapterNoUI;
 import com.example.android.geotrackshare.Utils.StopWatch;
 import com.example.android.geotrackshare.Utils.StopWatchHandler;
+import com.google.android.material.snackbar.Snackbar;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -388,7 +389,7 @@ public class RealTimeFragment extends Fragment implements
                 mLastRunLabel, mLast_ID));
 
         long mIntervall = UPDATE_INTERVAL_IN_MILLISECONDS / 1000;
-        String mIntervalll = String.valueOf(mIntervall) + " s";
+        String mIntervalll = mIntervall + " s";
         mIntervalTextView.setText(String.format(Locale.ENGLISH, "%s: %s", mIntervalLabel,
                 mIntervalll));
 
@@ -426,7 +427,7 @@ public class RealTimeFragment extends Fragment implements
                 updateConstants();
                 MapFragmentLive.mRequestingLocationUpdates = true;
                 long mIntervall = UPDATE_INTERVAL_IN_MILLISECONDS / 1000;
-                String mIntervalll = String.valueOf(mIntervall) + " s";
+                String mIntervalll = mIntervall + " s";
                 mIntervalTextView.setText(String.format(Locale.ENGLISH, "%s: %s", mIntervalLabel,
                         mIntervalll));
 
@@ -803,28 +804,28 @@ public class RealTimeFragment extends Fragment implements
                     Long time = cursor.getLong(timeColumnIndex);
 
                     String mTotalTime = new SimpleDateFormat("HH:mm:ss").format(new Date(time));
-                    String timeString = String.valueOf(mLastUpdateTimeLabel + " " + mTotalTime);
+                    String timeString = mLastUpdateTimeLabel + " " + mTotalTime;
 
                     String currentRun = String.valueOf(runID);
                     String currentRunText = getResources().getString(R.string.Run_no) + currentRun;
 
                     String totlaDistance3Dec = String.format("%.3f", totalDistance);
-                    String totalDistanceString = String.valueOf(mDistanceLabel + " " + totlaDistance3Dec + " km");
+                    String totalDistanceString = mDistanceLabel + " " + totlaDistance3Dec + " km";
 
                     String maxAltitudeNoDecimal = String.format("%.0f", maxAltitude);
-                    String maxAltitudeString = String.valueOf(mMaxAltitudeLabel + " " + maxAltitudeNoDecimal + " m");
+                    String maxAltitudeString = mMaxAltitudeLabel + " " + maxAltitudeNoDecimal + " m";
 
                     String curAltitudeNoDecimal = String.format("%.0f", curAltitude);
-                    String curAltitudeString = String.valueOf(mAltitudeLabel + " " + curAltitudeNoDecimal + " m");
+                    String curAltitudeString = mAltitudeLabel + " " + curAltitudeNoDecimal + " m";
 
                     String maxSpeed1Decimal = String.format("%.1f", maxSpeed);
-                    String maxSpeedString = String.valueOf(mMaxSpeedLabel + " " + maxSpeed1Decimal + " km/h");
+                    String maxSpeedString = mMaxSpeedLabel + " " + maxSpeed1Decimal + " km/h";
 
                     String curSpeed1Decimal = String.format("%.1f", curSpeed);
-                    String curSpeedString = String.valueOf(mSpeedLabel + " " + curSpeed1Decimal + " km/h");
+                    String curSpeedString = mSpeedLabel + " " + curSpeed1Decimal + " km/h";
 
                     String avrSpeed1Decimal = String.format("%.1f", mAvgSpeed);
-                    String avrSpeedString = String.valueOf(mAvgSpeedLabel + " " + avrSpeed1Decimal + " km/h");
+                    String avrSpeedString = mAvgSpeedLabel + " " + avrSpeed1Decimal + " km/h";
 
                     // condition needed when starting new recording. Everywhere must be zeroes
 
@@ -862,31 +863,31 @@ public class RealTimeFragment extends Fragment implements
         Double curSpeed = 0.0;
         Double mAvgSpeed = 0.0;
         int runID = 0;
-        Long totalTime = new Long((long) 0.0);
+        long totalTime = (long) 0.0;
 
         String mTotalTime = new SimpleDateFormat("HH:mm:ss").format(new Date(totalTime));
-        String totalTimeString = String.valueOf(mLastUpdateTimeLabel + " " + mTotalTime);
+        String totalTimeString = mLastUpdateTimeLabel + " " + mTotalTime;
 
         String currentRun = String.valueOf(runID);
         String currentRunText = getResources().getString(R.string.Run_no) + currentRun;
 
         String totlaDistance3Dec = String.format("%.3f", totalDistance);
-        String totalDistanceString = String.valueOf(mDistanceLabel + " " + totlaDistance3Dec + " km");
+        String totalDistanceString = mDistanceLabel + " " + totlaDistance3Dec + " km";
 
         String maxAltitudeNoDecimal = String.format("%.0f", maxAltitude);
-        String maxAltitudeString = String.valueOf(mMaxAltitudeLabel + " " + maxAltitudeNoDecimal + " m");
+        String maxAltitudeString = mMaxAltitudeLabel + " " + maxAltitudeNoDecimal + " m";
 
         String curAltitudeNoDecimal = String.format("%.0f", curAltitude);
-        String curAltitudeString = String.valueOf(mAltitudeLabel + " " + curAltitudeNoDecimal + " m");
+        String curAltitudeString = mAltitudeLabel + " " + curAltitudeNoDecimal + " m";
 
         String maxSpeed1Decimal = String.format("%.1f", maxSpeed);
-        String maxSpeedString = String.valueOf(mMaxSpeedLabel + " " + maxSpeed1Decimal + " km/h");
+        String maxSpeedString = mMaxSpeedLabel + " " + maxSpeed1Decimal + " km/h";
 
         String curSpeed1Decimal = String.format("%.1f", curSpeed);
-        String curSpeedString = String.valueOf(mSpeedLabel + " " + curSpeed1Decimal + " km/h");
+        String curSpeedString = mSpeedLabel + " " + curSpeed1Decimal + " km/h";
 
         String avrSpeed1Decimal = String.format("%.1f", mAvgSpeed);
-        String avrSpeedString = String.valueOf(mAvgSpeedLabel + " " + avrSpeed1Decimal + " km/h");
+        String avrSpeedString = mAvgSpeedLabel + " " + avrSpeed1Decimal + " km/h";
 
         mTotalDistanceTextView.setText(totalDistanceString);
         mRunNumber.setText(currentRunText);
@@ -923,28 +924,28 @@ public class RealTimeFragment extends Fragment implements
 //            Log.i("onlyUIupdate",mStopWatch);
 
             String mTotalTime = new SimpleDateFormat("HH:mm:ss").format(new Date(mLastUpdateTimeMillis));
-            String totalTimeString = String.valueOf(mLastUpdateTimeLabel + " " + mTotalTime);
+            String totalTimeString = mLastUpdateTimeLabel + " " + mTotalTime;
 
             String currentRun = String.valueOf(mCurrentId);
             String currentRunText = getResources().getString(R.string.Run_no) + currentRun;
 
             String totlaDistance3Dec = String.format("%.3f", mTotalDistance);
-            String totalDistanceString = String.valueOf(mDistanceLabel + " " + totlaDistance3Dec + " km");
+            String totalDistanceString = mDistanceLabel + " " + totlaDistance3Dec + " km";
 
             String maxAltitudeNoDecimal = String.format("%.0f", mMaxAltitude);
-            String maxAltitudeString = String.valueOf(mMaxAltitudeLabel + " " + maxAltitudeNoDecimal + " m");
+            String maxAltitudeString = mMaxAltitudeLabel + " " + maxAltitudeNoDecimal + " m";
 
             String curAltitudeNoDecimal = String.format("%.0f", mCurrentAltitude);
-            String curAltitudeString = String.valueOf(mAltitudeLabel + " " + curAltitudeNoDecimal + " m");
+            String curAltitudeString = mAltitudeLabel + " " + curAltitudeNoDecimal + " m";
 
             String maxSpeed1Decimal = String.format("%.1f", mMaxSpeed);
-            String maxSpeedString = String.valueOf(mMaxSpeedLabel + " " + maxSpeed1Decimal + " km/h");
+            String maxSpeedString = mMaxSpeedLabel + " " + maxSpeed1Decimal + " km/h";
 
             String curSpeed1Decimal = String.format("%.1f", mCurrentSpeed);
-            String curSpeedString = String.valueOf(mSpeedLabel + " " + curSpeed1Decimal + " km/h");
+            String curSpeedString = mSpeedLabel + " " + curSpeed1Decimal + " km/h";
 
             String avrSpeed1Decimal = String.format("%.1f", mAverageSpeed);
-            String avrSpeedString = String.valueOf(mAvgSpeedLabel + " " + avrSpeed1Decimal + " km/h");
+            String avrSpeedString = mAvgSpeedLabel + " " + avrSpeed1Decimal + " km/h";
 
             mTotalDistanceTextView.setText(totalDistanceString);
             mRunNumber.setText(currentRunText);
@@ -973,7 +974,7 @@ public class RealTimeFragment extends Fragment implements
         setLastTrackType(mContext, RUN_TYPE_VALUE);
         RUN_TYPE_TITLE = getString(mAdapter.getItem(RUN_TYPE_VALUE).getTitle());
         RUN_TYPE_PICTURE = mAdapter.getItem(RUN_TYPE_VALUE).getPicture();
-        RUN_TYPE_DESCRIPTION = getString(mAdapter.getItem(RUN_TYPE_VALUE).getDescription());
+        RUN_TYPE_DESCRIPTION = mAdapter.getItem(RUN_TYPE_VALUE).getDescription();
         RUN_TYPE_INTERVAL = Long.parseLong(String.valueOf(mAdapter.getItem(RUN_TYPE_VALUE).getIntervalPreset()));
         RUN_TYPE_NOISE = Double.parseDouble(String.valueOf(mAdapter.getItem(RUN_TYPE_VALUE).getNoisePreset()));
 
@@ -991,7 +992,7 @@ public class RealTimeFragment extends Fragment implements
         RunTypesAdapterNoUI mAdapter = new RunTypesAdapterNoUI(mContext, mCategories);
         long intervalInMillis = mAdapter.getItem(RUN_TYPE_VALUE).getIntervalPreset();
         long mIntervall = intervalInMillis / 1000;
-        String intervall = String.valueOf(mIntervall) + " s";
+        String intervall = mIntervall + " s";
         mIntervalTextView.setText(String.format(Locale.ENGLISH, "%s: %s", mIntervalLabel,
                 intervall));
     }

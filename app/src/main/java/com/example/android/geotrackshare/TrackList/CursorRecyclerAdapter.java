@@ -2,7 +2,8 @@ package com.example.android.geotrackshare.TrackList;
 
 import android.database.Cursor;
 import android.database.DataSetObserver;
-import android.support.v7.widget.RecyclerView;
+
+import androidx.recyclerview.widget.RecyclerView;
 
 /**
  * Created by Marcin on 2017-10-28.

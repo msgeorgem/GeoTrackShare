@@ -2,8 +2,8 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/GeoTrackShare.iml" filepath="$PROJECT_DIR$/GeoTrackShare.iml" />
-      <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/GeoTrackShare.iml" filepath="$PROJECT_DIR$/GeoTrackShare.iml" group="GeoTrackShare" />
+      <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" group="GeoTrackShare/app" />
     </modules>
   </component>
 </project>

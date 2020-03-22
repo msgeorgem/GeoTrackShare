@@ -9,12 +9,12 @@ public class RunType {
     private static final int NO_IMAGE_PROVIDED = -1;
     private int mPicture = NO_IMAGE_PROVIDED;
     private int mTitle;
-    private int mDescription;
+    private String mDescription;
     private long mInterval;
     private double mNoise;
 
 
-    public RunType(int picture, int title, int description, long interval, double noise) {
+    public RunType(int picture, int title, String description, long interval, double noise) {
         mPicture = picture;
         mTitle = title;
         mDescription = description;
@@ -31,7 +31,7 @@ public class RunType {
         return mTitle;
     }
 
-    public int getDescription() {
+    public String getDescription() {
         return mDescription;
     }
 

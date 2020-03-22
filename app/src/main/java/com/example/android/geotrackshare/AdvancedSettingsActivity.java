@@ -2,12 +2,14 @@ package com.example.android.geotrackshare;
 
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.preference.ListPreference;
-import android.preference.Preference;
-import android.preference.PreferenceFragment;
-import android.preference.PreferenceManager;
-import android.support.v7.app.ActionBar;
-import android.support.v7.app.AppCompatActivity;
+
+import androidx.appcompat.app.ActionBar;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.preference.ListPreference;
+import androidx.preference.Preference;
+import androidx.preference.PreferenceFragmentCompat;
+import androidx.preference.PreferenceManager;
+
 
 /**
  * Created by Marcin on 2017-09-12.
@@ -46,11 +48,31 @@ public class AdvancedSettingsActivity extends AppCompatActivity {
     }
     }
 
-    public static class TracksPreferenceFragment extends PreferenceFragment implements Preference.OnPreferenceChangeListener {
+    public static class TracksPreferenceFragment extends PreferenceFragmentCompat implements Preference.OnPreferenceChangeListener {
+
+//        @Override
+//        public void onCreate(Bundle savedInstanceState) {
+//            super.onCreate(savedInstanceState);
+//            setPreferenceScreen(null);
+//            addPreferencesFromResource(R.xml.advanced_settings);
+//
+//            Preference disableAutoStopPreference = findPreference(getString(R.string.disable_auto_stop_switch_key));
+//            bindPreferenceSummaryToValue2(disableAutoStopPreference);
+//
+//            Preference deleteloopBy = findPreference(getString(R.string.delete_loops_by_key));
+//            bindPreferenceSummaryToValue3(deleteloopBy);
+//
+//            Preference themePreference = findPreference(getString(R.string.theme_switch_key));
+//            bindPreferenceSummaryToValue4(themePreference);
+//
+//            Preference screenOnPreference = findPreference(getString(R.string.screen_on_switch_key));
+//            bindPreferenceSummaryToValue5(screenOnPreference);
+//
+//
+//        }
 
         @Override
-        public void onCreate(Bundle savedInstanceState) {
-            super.onCreate(savedInstanceState);
+        public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
             setPreferenceScreen(null);
             addPreferencesFromResource(R.xml.advanced_settings);
 
@@ -65,8 +87,6 @@ public class AdvancedSettingsActivity extends AppCompatActivity {
 
             Preference screenOnPreference = findPreference(getString(R.string.screen_on_switch_key));
             bindPreferenceSummaryToValue5(screenOnPreference);
-
-
         }
 
         @Override

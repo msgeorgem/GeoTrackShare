@@ -1,14 +1,11 @@
 package com.example.android.geotrackshare;
 
-import android.app.Fragment;
-import android.app.FragmentTransaction;
 import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -20,16 +17,20 @@ import android.widget.ImageView;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentTransaction;
+
 import com.example.android.geotrackshare.Data.TrackContract;
 import com.example.android.geotrackshare.RunTypes.RunTypesAdapterNoUI;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PolylineOptions;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -96,7 +97,7 @@ public class DetailFragment extends Fragment implements OnMapReadyCallback {
     private TextView stopTimeTextView;
     private TextView runIdTextView;
     private TextView avgSpeedTextView;
-    private MapFragment mapFragment;
+    private SupportMapFragment mapFragment;
     private static GoogleMap mMap;
     private static Bitmap mMapBitmap;
     private Bitmap mSharedImageBitmap;
@@ -163,7 +164,7 @@ public class DetailFragment extends Fragment implements OnMapReadyCallback {
         mMapFrame = view.findViewById(R.id.mapmap);
         mapScreenShottedTemp = view.findViewById(R.id.mapImageView);
         mapScreenShottedTemp.setVisibility(View.INVISIBLE);
-        mapFragment = MapFragment.newInstance();
+        mapFragment = SupportMapFragment.newInstance();
         mUpButtonContainer = view.findViewById(R.id.up_container);
 
         FragmentTransaction transaction = getChildFragmentManager().beginTransaction();
@@ -243,8 +244,8 @@ public class DetailFragment extends Fragment implements OnMapReadyCallback {
                     mStartLocation[0] = cur.getDouble(cur.getColumnIndex(COLUMN_LATITUDE));
                     mStartLocation[1] = cur.getDouble(cur.getColumnIndex(COLUMN_LONGITUDE));
 
-                    Log.i("Start Location", String.valueOf(mStartLocation[0]) +
-                            " , " + String.valueOf(mStartLocation[1]));
+                    Log.i("Start Location", mStartLocation[0] +
+                            " , " + mStartLocation[1]);
                 }
                 while (cur.moveToNext());
             }
@@ -276,8 +277,8 @@ public class DetailFragment extends Fragment implements OnMapReadyCallback {
                     mStopLocation[0] = cur.getDouble(cur.getColumnIndex(COLUMN_LATITUDE));
                     mStopLocation[1] = cur.getDouble(cur.getColumnIndex(COLUMN_LONGITUDE));
 
-                    Log.i("Stop Location", String.valueOf(mStopLocation[0]) +
-                            " , " + String.valueOf(mStopLocation[1]));
+                    Log.i("Stop Location", mStopLocation[0] +
+                            " , " + mStopLocation[1]);
                 }
                 while (cur.moveToNext());
             }
@@ -335,16 +336,16 @@ public class DetailFragment extends Fragment implements OnMapReadyCallback {
                     currentRunText = getResources().getString(R.string.Run_no) + currentRun;
 
                     String totlaDistance3Dec = String.format("%.3f", mTotalDistance);
-                    String totalDistanceString = String.valueOf(totlaDistance3Dec + " km");
+                    String totalDistanceString = totlaDistance3Dec + " km";
 
                     String maxAltitudeNoDecimal = String.format("%.0f", maxAltitude);
-                    String maxAltitudeString = String.valueOf(maxAltitudeNoDecimal + " m");
+                    String maxAltitudeString = maxAltitudeNoDecimal + " m";
 
                     String maxSpeed1Decimal = String.format("%.1f", maxSpeed);
-                    String maxSpeedString = String.valueOf(maxSpeed1Decimal + " km/h");
+                    String maxSpeedString = maxSpeed1Decimal + " km/h";
 
                     String avrSpeed1Decimal = String.format("%.1f", mAvgSpeed);
-                    String avrSpeedString = String.valueOf(avrSpeed1Decimal + " km/h");
+                    String avrSpeedString = avrSpeed1Decimal + " km/h";
 
                     String mDate = formatDate(stopTime);
                     dateTextView.setText(mDate);

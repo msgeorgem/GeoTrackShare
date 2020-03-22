@@ -1,9 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
-    android:title="@string/title_advanced_settings">
+    android:outlineAmbientShadowColor="#E91E63"
+    android:showDividers="middle|beginning|end"
+    android:title="@string/title_advanced_settings"
+    android:visibility="visible">
 
     <CheckBoxPreference
         android:id="@+id/disable_auto_stop"
+        android:layout_width="match_parent"
+        android:icon="?android:attr/alertDialogIcon"
         android:key="@string/disable_auto_stop_switch_key"
         android:summaryOff="Off"
         android:summaryOn="On"
@@ -11,14 +16,18 @@
 
     <ListPreference
         android:id="@+id/auto_stop"
+        android:layout_width="match_parent"
         android:defaultValue="@string/delete_loops_by_default_ultimate"
         android:entries="@array/delete_loops_by_labels"
         android:entryValues="@array/delete_loops_by_values"
+        android:icon="@android:drawable/ic_menu_view"
         android:key="@string/delete_loops_by_key"
         android:title="@string/delete_loops_by_label" />
 
     <CheckBoxPreference
         android:id="@+id/theme"
+        android:layout_width="match_parent"
+        android:icon="@android:drawable/ic_menu_set_as"
         android:key="@string/theme_switch_key"
         android:summaryOff="Off"
         android:summaryOn="On"
@@ -26,6 +35,8 @@
 
     <CheckBoxPreference
         android:id="@+id/screen_on"
+        android:layout_width="match_parent"
+        android:icon="@drawable/ic_menu_gallery"
         android:key="@string/screen_on_switch_key"
         android:summaryOff="Off"
         android:summaryOn="On"

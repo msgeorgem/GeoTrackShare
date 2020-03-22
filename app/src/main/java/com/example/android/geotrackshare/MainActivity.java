@@ -11,23 +11,21 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
-import android.support.annotation.NonNull;
-import android.support.design.widget.BottomNavigationView;
-import android.support.design.widget.NavigationView;
-import android.support.design.widget.Snackbar;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentTransaction;
-import android.support.v4.view.GravityCompat;
-import android.support.v4.widget.DrawerLayout;
-import android.support.v7.app.ActionBarDrawerToggle;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.ActionBarDrawerToggle;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
+import androidx.core.app.ActivityCompat;
+import androidx.core.view.GravityCompat;
+import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentTransaction;
 
 import com.example.android.geotrackshare.RunTypes.RunType;
 import com.example.android.geotrackshare.Sync.GeoTrackShareSyncUtils;
@@ -39,6 +37,10 @@ import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.android.material.navigation.NavigationView;
+import com.google.android.material.snackbar.Snackbar;
+import com.google.firebase.analytics.FirebaseAnalytics;
 import com.google.firebase.auth.AuthCredential;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
@@ -68,7 +70,9 @@ public class MainActivity extends AppCompatActivity
     public static SharedPreferences mSharedPrefsRunType;
     public static final int RC_SIGN_IN = 9001;
     public static String userId;
+    private FirebaseAnalytics mFirebaseAnalytics;
     private FirebaseAuth mAuth;
+    private FirebaseUser currentUser;
     private GoogleSignInClient mGoogleSignInClient;
     // The request code used in ActivityCompat.requestPermissions()
 // and returned in the Activity's onRequestPermissionsResult()
@@ -158,7 +162,7 @@ public class MainActivity extends AppCompatActivity
     public void onStart() {
         super.onStart();
         // Check if user is signed in (non-null) and update UI accordingly.
-        FirebaseUser currentUser = mAuth.getCurrentUser();
+        currentUser = mAuth.getCurrentUser();
 //        Update UI when necessary
 //        updateUI(currentUser);
     }
@@ -197,6 +201,14 @@ public class MainActivity extends AppCompatActivity
         switchScreenOn();
         mSharedPrefsRunType = getSharedPreferences("Run_Type", Context.MODE_PRIVATE);
         GeoTrackShareSyncUtils.initialize(this);
+        // Obtain the FirebaseAnalytics instance.
+        mFirebaseAnalytics = FirebaseAnalytics.getInstance(this);
+
+        Bundle bundle = new Bundle();
+        bundle.putString(FirebaseAnalytics.Param.ITEM_ID, "id"); //id
+        bundle.putString(FirebaseAnalytics.Param.ITEM_NAME, "name");
+        bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, "image");
+        mFirebaseAnalytics.logEvent(FirebaseAnalytics.Event.SELECT_CONTENT, bundle);
 
 
         // [START config_signin]
@@ -222,17 +234,20 @@ public class MainActivity extends AppCompatActivity
         if (!hasPermissions(this, PERMISSIONS)) {
             ActivityCompat.requestPermissions(this, PERMISSIONS, PERMISSION_ALL);
         }
-
+        String walkDesc = getResources().getString(R.string.Run_type_walk_desc);
+        String bikeDesc = getResources().getString(R.string.Run_type_bike_desc);
+        String carDesc = getResources().getString(R.string.Run_type_car_desc);
+        String customDesc = getResources().getString(R.string.Run_type_custom_desc);
         // Spinner Drop down elements
         mCategories = new ArrayList<RunType>();
         mCategories.add(new RunType(R.drawable.ic_directions_walk_black_24dp,
-                R.string.Run_type_walk, R.string.Run_type_walk_desc, 5000, 0.0));
+                R.string.Run_type_walk, walkDesc, 5000, 0.0));
         mCategories.add(new RunType(R.drawable.ic_directions_bike_black_24dp,
-                R.string.Run_type_bike, R.string.Run_type_bike_desc, 6000, 0.0));
+                R.string.Run_type_bike, bikeDesc, 6000, 0.0));
         mCategories.add(new RunType(R.drawable.ic_directions_car_black_24dp,
-                R.string.Run_type_car, R.string.Run_type_car_desc, 10000, 0.0));
+                R.string.Run_type_car, carDesc, 10000, 0.0));
         mCategories.add(new RunType(R.drawable.ic_developer_board_black_48dp,
-                R.string.Run_type_custom, R.string.Run_type_custom_desc, 9999, 0.0));
+                R.string.Run_type_custom, customDesc, 9999, 0.0));
 
         BottomNavigationView bottomNavigationView = findViewById(R.id.navigation);
 

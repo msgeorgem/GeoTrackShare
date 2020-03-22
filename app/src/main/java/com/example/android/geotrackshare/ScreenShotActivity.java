@@ -10,9 +10,6 @@ import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
-import android.support.design.widget.FloatingActionButton;
-import android.support.v4.content.FileProvider;
-import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.view.Window;
@@ -24,6 +21,9 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.FileProvider;
+
 import com.example.android.geotrackshare.Data.TrackContract;
 import com.example.android.geotrackshare.RunTypes.RunTypesAdapterNoUI;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -34,6 +34,7 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PolylineOptions;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -140,10 +141,10 @@ public class ScreenShotActivity extends AppCompatActivity implements OnMapReadyC
 
 
         String totlaDistance3Dec = String.format("%.3f", mDistance);
-        String totalDistanceString = String.valueOf(totlaDistance3Dec + " km");
+        String totalDistanceString = totlaDistance3Dec + " km";
 
         String avrSpeed1Decimal = String.format("%.1f", mAvgSpeed);
-        String avrSpeedString = String.valueOf(avrSpeed1Decimal + " km/h");
+        String avrSpeedString = avrSpeed1Decimal + " km/h";
 
         RunTypesAdapterNoUI mAdapter = new RunTypesAdapterNoUI(this, mCategories);
         RUN_TYPE_PICTURE = mAdapter.getItem(mRunType).getPicture();
@@ -197,8 +198,8 @@ public class ScreenShotActivity extends AppCompatActivity implements OnMapReadyC
 
     @Override
     public void onMapReady(GoogleMap googleMap) {
-        Log.e(TAG, String.valueOf("onMapReady"));
-        Log.e(TAG, String.valueOf("onMapReady" + runIdInt));
+        Log.e(TAG, "onMapReady");
+        Log.e(TAG, "onMapReady" + runIdInt);
         mMap = googleMap;
         double mStartLatitude = startLocation(runIdInt)[0];
         double mStartLongitude = startLocation(runIdInt)[1];
@@ -286,8 +287,8 @@ public class ScreenShotActivity extends AppCompatActivity implements OnMapReadyC
                     mStartLocation[0] = cur.getDouble(cur.getColumnIndex(COLUMN_LATITUDE));
                     mStartLocation[1] = cur.getDouble(cur.getColumnIndex(COLUMN_LONGITUDE));
 
-                    Log.i("Start Location", String.valueOf(mStartLocation[0]) +
-                            " , " + String.valueOf(mStartLocation[1]));
+                    Log.i("Start Location", mStartLocation[0] +
+                            " , " + mStartLocation[1]);
                 }
                 while (cur.moveToNext());
             }
@@ -319,8 +320,8 @@ public class ScreenShotActivity extends AppCompatActivity implements OnMapReadyC
                     mStopLocation[0] = cur.getDouble(cur.getColumnIndex(COLUMN_LATITUDE));
                     mStopLocation[1] = cur.getDouble(cur.getColumnIndex(COLUMN_LONGITUDE));
 
-                    Log.i("Stop Location", String.valueOf(mStopLocation[0]) +
-                            " , " + String.valueOf(mStopLocation[1]));
+                    Log.i("Stop Location", mStopLocation[0] +
+                            " , " + mStopLocation[1]);
                 }
                 while (cur.moveToNext());
             }

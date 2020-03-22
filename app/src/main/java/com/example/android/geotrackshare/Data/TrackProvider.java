@@ -7,7 +7,6 @@ import android.content.UriMatcher;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
-import android.support.annotation.NonNull;
 import android.util.Log;
 
 import static android.R.attr.id;
@@ -149,7 +148,7 @@ public class TrackProvider extends ContentProvider {
     }
 
     @Override
-    public int bulkInsert(@NonNull Uri uri, @NonNull ContentValues[] values) {
+    public int bulkInsert(Uri uri, ContentValues[] values) {
         final SQLiteDatabase db = mDbHelper.getWritableDatabase();
 
         switch (sUriMatcher.match(uri)) {

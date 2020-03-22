@@ -13,13 +13,6 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
-import android.support.annotation.NonNull;
-import android.support.design.widget.Snackbar;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.LocalBroadcastManager;
-import android.support.v7.app.ActionBar;
-import android.support.v7.app.AlertDialog;
-import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
@@ -27,9 +20,17 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.ActionBar;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
+
 import com.example.android.geotrackshare.RunTypes.RunTypesAdapterNoUI;
 import com.example.android.geotrackshare.Sync.GeoTrackShareFirebaseJobService;
 import com.example.android.geotrackshare.Utils.ExportImportDB;
+import com.google.android.material.snackbar.Snackbar;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -122,7 +123,7 @@ public class ModeSettingsActivity extends AppCompatActivity {
 
         Intent intent = getIntent();
         if ((WALK).equals(intent.getAction())) {
-            description = String.valueOf(mAdapter.getItem(0).getDescription());
+            description = mAdapter.getItem(0).getDescription();
             interval = (int) mAdapter.getItem(0).getIntervalPreset();
             exportButton.setVisibility(View.INVISIBLE);
             importButton.setVisibility(View.INVISIBLE);
@@ -144,9 +145,9 @@ public class ModeSettingsActivity extends AppCompatActivity {
             interval = (int) mAdapter.getItem(2).getIntervalPreset();
             exportButton.setVisibility(View.INVISIBLE);
             importButton.setVisibility(View.INVISIBLE);
-            uploadToFirebase.setVisibility(View.VISIBLE);
-            downloadFromFirebase.setVisibility(View.VISIBLE);
-            signOUT.setVisibility(View.VISIBLE);
+            uploadToFirebase.setVisibility(View.INVISIBLE);
+            downloadFromFirebase.setVisibility(View.INVISIBLE);
+            signOUT.setVisibility(View.INVISIBLE);
 //            importAutoButton.setVisibility(View.INVISIBLE);
         } else if ((EXPORTIMPORT).equals(intent.getAction())) {
             description = getResources().getString(R.string.export_database_summary);
@@ -295,8 +296,8 @@ public class ModeSettingsActivity extends AppCompatActivity {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
 
-                        String finalSelectedPath = String.valueOf(backupPath) + "/" + strName;
-                        File file1 = new File(String.valueOf(finalSelectedPath));
+                        String finalSelectedPath = backupPath + "/" + strName;
+                        File file1 = new File(finalSelectedPath);
                         ExportImportDB.importIntoDbReplace(getApplication(), file1);
                         Toast.makeText(getBaseContext(), getResources().getString(R.string.database_imported), Toast.LENGTH_LONG).show();
 
@@ -377,7 +378,7 @@ public class ModeSettingsActivity extends AppCompatActivity {
                 try {
                     selectedFile = data.getData().getPath();
                     selectedFile0 = selectedFile.substring(selectedFile.lastIndexOf(":") + 1);
-                    Log.i("OnActivityResult", String.valueOf(selectedFile));
+                    Log.i("OnActivityResult", selectedFile);
                 } catch (NullPointerException e) {
                     System.out.print("Caught the NullPointerException");
                 }
@@ -393,13 +394,13 @@ public class ModeSettingsActivity extends AppCompatActivity {
                 System.out.println();
 
                 String finalSelectedPath = Environment.getExternalStorageDirectory().getPath() + "/" + selectedFile0;
-                File file1 = new File(String.valueOf(finalSelectedPath));
+                File file1 = new File(finalSelectedPath);
 
                 ExportImportDB.importIntoDbReplace(getApplication(), file1);
                 Toast.makeText(getBaseContext(), "DataBase Imported",
                         Toast.LENGTH_LONG).show();
 
-                Log.i("OnActivityResult", String.valueOf(finalSelectedPath));
+                Log.i("OnActivityResult", finalSelectedPath);
 
             }
         }

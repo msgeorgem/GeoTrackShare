@@ -17,17 +17,6 @@ import android.os.Environment;
 import android.os.Parcelable;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
-import android.support.annotation.NonNull;
-import android.support.design.widget.Snackbar;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.LoaderManager;
-import android.support.v4.content.CursorLoader;
-import android.support.v4.content.Loader;
-import android.support.v7.app.AlertDialog;
-import android.support.v7.widget.DefaultItemAnimator;
-import android.support.v7.widget.GridLayoutManager;
-import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -35,6 +24,17 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
+import androidx.core.app.ActivityCompat;
+import androidx.fragment.app.Fragment;
+import androidx.loader.app.LoaderManager;
+import androidx.loader.content.CursorLoader;
+import androidx.loader.content.Loader;
+import androidx.recyclerview.widget.DefaultItemAnimator;
+import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.android.geotrackshare.BuildConfig;
 import com.example.android.geotrackshare.Data.TrackContract;
@@ -47,12 +47,12 @@ import com.example.android.geotrackshare.Utils.SqliteExporter;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
+import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.FirebaseAuth;
 
 import java.io.File;
 import java.util.Arrays;
 
-import static android.support.constraint.Constraints.TAG;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_AVR_SPEEDP;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_FAVORITEP;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_MAX_ALTP;
@@ -178,7 +178,7 @@ public class RunListFragment extends Fragment implements LoaderManager.LoaderCal
     }
 
     public static void updateFavouritePost(final int favourite, final int id, final Context context) {
-        Log.e(TAG, "saving " + favourite);
+        Log.e(LOG_TAG, "saving " + favourite);
         String specificID = String.valueOf(id);
         final String mSelectionClause = TrackContract.TrackingEntry.COLUMN_RUN_IDP;
         final String mSelection = mSelectionClause + " = '" + specificID + "'";
@@ -433,7 +433,7 @@ public class RunListFragment extends Fragment implements LoaderManager.LoaderCal
         // Provide an additional rationale to the user. This would happen if the user denied the
         // request previously, but didn't check the "Don't ask again" checkbox.
         if (shouldProvideRationale1) {
-            Log.i(TAG, "Displaying permission rationale to provide additional context.");
+            Log.i(LOG_TAG, "Displaying permission rationale to provide additional context.");
             showSnackbar(R.string.permission_rationale,
                     android.R.string.ok, new View.OnClickListener() {
                         @Override
@@ -447,7 +447,7 @@ public class RunListFragment extends Fragment implements LoaderManager.LoaderCal
                         }
                     });
         } else {
-            Log.i(TAG, "Requesting permission");
+            Log.i(LOG_TAG, "Requesting permission");
             // Request permission. It's possible this can be auto answered if device policy
             // sets the permission in a given state or the user denied the permission
             // previously and checked "Never ask again".
@@ -464,15 +464,15 @@ public class RunListFragment extends Fragment implements LoaderManager.LoaderCal
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
                                            @NonNull int[] grantResults) {
-        Log.i(TAG, "onRequestPermissionResult");
+        Log.i(LOG_TAG, "onRequestPermissionResult");
         if (requestCode == REQUEST_PERMISSIONS_REQUEST_CODE) {
             if (grantResults.length <= 0) {
                 // If user interaction was interrupted, the permission request is cancelled and you
                 // receive empty arrays.
-                Log.i(TAG, "User interaction was cancelled.");
+                Log.i(LOG_TAG, "User interaction was cancelled.");
             } else if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
 
-                Log.i(TAG, "Permission granted, download requested, starting location updates");
+                Log.i(LOG_TAG, "Permission granted, download requested, starting location updates");
 
                 ExportImportDB.downloadFromFirebaseStorage();
 

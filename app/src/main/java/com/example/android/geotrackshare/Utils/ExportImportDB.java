@@ -11,8 +11,9 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
-import android.support.annotation.NonNull;
 import android.util.Log;
+
+import androidx.annotation.NonNull;
 
 import com.example.android.geotrackshare.LocationService.LocationServiceConstants;
 import com.google.android.gms.common.api.GoogleApiClient;

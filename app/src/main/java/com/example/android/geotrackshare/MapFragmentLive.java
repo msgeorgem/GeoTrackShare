@@ -2,6 +2,7 @@ package com.example.android.geotrackshare;
 
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
@@ -21,14 +22,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.provider.Settings;
-import android.support.annotation.NonNull;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentTransaction;
-import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -37,6 +30,13 @@ import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+import androidx.core.app.ActivityCompat;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.example.android.geotrackshare.Data.TrackContract;
 import com.example.android.geotrackshare.LocationService.LocationUpdatesService;
@@ -54,6 +54,8 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.android.gms.maps.model.RoundCap;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.android.material.snackbar.Snackbar;
 
 import java.util.ArrayList;
 
@@ -157,7 +159,7 @@ public class MapFragmentLive extends Fragment implements OnMapReadyCallback {
      * @return A new instance of fragment MapFragmentLive.
      */
     // TODO: Rename and change types and number of parameters
-    public static MapFragmentLive newInstance() {
+    public static Fragment newInstance() {
         MapFragmentLive fragment = new MapFragmentLive();
 //        Bundle args = new Bundle();
 //        args.putBoolean(ARG_PARAM1, param1);
@@ -310,7 +312,7 @@ public class MapFragmentLive extends Fragment implements OnMapReadyCallback {
                 Location location = lm.getLastKnownLocation(LocationManager.GPS_PROVIDER);
                 mCurrentLatitude = location.getLatitude();
                 mCurrentLongitude = location.getLongitude();
-                Toast.makeText(getContext(), String.valueOf(mCurrentLatitude) + "/" + String.valueOf(mCurrentLongitude), Toast.LENGTH_SHORT).show();
+                Toast.makeText(getContext(), mCurrentLatitude + "/" + mCurrentLongitude, Toast.LENGTH_SHORT).show();
                 currentLocation = new LatLng(mCurrentLatitude, mCurrentLongitude);
             } catch (NullPointerException e) {
                 System.out.print("Caught the NullPointerException");
@@ -324,8 +326,8 @@ public class MapFragmentLive extends Fragment implements OnMapReadyCallback {
 
     @Override
     public void onMapReady(GoogleMap googleMap) {
-        Log.e(TAG, String.valueOf("onMapReady"));
-        Log.e(TAG, String.valueOf("onMapReady" + mCurrentId));
+        Log.e(TAG, "onMapReady");
+        Log.e(TAG, "onMapReady" + mCurrentId);
         mMap = googleMap;
 
         double mStartLatitude = startLocation(mCurrentId)[0];
@@ -363,9 +365,16 @@ public class MapFragmentLive extends Fragment implements OnMapReadyCallback {
         LatLngBounds TRIP = new LatLngBounds(mSouthWestPoint, mNorthEastPoint);
         LatLngBounds POZNAN = new LatLngBounds(poznan, poznan);
 
-//        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(getLastLocation(getContext()), 13));
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(mCurrentLocation, 13));
-//        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(getLastLocation(getContext()), 13));
+        // TODO: Verify moving camera
+        if (ActivityCompat.checkSelfPermission(mContext, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED &&
+                ActivityCompat.checkSelfPermission(mContext, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            //        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(getLastLocation(getContext()), 13));
+            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLocation(), 13));
+            //        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(getLastLocation(getContext()), 13));
+
+        } else {
+            requestPermissions();
+        }
 
 
         // Add a marker in Poznan, Poland, and move the camera.
@@ -419,6 +428,7 @@ public class MapFragmentLive extends Fragment implements OnMapReadyCallback {
      * enabled if the user is not requesting location updates. The Stop Updates button is enabled
      * if the user is requesting location updates.
      */
+    @SuppressLint("RestrictedApi")
     public void setButtonsEnabledState(Intent intent) {
 
 //        mRequestingLocationUpdates = intent.getBooleanExtra(LocationUpdatesService.EXTRA_REQUESTING_UDPATES, mRequestingLocationUpdates);
@@ -505,8 +515,8 @@ public class MapFragmentLive extends Fragment implements OnMapReadyCallback {
                     mStartLocation[0] = cur.getDouble(cur.getColumnIndex(COLUMN_LATITUDE));
                     mStartLocation[1] = cur.getDouble(cur.getColumnIndex(COLUMN_LONGITUDE));
 
-                    Log.i("Start Location", String.valueOf(mStartLocation[0]) +
-                            " , " + String.valueOf(mStartLocation[1]));
+                    Log.i("Start Location", mStartLocation[0] +
+                            " , " + mStartLocation[1]);
                 }
                 while (cur.moveToNext());
             }
@@ -538,8 +548,8 @@ public class MapFragmentLive extends Fragment implements OnMapReadyCallback {
                     mStopLocation[0] = cur.getDouble(cur.getColumnIndex(COLUMN_LATITUDE));
                     mStopLocation[1] = cur.getDouble(cur.getColumnIndex(COLUMN_LONGITUDE));
 
-                    Log.i("Stop Location", String.valueOf(mStopLocation[0]) +
-                            " , " + String.valueOf(mStopLocation[1]));
+                    Log.i("Stop Location", mStopLocation[0] +
+                            " , " + mStopLocation[1]);
                 }
                 while (cur.moveToNext());
             }
@@ -763,6 +773,47 @@ public class MapFragmentLive extends Fragment implements OnMapReadyCallback {
                 Manifest.permission.ACCESS_FINE_LOCATION);
     }
 
+    public void onGetDataFromDataBaseAndDisplay() {
+
+        String ORDER = " " + _ID + " DESC LIMIT 1";
+        try {
+            Cursor cursor = getActivity().getContentResolver().query(TrackContract.TrackingEntry.CONTENT_URI, null, null, null, ORDER);
+
+            if (cursor != null && cursor.moveToFirst()) {
+                do {
+
+                    int totalDistanceColumnIndex = cursor.getColumnIndex(COLUMN_TOTAL_DISTANCE);
+                    int runColumnIndex = cursor.getColumnIndex(COLUMN_RUN_ID);
+
+                    Double totalDistance = cursor.getDouble(totalDistanceColumnIndex);
+                    int runID = cursor.getInt(runColumnIndex);
+//                    int maxAltitudeColumnIndex = cursor.getColumnIndex(COLUMN_MAX_ALT);
+//                    int maxSpeedColumnIndex = cursor.getColumnIndex(COLUMN_MAX_SPEED);
+//                    int avrSpeedColumnIndex = cursor.getColumnIndex(COLUMN_AVR_SPEED);
+//                    int totalTimeColumnIndex = cursor.getColumnIndex(COLUMN_TIME_COUNTER);
+
+                    String totlaDistance3Dec = String.format("%.3f", totalDistance);
+                    String totalDistanceString = totlaDistance3Dec + " km";
+
+
+                    if (runID == mCurrentId) {
+                        mDistanceTextView.setText(totalDistanceString);
+                    } else {
+//                        mDistanceTextView.setText(totalDistanceStringZero);
+                        mDistanceTextView = mView.findViewById(R.id.total_distance);
+                    }
+
+                } while (cursor.moveToNext());
+            }
+            if (cursor != null) {
+                cursor.close();
+            }
+
+        } catch (Exception e) {
+            Log.e("Path Error1235", e.toString());
+        }
+    }
+
     /**
      * Receiver for broadcasts sent by {@link LocationUpdatesService}.
      */
@@ -802,49 +853,8 @@ public class MapFragmentLive extends Fragment implements OnMapReadyCallback {
 
             double totalDistance = intent.getDoubleExtra(LocationUpdatesService.EXTRA_TOTAL_DISTANCE, 0);
             String totlaDistance3Dec = String.format("%.3f", totalDistance);
-            String totalDistanceString = String.valueOf(totlaDistance3Dec + " km");
+            String totalDistanceString = totlaDistance3Dec + " km";
             mDistanceTextView.setText(totalDistanceString);
-        }
-    }
-
-    public void onGetDataFromDataBaseAndDisplay() {
-
-        String ORDER = " " + _ID + " DESC LIMIT 1";
-        try {
-            Cursor cursor = getActivity().getContentResolver().query(TrackContract.TrackingEntry.CONTENT_URI, null, null, null, ORDER);
-
-            if (cursor != null && cursor.moveToFirst()) {
-                do {
-
-                    int totalDistanceColumnIndex = cursor.getColumnIndex(COLUMN_TOTAL_DISTANCE);
-                    int runColumnIndex = cursor.getColumnIndex(COLUMN_RUN_ID);
-
-                    Double totalDistance = cursor.getDouble(totalDistanceColumnIndex);
-                    int runID = cursor.getInt(runColumnIndex);
-//                    int maxAltitudeColumnIndex = cursor.getColumnIndex(COLUMN_MAX_ALT);
-//                    int maxSpeedColumnIndex = cursor.getColumnIndex(COLUMN_MAX_SPEED);
-//                    int avrSpeedColumnIndex = cursor.getColumnIndex(COLUMN_AVR_SPEED);
-//                    int totalTimeColumnIndex = cursor.getColumnIndex(COLUMN_TIME_COUNTER);
-
-                    String totlaDistance3Dec = String.format("%.3f", totalDistance);
-                    String totalDistanceString = String.valueOf(totlaDistance3Dec + " km");
-
-
-                    if (runID == mCurrentId) {
-                        mDistanceTextView.setText(totalDistanceString);
-                    } else {
-//                        mDistanceTextView.setText(totalDistanceStringZero);
-                        mDistanceTextView = mView.findViewById(R.id.total_distance);
-                    }
-
-                } while (cursor.moveToNext());
-            }
-            if (cursor != null) {
-                cursor.close();
-            }
-
-        } catch (Exception e) {
-            Log.e("Path Error1235", e.toString());
         }
     }
 
