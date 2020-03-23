@@ -4,19 +4,14 @@ package com.example.android.geotrackshare;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
-import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.View;
-import android.view.WindowInsets;
 
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentManager;
-import androidx.fragment.app.FragmentTransaction;
-import androidx.lifecycle.Lifecycle;
+import androidx.fragment.app.FragmentActivity;
 import androidx.loader.app.LoaderManager;
 import androidx.loader.content.Loader;
 import androidx.viewpager2.adapter.FragmentStateAdapter;
@@ -32,7 +27,7 @@ import static com.example.android.geotrackshare.TrackList.RunListFragment.EXTRA_
  * Created by Marcin on 2017-11-29.
  */
 
-public class DetailActivity extends AppCompatActivity
+public class DetailActivity extends FragmentActivity
         implements LoaderManager.LoaderCallbacks<Cursor> {
 
 
@@ -49,8 +44,9 @@ public class DetailActivity extends AppCompatActivity
     private int mSelectedItemUpButtonFloor = Integer.MAX_VALUE;
     private int mTopInset;
 
-    private ViewPager2 myViewPager2;
-    private ViewPagerFragmentAdapter myPagerFragmentAdapter;
+    private ViewPager2 viewPager;
+    private FragmentStateAdapter pagerAdapter;
+
     private View mUpButtonContainer;
     private View mUpButton;
 
@@ -70,87 +66,72 @@ public class DetailActivity extends AppCompatActivity
         }
         //Temporary solution to prove it works
         //Temporary solution to prove it works
-        FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
-        transaction.setCustomAnimations(android.R.animator.fade_in, android.R.animator.fade_out, android.R.animator.fade_in, android.R.animator.fade_out);
-        transaction.replace(R.id.container,
-                DetailFragment.newInstance((int) mStartId));
-        transaction.commit();
+//        FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
+//        transaction.setCustomAnimations(android.R.animator.fade_in, android.R.animator.fade_out, android.R.animator.fade_in, android.R.animator.fade_out);
+//        transaction.replace(R.id.container,
+//                DetailFragment.newInstance((int) mStartId));
+//        transaction.commit();
 
-        //LoaderManager.getInstance(this).initLoader(0, null, this);
-        //TODO 00001: Fix Adapter
-        myPagerFragmentAdapter = new ViewPagerFragmentAdapter(getSupportFragmentManager(), getLifecycle());
-        myViewPager2 = findViewById(R.id.pager);
-        myViewPager2.setAdapter(myPagerFragmentAdapter);
-        Log.e(LOG_TAG, "Looking for me0");
-        ///////////////////////
-        ///myViewPager2.setPageTransformer(new ZoomOutPageTransformer());
+        LoaderManager.getInstance(this).initLoader(0, null, this);
+        viewPager = findViewById(R.id.pager);
+        pagerAdapter = new ScreenSlidePagerAdapter(this);
+        viewPager.setAdapter(pagerAdapter);
 
-        myViewPager2.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
+        viewPager.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
+
             @Override
             public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
-                super.onPageScrolled(position, positionOffset, positionOffsetPixels);
-                Log.e(LOG_TAG, "Looking for me1");
-            }
-
-            @Override
-            public void onPageSelected(int position) {
-                //super.onPageSelected(position);
-
                 Log.e("Selected_Page", String.valueOf(position));
                 if (mCursor != null) {
                     mCursor.moveToPosition(position);
                 }
                 mSelectedItemId = mCursor.getLong(TrackLoader.Query.COLUMN_RUN_IDP);
-                Log.e(LOG_TAG +"_onPageSelected", String.valueOf(mSelectedItemId));
+                Log.e(LOG_TAG + "_onPageSelected", String.valueOf(mSelectedItemId));
 
-                updateUpButtonPosition();
+//                updateUpButtonPosition();
             }
 
-            @Override
-            public void onPageScrollStateChanged(int state) {
-                super.onPageScrollStateChanged(state);
-            }
         });
 
-        mUpButtonContainer = findViewById(R.id.up_container);
+//        mUpButtonContainer = findViewById(R.id.up_container);
+//
+//        mUpButton = findViewById(R.id.action_up);
+//        mUpButton.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View view) {
+////                onSupportNavigateUp();
+//            }
+//        });
 
-        mUpButton = findViewById(R.id.action_up);
-        mUpButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                onSupportNavigateUp();
-            }
-        });
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-
-            mUpButtonContainer.setOnApplyWindowInsetsListener(new View.OnApplyWindowInsetsListener() {
-                @Override
-                public WindowInsets onApplyWindowInsets(View view, WindowInsets windowInsets) {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT_WATCH) {
-                        view.onApplyWindowInsets(windowInsets);
-                    }
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT_WATCH) {
-                        mTopInset = windowInsets.getSystemWindowInsetTop();
-                    }
-                    mUpButtonContainer.setTranslationY(mTopInset);
-                    updateUpButtonPosition();
-                    return windowInsets;
-
-                }
-            });
-        }
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+//
+//            mUpButtonContainer.setOnApplyWindowInsetsListener(new View.OnApplyWindowInsetsListener() {
+//                @Override
+//                public WindowInsets onApplyWindowInsets(View view, WindowInsets windowInsets) {
+//                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT_WATCH) {
+//                        view.onApplyWindowInsets(windowInsets);
+//                    }
+//                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT_WATCH) {
+//                        mTopInset = windowInsets.getSystemWindowInsetTop();
+//                    }
+//                    mUpButtonContainer.setTranslationY(mTopInset);
+//                    updateUpButtonPosition();
+//                    return windowInsets;
+//
+//                }
+//            });
+//        }
 
         if (savedInstanceState == null) {
             Log.e("savedInstanceState", "null");
             mSelectedItemId = mStartId;
         }
     }
-
-    private void updateUpButtonPosition() {
-        int upButtonNormalBottom = mTopInset + mUpButton.getHeight();
-        mUpButton.setTranslationY(Math.min(mSelectedItemUpButtonFloor - upButtonNormalBottom, 0));
-    }
+//
+//    private void updateUpButtonPosition() {
+//        int upButtonNormalBottom = mTopInset + mUpButton.getHeight();
+//        mUpButton.setTranslationY(Math.min(mSelectedItemUpButtonFloor - upButtonNormalBottom, 0));
+//    }
 
     @NonNull
     @Override
@@ -171,8 +152,8 @@ public class DetailActivity extends AppCompatActivity
                 if (mCursor.getInt(TrackLoader.Query.COLUMN_RUN_IDP) == mStartId) {
                     Log.e("Query.COLUMN_RUN_IDP", String.valueOf(TrackLoader.Query.COLUMN_RUN_IDP));
                     final int position = mCursor.getPosition();
-                    myPagerFragmentAdapter.notifyDataSetChanged();
-                    myViewPager2.setCurrentItem(position, false);
+                    pagerAdapter.notifyDataSetChanged();
+                    viewPager.setCurrentItem(position, false);
                     break;
                 }
                 mCursor.moveToNext();
@@ -184,31 +165,39 @@ public class DetailActivity extends AppCompatActivity
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {
         mCursor = null;
-        myPagerFragmentAdapter.notifyDataSetChanged();
+        pagerAdapter.notifyDataSetChanged();
     }
+//    @Override
+//    public void onBackPressed() {
+//        if (viewPager.getCurrentItem() == 0) {
+//            // If the user is currently looking at the first step, allow the system to handle the
+//            // Back button. This calls finish() on this activity and pops the back stack.
+//            super.onBackPressed();
+//        } else {
+//            // Otherwise, select the previous step.
+//            viewPager.setCurrentItem(viewPager.getCurrentItem() - 1);
+//        }
+//    }
 
+    private class ScreenSlidePagerAdapter extends FragmentStateAdapter {
 
-    private class ViewPagerFragmentAdapter extends FragmentStateAdapter {
-
-        private ViewPagerFragmentAdapter(@NonNull FragmentManager fragmentManager,
-                                         @NonNull Lifecycle lifecycle) {
-            super(fragmentManager, lifecycle);
-            Log.e(LOG_TAG, "Looking for me4");
+        public ScreenSlidePagerAdapter(@NonNull FragmentActivity fragmentActivity) {
+            super(fragmentActivity);
+            Log.e(LOG_TAG, "Looking for me3");
         }
-
 
         @NonNull
         @Override
         public Fragment createFragment(int position) {
+            Log.e(LOG_TAG + "_getItem_whatever", String.valueOf(position));
             mCursor.moveToPosition(position);
             int whatever = mCursor.getInt(TrackLoader.Query.COLUMN_RUN_IDP);
-            Log.e(LOG_TAG + "_getItem_whatever", String.valueOf(whatever));
             return DetailFragment.newInstance(mCursor.getInt(TrackLoader.Query.COLUMN_RUN_IDP));
         }
 
         @Override
         public int getItemCount() {
-            return 0;
+            return (mCursor != null) ? mCursor.getCount() : 0;
         }
     }
 

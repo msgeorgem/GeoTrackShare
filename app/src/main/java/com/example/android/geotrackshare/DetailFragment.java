@@ -185,7 +185,7 @@ public class DetailFragment extends Fragment implements OnMapReadyCallback {
         animationDisapear.setStartOffset(0);
 
         fabShare = view.findViewById(R.id.fab2);
-        fabShare.startAnimation(animationApear);
+//        fabShare.startAnimation(animationApear);
         fabShare.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
