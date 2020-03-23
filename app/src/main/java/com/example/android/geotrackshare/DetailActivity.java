@@ -77,6 +77,9 @@ public class DetailActivity extends FragmentActivity
         pagerAdapter = new ScreenSlidePagerAdapter(this);
         viewPager.setAdapter(pagerAdapter);
 
+        //Example for implemantations, not used here since maps do not like it
+        //viewPager.setPageTransformer(new ZoomOutPageTransformer());
+
         viewPager.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
 
             @Override
@@ -197,6 +200,7 @@ public class DetailActivity extends FragmentActivity
 
         @Override
         public int getItemCount() {
+            //very important piece of code
             return (mCursor != null) ? mCursor.getCount() : 0;
         }
     }
