@@ -5,6 +5,7 @@ import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.net.ConnectivityManager;
 import android.net.Uri;
@@ -48,6 +49,7 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GoogleAuthProvider;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import static com.example.android.geotrackshare.AdvancedSettingsActivity.preferenceBooleanScreenOn;
 import static com.example.android.geotrackshare.AdvancedSettingsActivity.preferenceBooleanTheme;
@@ -74,6 +76,8 @@ public class MainActivity extends AppCompatActivity
     private FirebaseAuth mAuth;
     private FirebaseUser currentUser;
     private GoogleSignInClient mGoogleSignInClient;
+
+
     // The request code used in ActivityCompat.requestPermissions()
 // and returned in the Activity's onRequestPermissionsResult()
     int PERMISSION_ALL = 1;
@@ -211,6 +215,16 @@ public class MainActivity extends AppCompatActivity
         mFirebaseAnalytics.logEvent(FirebaseAnalytics.Event.SELECT_CONTENT, bundle);
 
 
+        //get a list of installed apps other than googls.
+        final PackageManager pm = getPackageManager();
+        List<ApplicationInfo> packages = pm.getInstalledApplications(PackageManager.GET_META_DATA);
+
+        for (ApplicationInfo packageInfo : packages) {
+            if ((packageInfo.flags & ApplicationInfo.FLAG_SYSTEM) == 0) {
+                String appName = packageInfo.loadLabel(getPackageManager()).toString();
+                Log.d(TAG + "IMAF", appName);
+            }
+        }
         // [START config_signin]
         // Configure Google Sign In
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)

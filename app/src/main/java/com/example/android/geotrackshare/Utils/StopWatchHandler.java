@@ -49,6 +49,7 @@ public class StopWatchHandler extends Handler {
 
     }
 
+    //TODO: INEFICIENT FOR TIMER!!!!
     // Define how to handle any incoming messages here
     @Override
     public void handleMessage(Message msg) {
@@ -85,7 +86,7 @@ public class StopWatchHandler extends Handler {
             case MSG_UPDATE_TIMER_WIDGET:
 
                 try {
-                    widgetProvider.get().updateStopWatch(elapsedTime);
+                    //widgetProvider.get().updateStopWatch(elapsedTime);
                 } catch (NullPointerException e) {
                     System.out.print("Caught the NullPointerException");
                 }

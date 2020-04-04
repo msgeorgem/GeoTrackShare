@@ -51,6 +51,10 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
 import java.util.UUID;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 import static com.example.android.geotrackshare.AdvancedSettingsActivity.preferenceBooleanDisableAutoStop;
 import static com.example.android.geotrackshare.Data.TrackContract.TrackingEntry.COLUMN_ALTITUDE;
@@ -73,10 +77,10 @@ import static com.example.android.geotrackshare.LocationService.LocationServiceC
 import static com.example.android.geotrackshare.LocationService.LocationUpdatesService.REQUEST_CHECK_SETTINGS;
 import static com.example.android.geotrackshare.MainActivity.mCategories;
 import static com.example.android.geotrackshare.MainActivity.mSharedPrefsRunType;
-import static com.example.android.geotrackshare.Utils.StopWatchHandler.MSG_START_TIMER;
 import static com.example.android.geotrackshare.Utils.StopWatchHandler.MSG_STOP_TIMER_REAL_TIME;
 import static com.example.android.geotrackshare.Utils.StopWatchHandler.MSG_UPDATE_TIMER_MAP_LIVE;
-import static com.example.android.geotrackshare.Utils.StopWatchHandler.MSG_UPDATE_TIMER_REAL_TIME;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 
 /**
@@ -148,7 +152,9 @@ public class RealTimeFragment extends Fragment implements
     View mView;
     // The BroadcastReceiver used to listen from broadcasts from the service.
     private MyReceiver myReceiver;
-
+    private final ScheduledExecutorService scheduler =
+            Executors.newScheduledThreadPool(1);
+    public TextView mElapsedTimeTextView;
     // UI Widgets.
     private Button mRequestLocationUpdatesButton;
     private Button mRemoveLocationUpdatesButton;
@@ -177,7 +183,7 @@ public class RealTimeFragment extends Fragment implements
     private String mAvgSpeedLabel;
     private String mMinAltitudeLabel;
     private String mMaxAltitudeLabel;
-    public static TextView mElapsedTimeTextView;
+    private ScheduledThreadPoolExecutor executor = new ScheduledThreadPoolExecutor(1);
     private String mLastRunLabel;
     private String mCurrentRunLabel;
     private String mDistanceLabel;
@@ -235,7 +241,6 @@ public class RealTimeFragment extends Fragment implements
         // Required empty public constructor
     }
 
-
     @SuppressLint({"HardwareIds", "HandlerLeak"})
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -250,7 +255,9 @@ public class RealTimeFragment extends Fragment implements
 
         // Check that the user hasn't revoked permissions by going to Settings.
         if (mRequestingLocationUpdates) {
-            mStopWatchHandler.sendEmptyMessage(MSG_UPDATE_TIMER_REAL_TIME);
+            elapsedTimeExecutor();
+            //elapsedTimeScheduler();
+            //mStopWatchHandler.sendEmptyMessage(MSG_UPDATE_TIMER_REAL_TIME);
             if (!checkPermissionsFIneLocation()) {
                 requestPermissions();
             }
@@ -419,12 +426,15 @@ public class RealTimeFragment extends Fragment implements
                     requestPermissions();
                 } else {
                     mService.startUpdatesButtonHandler();
-                    mStopWatchHandler.sendEmptyMessage(MSG_START_TIMER);
-
+                    //mStopWatchHandler.sendEmptyMessage(MSG_START_TIMER);
+                    LocationUpdatesService.startStopWatch();
                     setStartTimeCurrentTrack(mContext, LocationUpdatesService.startTimeStopWatch);
-
+                    elapsedTimeExecutor();
+                    //elapsedTimeScheduler();
                 }
+
                 updateConstants();
+
                 MapFragmentLive.mRequestingLocationUpdates = true;
                 long mIntervall = UPDATE_INTERVAL_IN_MILLISECONDS / 1000;
                 String mIntervalll = mIntervall + " s";
@@ -447,6 +457,9 @@ public class RealTimeFragment extends Fragment implements
                     mContext.getApplicationContext().unbindService(mServiceConnection);
                 }
                 setServiceBound(mContext, false);
+                executor.shutdown();
+                //scheduler.shutdown();
+
             }
         });
 
@@ -618,6 +631,8 @@ public class RealTimeFragment extends Fragment implements
             //mContext.getApplicationContext().unbindService(mServiceConnection);
             //setServiceBound(mContext, false);
         }
+        this.executor.shutdown();
+        //this.scheduler.shutdown();
         PreferenceManager.getDefaultSharedPreferences(mContext)
                 .unregisterOnSharedPreferenceChangeListener(this);
     }
@@ -1016,27 +1031,100 @@ public class RealTimeFragment extends Fragment implements
     /**
      * Updates the StopWatch when a run starts
      */
-    private void updateStopWatchPause() {
-        mStopWatchHandler.sendEmptyMessage(MSG_UPDATE_TIMER_REAL_TIME);
-        mElapsedTimeTextView.setText("Paused");
-    }
+    //INefficient depreciated
+//    private void updateStopWatchPause() {
+//        mStopWatchHandler.sendEmptyMessage(MSG_UPDATE_TIMER_REAL_TIME);
+//        mElapsedTimeTextView.setText("Paused");
+//    }
 
     /**
      * Updates the StopWatch when a run stops
      */
+
     public void updateStopWatchStop() {
         mStopWatchHandler.removeMessages(MSG_UPDATE_TIMER_MAP_LIVE);
         mElapsedTimeTextView.setText("Stopped");
+
 
     }
 
     /**
      * Updates the StopWatch readout in the UI; the service must be bound
      */
+//INefficient depreciated
     public void updateStopWatch(String elapsedTime) {
         if (serviceBound(mContext)) {
             mElapsedTimeTextView.setText(elapsedTime);
+
         }
+    }
+
+    private void elapsedTimeExecutor() {
+        Log.i(TAG + "UpdatesButton", "me02");
+        this.executor.scheduleWithFixedDelay(new Runnable() {
+            @Override
+            public void run() {
+                Log.i(TAG + "UpdatesButton", "me03");
+                //leaving below condition for future timer aplication
+                //long elapsed = timer.switchElapsedTime(timerLimit, mTestMode);
+                //Log.i(TAG + "_elapsed", String.valueOf(elapsed));
+//                if (elapsed <= 0) {
+//                    timer.stop();
+//                    Log.i(TAG + "_elapsedUP", "Time is up");
+//                    //mTimer.setVisibility(View.INVISIBLE);
+//
+//                    Message msg = new Message();
+//                    msg.obj = "Time is up";
+//                    mHandler.sendMessage(msg);
+//                    executor.shutdown();
+
+                //Toast.makeText(QuestionActivity.this, "Time is up", Toast.LENGTH_LONG).show();
+                // }
+                //String elapsedTime = timer.elapsedTimeStringDateFormatter(timerLimit, mTestMode);
+                String elapsedTime = LocationUpdatesService.elapsedTime();
+                Log.i(TAG + "Executor", "me04");
+                mElapsedTimeTextView.setText(elapsedTime);
+
+
+            }
+        }, 0L, 1000, MILLISECONDS);
+
+    }
+
+    public void elapsedTimeScheduler() {
+        final Runnable beeper = new Runnable() {
+            public void run() {
+
+                String elapsedTime = LocationUpdatesService.elapsedTime();
+                Log.i(TAG + "Executor", "me04");
+                mElapsedTimeTextView.setText(elapsedTime);
+            }
+        };
+        final ScheduledFuture<?> beeperHandle = scheduler.scheduleAtFixedRate(beeper, 0, 1, SECONDS);
+        scheduler.schedule(new Runnable() {
+            public void run() {
+                beeperHandle.cancel(true);
+            }
+        }, 60 * 60, SECONDS);
+    }
+}
+
+class BeeperControl {
+    private final ScheduledExecutorService scheduler =
+            Executors.newScheduledThreadPool(1);
+
+    public void beepForAnHour() {
+        final Runnable beeper = new Runnable() {
+            public void run() {
+                System.out.println("beep");
+            }
+        };
+        final ScheduledFuture<?> beeperHandle = scheduler.scheduleAtFixedRate(beeper, 10, 1, SECONDS);
+        scheduler.schedule(new Runnable() {
+            public void run() {
+                beeperHandle.cancel(true);
+            }
+        }, 60 * 60, SECONDS);
     }
 }
 
